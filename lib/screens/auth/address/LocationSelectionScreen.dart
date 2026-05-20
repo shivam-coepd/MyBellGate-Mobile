@@ -197,15 +197,21 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, designSize: const Size(375, 812));
-    
+
     final selectedRole = AppConfig.selectedRole ?? 'resident';
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode
         ? AppTheme.backgroundDark
         : AppTheme.backgroundLight;
-    final surfaceColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
-    final textColor = isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight;
-    final secondaryTextColor = isDarkMode ? AppTheme.onPrimary.withValues(alpha: 0.7) : AppTheme.onBackgroundLight;
+    final surfaceColor = isDarkMode
+        ? AppTheme.surfaceDark
+        : AppTheme.surfaceLight;
+    final textColor = isDarkMode
+        ? AppTheme.onPrimary
+        : AppTheme.onBackgroundLight;
+    final secondaryTextColor = isDarkMode
+        ? AppTheme.onPrimary.withValues(alpha: 0.7)
+        : AppTheme.onBackgroundLight;
     final iconColor = AppTheme.primary;
 
     final bool canContinue = selectedSociety != null;
@@ -226,8 +232,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   colors: [AppTheme.primary, AppTheme.primaryDark],
                 ),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+                  bottomLeft: Radius.circular(30.r),
+                  bottomRight: Radius.circular(30.r),
                 ),
               ),
               child: Stack(
@@ -272,7 +278,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                             Container(
                               padding: EdgeInsets.all(12.r),
                               decoration: BoxDecoration(
-                                color: AppTheme.onPrimary.withValues(alpha: 0.2),
+                                color: AppTheme.onPrimary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Icon(
@@ -292,7 +300,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                 Text(
                                   'Registering as',
                                   style: TextStyle(
-                                    color: AppTheme.onPrimary.withValues(alpha: 0.9),
+                                    color: AppTheme.onPrimary.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontSize: 14.sp,
                                   ),
                                 ),
@@ -352,7 +362,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                             ? []
                             : [
                                 BoxShadow(
-                                  color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                  color: AppTheme.onBackgroundLight.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   blurRadius: 10.r,
                                   offset: Offset(0, 5.h),
                                 ),
@@ -402,7 +414,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               ? []
                               : [
                                   BoxShadow(
-                                    color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                    color: AppTheme.onBackgroundLight
+                                        .withValues(alpha: 0.1),
                                     blurRadius: 10.r,
                                     offset: Offset(0, 5.h),
                                   ),
@@ -454,7 +467,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               ? []
                               : [
                                   BoxShadow(
-                                    color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                    color: AppTheme.onBackgroundLight
+                                        .withValues(alpha: 0.1),
                                     blurRadius: 10.r,
                                     offset: Offset(0, 5.h),
                                   ),
@@ -541,9 +555,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                   debugPrint(
                                     'Country: ${selectedCountry!['name']}',
                                   );
-                                  debugPrint(
-                                    'City: ${selectedCity!['name']}',
-                                  );
+                                  debugPrint('City: ${selectedCity!['name']}');
                                   debugPrint(
                                     'Society: ${selectedSociety!['name']} (ID: ${selectedSociety!['id']})',
                                   );
@@ -553,8 +565,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                     MaterialPageRoute(
                                       builder: (_) =>
                                           BuildingUnitSelectionScreen(
-                                            societyId:
-                                                selectedSociety!['id'],
+                                            societyId: selectedSociety!['id'],
                                           ),
                                     ),
                                   );

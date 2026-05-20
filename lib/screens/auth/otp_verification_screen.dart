@@ -6,7 +6,6 @@ import 'package:mygate_coepd/blocs/auth/auth_event.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/screens/resident/resident_main_screen.dart';
 import 'package:mygate_coepd/screens/guard/guard_main_screen.dart';
-import 'package:mygate_coepd/screens/admin/admin_main_screen.dart';
 import 'package:mygate_coepd/screens/auth/approval_pending_screen.dart';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
@@ -75,24 +74,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   void _requestOtp() {
     // Request OTP again
-    context.read<AuthBloc>().add(
-      OtpRequested(phone: widget.phone),
-    );
+    context.read<AuthBloc>().add(OtpRequested(phone: widget.phone));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
@@ -122,13 +110,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ),
                 (route) => false,
               );
-            } else if (selectedRole == 'admin') {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const AdminMainScreen(),
-                ),
-                (route) => false,
-              );
             } else {
               // Check if user is approved
               if (state.user.isApproved == false) {
@@ -149,91 +130,256 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             }
           }
         },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Verify Code', style: TextStyle(fontSize: 28)),
-                const SizedBox(height: 12),
-                Text(
-                  'Please enter the 6-digit verification code sent to your device.',
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Phone: ${widget.phone}',
-                  style: TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: theme.colorScheme.surface,
+          child: Column(
+            children: [
+              // Header with role info
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppTheme.primary, AppTheme.primaryDark],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(30.r),
+                    bottomRight: Radius.circular(30.r),
                   ),
                 ),
-                const SizedBox(height: 48),
-                TextFormField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 32, 
-                    fontWeight: FontWeight.bold, 
-                    letterSpacing: 16,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    hintText: '000000',
-                    hintStyle: TextStyle(color: Colors.grey.shade200),
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
+                child: Stack(
+                  children: [
+                    // Decorative background elements
+                    Positioned(
+                      top: -30.h,
+                      right: -30.w,
+                      child: Container(
+                        width: 120.r,
+                        height: 120.r,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.onPrimary.withValues(alpha: 0.1),
+                        ),
+                      ),
                     ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: theme.primaryColor, width: 2),
+                    Positioned(
+                      bottom: -25.h,
+                      left: 30.w,
+                      child: Container(
+                        width: 80.r,
+                        height: 80.r,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.onPrimary.withValues(alpha: 0.1),
+                        ),
+                      ),
                     ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.length != 6 || !RegExp(r'^[0-9]+$').hasMatch(value)) {
-                      return 'Enter a valid 6-digit code';
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 24.w,
+                        right: 24.w,
+                        top: 50.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          IconButton(
+                            alignment: Alignment.centerLeft,
+                            icon: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: AppTheme.onPrimary,
+                              size: 24.sp,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                          SizedBox(height: 14.h),
+                          Text(
+                            'Verify Code',
+                            style: TextStyle(
+                              color: AppTheme.onPrimary,
+                              fontSize: 28.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Please enter the 6-digit verification code sent to your device.',
+                            style: TextStyle(
+                              color: AppTheme.onPrimary.withValues(alpha: 0.9),
+                              fontSize: 16.sp,
+                            ),
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            'Phone: ${widget.phone}',
+                            style: TextStyle(
+                              color: AppTheme.onPrimary,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 30.h),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Form content
+              Expanded(
+                child: BlocListener<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    if (state is AuthError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: AppTheme.error,
+                        ),
+                      );
+                    } else if (state is Authenticated) {
+                      final selectedRole = AppConfig.selectedRole ?? 'resident';
+                      if (selectedRole == 'guard') {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const GuardMainScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      } else {
+                        // Check if user is approved
+                        if (state.user.isApproved == false) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const ApprovalPendingScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        } else {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => const ResidentMainScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      }
                     }
-                    return null;
                   },
-                ),
-                const SizedBox(height: 48),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _verifyOtp,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 60),
-                    backgroundColor: theme.primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 8,
-                    shadowColor: theme.primaryColor.withOpacity(0.4),
-                  ),
-                  child: _isLoading
-                    ? const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      )
-                    : Text('Verify & Continue', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: TextButton(
-                    onPressed: _requestOtp,
-                    child: Text(
-                      "Didn't receive the code? Resend",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.primaryColor, 
-                        fontWeight: FontWeight.bold
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(24.w),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 20.h),
+                          TextFormField(
+                            controller: _otpController,
+                            keyboardType: TextInputType.number,
+                            maxLength: 6,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 32.sp,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 16.sp,
+                              color: theme.colorScheme.onBackground,
+                            ),
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: '000000',
+                              hintStyle: TextStyle(color: Colors.grey.shade200),
+                              filled: true,
+                              fillColor: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.05,
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                  width: 2.w,
+                                ),
+                              ),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: theme.primaryColor,
+                                  width: 2.w,
+                                ),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null ||
+                                  value.length != 6 ||
+                                  !RegExp(r'^[0-9]+$').hasMatch(value)) {
+                                return 'Enter a valid 6-digit code';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: 48.h),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _verifyOtp,
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 60),
+                              backgroundColor: theme.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 8,
+                              shadowColor: theme.primaryColor.withOpacity(0.4),
+                            ),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    'Verify & Continue',
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                          SizedBox(height: 24.h),
+                          Center(
+                            child: TextButton(
+                              onPressed: _requestOtp,
+                              child: RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "Didn't receive the code? ",
+                                      style: TextStyle(
+                                        color: theme.primaryColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14.sp,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: "Resend",
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14.sp,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

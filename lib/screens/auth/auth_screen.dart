@@ -9,7 +9,6 @@ import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/screens/resident/resident_main_screen.dart';
 import 'package:mygate_coepd/screens/guard/guard_main_screen.dart';
-import 'package:mygate_coepd/screens/admin/admin_main_screen.dart';
 import 'package:mygate_coepd/screens/auth/approval_pending_screen.dart';
 import 'package:mygate_coepd/screens/auth/otp_verification_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
@@ -89,15 +88,21 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, designSize: const Size(375, 812));
-    
+
     final selectedRole = AppConfig.selectedRole ?? 'resident';
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode
         ? AppTheme.backgroundDark
         : AppTheme.backgroundLight;
-    final surfaceColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
-    final textColor = isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight;
-    final secondaryTextColor = isDarkMode ? AppTheme.onPrimary.withValues(alpha: 0.7) : AppTheme.onBackgroundLight;
+    final surfaceColor = isDarkMode
+        ? AppTheme.surfaceDark
+        : AppTheme.surfaceLight;
+    final textColor = isDarkMode
+        ? AppTheme.onPrimary
+        : AppTheme.onBackgroundLight;
+    final secondaryTextColor = isDarkMode
+        ? AppTheme.onPrimary.withValues(alpha: 0.7)
+        : AppTheme.onBackgroundLight;
     final iconColor = AppTheme.primary;
 
     return Scaffold(
@@ -117,8 +122,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   colors: [AppTheme.primary, AppTheme.primaryDark],
                 ),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+                  bottomLeft: Radius.circular(30.r),
+                  bottomRight: Radius.circular(30.r),
                 ),
               ),
               child: Stack(
@@ -163,7 +168,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             Container(
                               padding: EdgeInsets.all(12.r),
                               decoration: BoxDecoration(
-                                color: AppTheme.onPrimary.withValues(alpha: 0.2),
+                                color: AppTheme.onPrimary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Icon(
@@ -183,7 +190,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                 Text(
                                   'Logging in as',
                                   style: TextStyle(
-                                    color: AppTheme.onPrimary.withValues(alpha: 0.9),
+                                    color: AppTheme.onPrimary.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontSize: 14.sp,
                                   ),
                                 ),
@@ -212,7 +221,6 @@ class _AuthScreenState extends State<AuthScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 5.h),
                         Text(
                           _isLogin
                               ? 'Sign in to access your community'
@@ -248,13 +256,6 @@ class _AuthScreenState extends State<AuthScreen> {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
                           builder: (context) => const GuardMainScreen(),
-                        ),
-                        (route) => false,
-                      );
-                    } else if (selectedRole == 'admin') {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (context) => const AdminMainScreen(),
                         ),
                         (route) => false,
                       );
@@ -295,7 +296,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ? []
                                   : [
                                       BoxShadow(
-                                        color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                        color: AppTheme.onBackgroundLight
+                                            .withValues(alpha: 0.1),
                                         blurRadius: 10.r,
                                         offset: Offset(0, 5.h),
                                       ),
@@ -338,7 +340,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ? []
                                   : [
                                       BoxShadow(
-                                        color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                        color: AppTheme.onBackgroundLight
+                                            .withValues(alpha: 0.1),
                                         blurRadius: 10.r,
                                         offset: Offset(0, 5.h),
                                       ),
@@ -382,7 +385,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                     ? []
                                     : [
                                         BoxShadow(
-                                          color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                          color: AppTheme.onBackgroundLight
+                                              .withValues(alpha: 0.1),
                                           blurRadius: 10.r,
                                           offset: Offset(0, 5.h),
                                         ),
@@ -427,7 +431,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ? []
                                 : [
                                     BoxShadow(
-                                      color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                      color: AppTheme.onBackgroundLight
+                                          .withValues(alpha: 0.1),
                                       blurRadius: 10.r,
                                       offset: Offset(0, 5.h),
                                     ),
@@ -481,7 +486,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ? []
                                   : [
                                       BoxShadow(
-                                        color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                                        color: AppTheme.onBackgroundLight
+                                            .withValues(alpha: 0.1),
                                         blurRadius: 10.r,
                                         offset: Offset(0, 5.h),
                                       ),
@@ -492,7 +498,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               style: TextStyle(color: textColor),
                               decoration: InputDecoration(
                                 labelText: 'Email Address',
-                                labelStyle: TextStyle(color: secondaryTextColor),
+                                labelStyle: TextStyle(
+                                  color: secondaryTextColor,
+                                ),
                                 prefixIcon: Icon(
                                   Icons.email_outlined,
                                   color: iconColor,
@@ -505,12 +513,15 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
-                                if (!_isLogin && (value == null || value.isEmpty)) {
+                                if (!_isLogin &&
+                                    (value == null || value.isEmpty)) {
                                   return 'Please enter your email address';
                                 }
-                                if (!_isLogin && value != null && !RegExp(
-                                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                                ).hasMatch(value)) {
+                                if (!_isLogin &&
+                                    value != null &&
+                                    !RegExp(
+                                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                                    ).hasMatch(value)) {
                                   return 'Please enter a valid email address';
                                 }
                                 return null;

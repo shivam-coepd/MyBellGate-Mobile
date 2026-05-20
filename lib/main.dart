@@ -17,7 +17,6 @@ import 'package:mygate_coepd/screens/auth/role_selection_screen.dart';
 import 'package:mygate_coepd/screens/auth/auth_screen.dart';
 import 'package:mygate_coepd/screens/resident/resident_main_screen.dart';
 import 'package:mygate_coepd/screens/guard/guard_main_screen.dart';
-import 'package:mygate_coepd/screens/admin/admin_main_screen.dart';
 import 'package:mygate_coepd/screens/resident/visitor_management_screen.dart';
 import 'package:mygate_coepd/screens/resident/announcements_screen.dart';
 import 'package:mygate_coepd/screens/resident/service_requests_screen.dart';
@@ -25,7 +24,6 @@ import 'package:mygate_coepd/screens/resident/bills_payments_screen.dart';
 import 'package:mygate_coepd/screens/resident/amenity_booking_screen.dart';
 import 'package:mygate_coepd/screens/resident/community_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_screen.dart';
-import 'package:mygate_coepd/routes/admin_routes.dart';
 import 'package:sizer/sizer.dart';
 
 void main() async {
@@ -134,7 +132,7 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
                 darkTheme: AppTheme.darkTheme,
                 themeMode: ThemeMode.system,
                 initialRoute: '/',
-                routes: {..._getMainRoutes(), ...AdminRoutes.getRoutes()},
+                routes: {..._getMainRoutes()},
                 debugShowCheckedModeBanner: false,
               ),
             ),
@@ -160,7 +158,6 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
       '/resident-main/community': (context) =>
           ResidentMainScreen(initialTabIndex: 4),
       '/guard-main': (context) => const GuardMainScreen(),
-      '/admin-main': (context) => const AdminMainScreen(),
       '/visitors': (context) => const VisitorManagementScreen(),
       '/announcements': (context) => const AnnouncementsScreen(),
       '/services': (context) => const ServiceRequestsScreen(),

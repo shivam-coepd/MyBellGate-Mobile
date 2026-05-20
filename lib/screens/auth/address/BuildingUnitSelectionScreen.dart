@@ -11,12 +11,15 @@ class BuildingUnitSelectionScreen extends StatefulWidget {
   const BuildingUnitSelectionScreen({super.key, required this.societyId});
 
   @override
-  State<BuildingUnitSelectionScreen> createState() => _BuildingUnitSelectionScreenState();
+  State<BuildingUnitSelectionScreen> createState() =>
+      _BuildingUnitSelectionScreenState();
 }
 
-class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScreen> {
+class _BuildingUnitSelectionScreenState
+    extends State<BuildingUnitSelectionScreen> {
   final Dio _dio = Dio();
-  final String baseUrl = 'https://app.mygatebell.com/backend'; // Replace with actual {{app_url}}
+  final String baseUrl =
+      'https://app.mygatebell.com/backend'; // Replace with actual {{app_url}}
 
   List<dynamic> buildings = [];
   Map<String, dynamic>? selectedBuilding;
@@ -36,7 +39,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
   Future<void> _fetchBuildings() async {
     setState(() => isLoadingBuildings = true);
     try {
-      final response = await _dio.get('$baseUrl/api/buildings/by-society/${widget.societyId}');
+      final response = await _dio.get(
+        '$baseUrl/api/buildings/by-society/${widget.societyId}',
+      );
       if (response.data['status'] == true) {
         setState(() {
           buildings = response.data['data'];
@@ -45,9 +50,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
       }
     } catch (e) {
       debugPrint('Error fetching buildings: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load buildings')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to load buildings')));
       setState(() => isLoadingBuildings = false);
     }
   }
@@ -55,13 +60,19 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
   Future<void> _fetchFlats(int buildingId) async {
     setState(() => isLoadingFlats = true);
     try {
-      final response = await _dio.get('$baseUrl/api/flats/by-building/$buildingId');
+      final response = await _dio.get(
+        '$baseUrl/api/flats/by-building/$buildingId',
+      );
       if (response.data['status'] == true) {
         final allFlats = response.data['data']['flats'] as List<dynamic>;
         setState(() {
           if (selectedFloor != null) {
             flatsOnSelectedFloor = allFlats
-                .where((flat) => flat['floor_number'].toString() == selectedFloor.toString())
+                .where(
+                  (flat) =>
+                      flat['floor_number'].toString() ==
+                      selectedFloor.toString(),
+                )
                 .toList();
           }
           isLoadingFlats = false;
@@ -69,9 +80,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
       }
     } catch (e) {
       debugPrint('Error fetching flats: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load flats')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to load flats')));
       setState(() => isLoadingFlats = false);
     }
   }
@@ -83,7 +94,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
       selectedFlat = null;
       flatsOnSelectedFloor = [];
     });
-    debugPrint('Selected Building: ${building['name']} (ID: ${building['id']})');
+    debugPrint(
+      'Selected Building: ${building['name']} (ID: ${building['id']})',
+    );
     _fetchFlats(building['id']);
   }
 
@@ -108,12 +121,12 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
               (flat) => flat['floor_number'].toString() == floor.toString(),
             )
             .toList();
-        
+
         setState(() {
           flatsOnSelectedFloor = filteredFlats;
           isLoadingFlats = false;
         });
-        
+
         // Debug print to help diagnose issues
         debugPrint('Flats found for floor $floor: ${filteredFlats.length}');
       } else {
@@ -173,9 +186,15 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
 
     final selectedRole = AppConfig.selectedRole ?? 'resident';
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? AppTheme.backgroundDark : AppTheme.backgroundLight;
-    final surfaceColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
-    final textColor = isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight;
+    final backgroundColor = isDarkMode
+        ? AppTheme.backgroundDark
+        : AppTheme.backgroundLight;
+    final surfaceColor = isDarkMode
+        ? AppTheme.surfaceDark
+        : AppTheme.surfaceLight;
+    final textColor = isDarkMode
+        ? AppTheme.onPrimary
+        : AppTheme.onBackgroundLight;
     final iconColor = AppTheme.primary;
 
     final bool canContinue = selectedFlat != null;
@@ -196,8 +215,8 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                   colors: [AppTheme.primary, AppTheme.primaryDark],
                 ),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+                  bottomLeft: Radius.circular(30.r),
+                  bottomRight: Radius.circular(30.r),
                 ),
               ),
               child: Stack(
@@ -242,7 +261,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                             Container(
                               padding: EdgeInsets.all(12.r),
                               decoration: BoxDecoration(
-                                color: AppTheme.onPrimary.withValues(alpha: 0.2),
+                                color: AppTheme.onPrimary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Icon(
@@ -262,7 +283,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                                 Text(
                                   'Registering as',
                                   style: TextStyle(
-                                    color: AppTheme.onPrimary.withValues(alpha: 0.9),
+                                    color: AppTheme.onPrimary.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontSize: 14.sp,
                                   ),
                                 ),
@@ -316,7 +339,11 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                     // Building Selection
                     Text(
                       'Building',
-                      style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: textColor),
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
                     ),
                     SizedBox(height: 12.h),
 
@@ -327,94 +354,118 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                             crossAxisCount: 2,
                           )
                         : buildings.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 60.h),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Icons.apartment_outlined,
-                                        size: 80.sp,
-                                        color: AppTheme.onBackgroundLight.withValues(alpha: 0.4),
-                                      ),
-                                      SizedBox(height: 20.h),
-                                      Text(
-                                        'No buildings found',
-                                        style: TextStyle(
-                                          fontSize: 18.sp,
-                                          fontWeight: FontWeight.bold,
-                                          color: textColor.withValues(alpha: 0.7),
-                                        ),
-                                      ),
-                                      SizedBox(height: 8.h),
-                                      Text(
-                                        'This society currently has no registered buildings.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 14.sp,
-                                          color: textColor.withValues(alpha: 0.7),
-                                        ),
-                                      ),
-                                      SizedBox(height: 20.h),
-                                    ],
+                        ? Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 60.h),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.apartment_outlined,
+                                    size: 80.sp,
+                                    color: AppTheme.onBackgroundLight
+                                        .withValues(alpha: 0.4),
                                   ),
-                                ),
-                              )
-                            : GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  SizedBox(height: 20.h),
+                                  Text(
+                                    'No buildings found',
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    'This society currently has no registered buildings.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      color: textColor.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                  SizedBox(height: 20.h),
+                                ],
+                              ),
+                            ),
+                          )
+                        : GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2,
                                   childAspectRatio: 1.4,
                                   crossAxisSpacing: 16.w,
                                   mainAxisSpacing: 16.h,
                                 ),
-                                itemCount: buildings.length,
-                                itemBuilder: (context, index) {
-                                  final building = buildings[index];
-                                  final isSelected = selectedBuilding?['id'] == building['id'];
-                                  return GestureDetector(
-                                    onTap: () => _onBuildingSelected(building),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: isSelected ? iconColor : surfaceColor,
-                                        borderRadius: BorderRadius.circular(16.r),
-                                        boxShadow: isDarkMode
-                                            ? []
-                                            : [BoxShadow(color: AppTheme.onBackgroundLight.withValues(alpha: 0.1), blurRadius: 8.r, offset: Offset(0, 4.h))],
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.apartment, size: 36.sp, color: isSelected ? AppTheme.onPrimary : iconColor),
-                                          SizedBox(height: 8.h),
-                                          Text(
-                                            building['name'],
-                                            style: TextStyle(
-                                              fontSize: 16.sp,
-                                              fontWeight: FontWeight.bold,
-                                              color: isSelected ? AppTheme.onPrimary : textColor,
+                            itemCount: buildings.length,
+                            itemBuilder: (context, index) {
+                              final building = buildings[index];
+                              final isSelected =
+                                  selectedBuilding?['id'] == building['id'];
+                              return GestureDetector(
+                                onTap: () => _onBuildingSelected(building),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? iconColor
+                                        : surfaceColor,
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    boxShadow: isDarkMode
+                                        ? []
+                                        : [
+                                            BoxShadow(
+                                              color: AppTheme.onBackgroundLight
+                                                  .withValues(alpha: 0.1),
+                                              blurRadius: 8.r,
+                                              offset: Offset(0, 4.h),
                                             ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          Text(
-                                            '${building['total_floors']} Floors',
-                                            style: TextStyle(
-                                              fontSize: 12.sp,
-                                              color: isSelected ? AppTheme.onPrimary.withValues(alpha: 0.7) : textColor.withValues(alpha: 0.6),
-                                            ),
-                                          ),
-                                        ],
+                                          ],
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.apartment,
+                                        size: 36.sp,
+                                        color: isSelected
+                                            ? AppTheme.onPrimary
+                                            : iconColor,
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
+                                      SizedBox(height: 8.h),
+                                      Text(
+                                        building['name'],
+                                        style: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected
+                                              ? AppTheme.onPrimary
+                                              : textColor,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      Text(
+                                        '${building['total_floors']} Floors',
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: isSelected
+                                              ? AppTheme.onPrimary.withValues(
+                                                  alpha: 0.7,
+                                                )
+                                              : textColor.withValues(
+                                                  alpha: 0.6,
+                                                ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
 
                     if (selectedBuilding != null) ...[
-                      SizedBox(
-                        height: 20.h,
-                      ),
+                      SizedBox(height: 20.h),
 
                       Text(
                         'Floor',
@@ -428,13 +479,16 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                       selectedBuilding!['total_floors'] <= 0
                           ? Center(
                               child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 30.h), // Reduced vertical padding
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 30.h,
+                                ), // Reduced vertical padding
                                 child: Column(
                                   children: [
                                     Icon(
                                       Icons.layers_outlined,
                                       size: 70.sp,
-                                      color: AppTheme.onBackgroundLight.withValues(alpha: 0.4),
+                                      color: AppTheme.onBackgroundLight
+                                          .withValues(alpha: 0.4),
                                     ),
                                     SizedBox(height: 16.h),
                                     Text(
@@ -484,9 +538,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                                           ? []
                                           : [
                                               BoxShadow(
-                                                color: AppTheme.onBackgroundLight.withValues(alpha: 
-                                                  0.1,
-                                                ),
+                                                color: AppTheme
+                                                    .onBackgroundLight
+                                                    .withValues(alpha: 0.1),
                                                 blurRadius: 6.r,
                                               ),
                                             ],
@@ -551,7 +605,8 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                                       Icon(
                                         Icons.home_outlined,
                                         size: 70.sp,
-                                        color: AppTheme.onBackgroundLight.withValues(alpha: 0.4),
+                                        color: AppTheme.onBackgroundLight
+                                            .withValues(alpha: 0.4),
                                       ),
                                       SizedBox(height: 16.h),
                                       Text(
@@ -559,7 +614,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                                         style: TextStyle(
                                           fontSize: 18.sp,
                                           fontWeight: FontWeight.bold,
-                                          color: textColor.withValues(alpha: 0.7),
+                                          color: textColor.withValues(
+                                            alpha: 0.7,
+                                          ),
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
@@ -569,7 +626,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 14.sp,
-                                          color: textColor.withValues(alpha: 0.7),
+                                          color: textColor.withValues(
+                                            alpha: 0.7,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -606,7 +665,8 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                                             ? []
                                             : [
                                                 BoxShadow(
-                                                  color: AppTheme.onBackgroundLight
+                                                  color: AppTheme
+                                                      .onBackgroundLight
                                                       .withValues(alpha: 0.1),
                                                   blurRadius: 8.r,
                                                   offset: Offset(0, 4.h),
@@ -632,8 +692,9 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                       ],
                     ],
 
-                    SizedBox(height: 30.h), // Reduced spacing before continue button
-
+                    SizedBox(
+                      height: 30.h,
+                    ), // Reduced spacing before continue button
                     // Continue Button
                     SizedBox(
                       width: double.infinity,
@@ -642,24 +703,34 @@ class _BuildingUnitSelectionScreenState extends State<BuildingUnitSelectionScree
                         onPressed: canContinue
                             ? () {
                                 debugPrint('Final Selection:');
-                                debugPrint('Building: ${selectedBuilding!['name']}');
+                                debugPrint(
+                                  'Building: ${selectedBuilding!['name']}',
+                                );
                                 debugPrint('Floor: $selectedFloor');
                                 debugPrint('Flat: $selectedFlat');
 
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const WhoAreYouScreen()),
+                                  MaterialPageRoute(
+                                    builder: (_) => const WhoAreYouScreen(),
+                                  ),
                                 );
                               }
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: iconColor,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
                           elevation: isDarkMode ? 2 : 5,
                         ),
                         child: Text(
                           'Continue',
-                          style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppTheme.onPrimary),
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.onPrimary,
+                          ),
                         ),
                       ),
                     ),

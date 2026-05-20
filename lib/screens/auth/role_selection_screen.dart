@@ -24,7 +24,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     isDarkMode = Theme.of(context).brightness == Brightness.dark;
     backgroundColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
     textColor = isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight;
-    secondaryTextColor = isDarkMode ? AppTheme.onPrimary.withValues(alpha: 0.7) : AppTheme.onBackgroundLight.withValues(alpha: 0.6);
+    secondaryTextColor = isDarkMode
+        ? AppTheme.onPrimary.withValues(alpha: 0.7)
+        : AppTheme.onBackgroundLight.withValues(alpha: 0.6);
   }
 
   @override
@@ -37,10 +39,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppTheme.primary,
-              AppTheme.primaryDark,
-            ],
+            colors: [AppTheme.primary, AppTheme.primaryDark],
           ),
         ),
         child: Stack(
@@ -189,23 +188,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           // Role Cards
                           _buildRoleCard(
                             title: 'Resident',
-                            description: 'For community members living in the society',
+                            description:
+                                'For community members living in the society',
                             icon: Icons.home_outlined,
                             role: 'resident',
                           ),
                           SizedBox(height: 20.h),
                           _buildRoleCard(
                             title: 'Security Guard',
-                            description: 'For security personnel managing entries and safety',
+                            description:
+                                'For security personnel managing entries and safety',
                             icon: Icons.shield_outlined,
                             role: 'guard',
-                          ),
-                          SizedBox(height: 20.h),
-                          _buildRoleCard(
-                            title: 'Administrator',
-                            description: 'For society managers and committee members',
-                            icon: Icons.admin_panel_settings_outlined,
-                            role: 'admin',
                           ),
                           SizedBox(height: 40.h),
                         ],
@@ -228,8 +222,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     required String role,
   }) {
     final cardColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
-    final borderColor = isDarkMode ? AppTheme.onBackgroundLight.withValues(alpha: 0.4) : AppTheme.onBackgroundLight.withValues(alpha: 0.2);
-    final shadowColor = isDarkMode ? AppTheme.onBackgroundLight.withValues(alpha: 0.15) : AppTheme.onBackgroundDark.withValues(alpha: 0.5);
+    final borderColor = isDarkMode
+        ? AppTheme.onBackgroundLight.withValues(alpha: 0.4)
+        : AppTheme.onBackgroundLight.withValues(alpha: 0.2);
+    final shadowColor = isDarkMode
+        ? AppTheme.onBackgroundLight.withValues(alpha: 0.15)
+        : AppTheme.onBackgroundDark.withValues(alpha: 0.5);
     final primaryColor = AppTheme.primary;
 
     return GestureDetector(

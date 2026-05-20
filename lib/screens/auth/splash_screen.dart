@@ -7,7 +7,6 @@ import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/screens/resident/resident_main_screen.dart';
 import 'package:mygate_coepd/screens/guard/guard_main_screen.dart';
-import 'package:mygate_coepd/screens/admin/admin_main_screen.dart';
 import 'package:mygate_coepd/screens/auth/approval_pending_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 
@@ -18,7 +17,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _opacityAnimation;
@@ -33,13 +33,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _opacityAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _opacityAnimation = Tween<double>(
+      begin: 0.7,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.repeat(reverse: true);
 
@@ -71,18 +73,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               case 'guard':
                 nextScreen = const GuardMainScreen();
                 break;
-              case 'admin':
-                nextScreen = const AdminMainScreen();
-                break;
               default:
                 nextScreen = state.user.isApproved == false
                     ? const ApprovalPendingScreen()
                     : const ResidentMainScreen();
             }
 
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => nextScreen),
-            );
+            Navigator.of(
+              context,
+            ).pushReplacement(MaterialPageRoute(builder: (_) => nextScreen));
           }
         },
         child: Container(
@@ -96,7 +95,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 // Color(0xFF006D77),
                 // Color(0xFF005A63),
                 AppTheme.primary,
-                AppTheme.primaryDark
+                AppTheme.primaryDark,
               ],
             ),
           ),
@@ -170,10 +169,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                               height: 140.r,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppTheme.onPrimary.withValues(alpha: 0.25),
+                                color: AppTheme.onPrimary.withValues(
+                                  alpha: 0.25,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppTheme.onPrimary.withValues(alpha: 0.2),
+                                    color: AppTheme.onPrimary.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     blurRadius: 30.r,
                                     spreadRadius: 10.r,
                                   ),
@@ -209,7 +212,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                                 letterSpacing: 2.0,
                                 shadows: [
                                   Shadow(
-                                    color: AppTheme.onBackgroundDark.withValues(alpha: 0.26),
+                                    color: AppTheme.onBackgroundDark.withValues(
+                                      alpha: 0.26,
+                                    ),
                                     offset: Offset(0, 2),
                                     blurRadius: 8.r,
                                   ),
@@ -235,9 +240,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                               width: 60.r,
                               height: 60.r,
                               child: CircularProgressIndicator(
-                                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.onPrimary),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppTheme.onPrimary,
+                                ),
                                 strokeWidth: 5.w,
-                                backgroundColor: AppTheme.onPrimary.withValues(alpha: 0.2),
+                                backgroundColor: AppTheme.onPrimary.withValues(
+                                  alpha: 0.2,
+                                ),
                               ),
                             ),
                             SizedBox(height: 20.h),

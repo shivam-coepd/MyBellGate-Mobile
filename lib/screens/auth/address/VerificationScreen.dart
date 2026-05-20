@@ -32,10 +32,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
           _selectedFile = File(pickedFile.path);
           _fileType = 'image';
         });
-        
+
         // Simulate upload process
         await Future.delayed(const Duration(seconds: 2));
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -43,7 +43,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
               backgroundColor: AppTheme.success,
             ),
           );
-          
+
           // Navigate to next screen or show success message
           _showSuccessDialog();
         }
@@ -60,10 +60,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.error,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
         );
       }
     } finally {
@@ -88,16 +85,16 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
       if (result != null) {
         PlatformFile file = result.files.first;
-        
+
         setState(() {
           _selectedFile = File(file.path!);
           String extension = file.extension?.toLowerCase() ?? '';
           _fileType = (extension == 'pdf') ? 'pdf' : 'image';
         });
-        
+
         // Simulate upload process
         await Future.delayed(const Duration(seconds: 2));
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -105,7 +102,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
               backgroundColor: AppTheme.success,
             ),
           );
-          
+
           // Navigate to next screen or show success message
           _showSuccessDialog();
         }
@@ -123,10 +120,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.error,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
         );
       }
     } finally {
@@ -169,13 +163,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, designSize: const Size(375, 812));
-    
+
     final selectedRole = AppConfig.selectedRole ?? 'resident';
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? AppTheme.backgroundDark : AppTheme.backgroundLight;
-    final surfaceColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
-    final textColor = isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight;
-    final secondaryTextColor = isDarkMode ? AppTheme.onPrimary.withValues(alpha: 0.7) : AppTheme.onBackgroundLight;
+    final backgroundColor = isDarkMode
+        ? AppTheme.backgroundDark
+        : AppTheme.backgroundLight;
+    final surfaceColor = isDarkMode
+        ? AppTheme.surfaceDark
+        : AppTheme.surfaceLight;
+    final textColor = isDarkMode
+        ? AppTheme.onPrimary
+        : AppTheme.onBackgroundLight;
+    final secondaryTextColor = isDarkMode
+        ? AppTheme.onPrimary.withValues(alpha: 0.7)
+        : AppTheme.onBackgroundLight;
     final iconColor = AppTheme.primary;
 
     return Scaffold(
@@ -194,8 +196,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   colors: [AppTheme.primary, AppTheme.primaryDark],
                 ),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+                  bottomLeft: Radius.circular(30.r),
+                  bottomRight: Radius.circular(30.r),
                 ),
               ),
               child: Stack(
@@ -240,7 +242,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             Container(
                               padding: EdgeInsets.all(12.r),
                               decoration: BoxDecoration(
-                                color: AppTheme.onPrimary.withValues(alpha: 0.2),
+                                color: AppTheme.onPrimary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Icon(
@@ -260,7 +264,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                 Text(
                                   'Registering as',
                                   style: TextStyle(
-                                    color: AppTheme.onPrimary.withValues(alpha: 0.9),
+                                    color: AppTheme.onPrimary.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontSize: 14.sp,
                                   ),
                                 ),
@@ -359,7 +365,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 14.sp,
-                                              color: AppTheme.onPrimary.withValues(alpha: 0.7),
+                                              color: AppTheme.onPrimary
+                                                  .withValues(alpha: 0.7),
                                             ),
                                           ),
                                         ],
@@ -370,7 +377,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                       Alignment.topLeft,
                                       Alignment.topRight,
                                       Alignment.bottomLeft,
-                                      Alignment.bottomRight
+                                      Alignment.bottomRight,
                                     ].map(
                                       (a) => Align(
                                         alignment: a,
@@ -409,16 +416,23 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                                   style: TextStyle(
                                                     fontSize: 18.sp,
                                                     fontWeight: FontWeight.bold,
-                                                    color: AppTheme.onBackgroundLight,
+                                                    color: AppTheme
+                                                        .onBackgroundLight,
                                                   ),
                                                 ),
                                                 SizedBox(height: 10.h),
                                                 Text(
-                                                  _selectedFile!.path.split('/').last,
+                                                  _selectedFile!.path
+                                                      .split('/')
+                                                      .last,
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     fontSize: 14.sp,
-                                                    color: AppTheme.onBackgroundLight.withValues(alpha: 0.54),
+                                                    color: AppTheme
+                                                        .onBackgroundLight
+                                                        .withValues(
+                                                          alpha: 0.54,
+                                                        ),
                                                   ),
                                                 ),
                                               ],
@@ -452,8 +466,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(AppTheme.onPrimary),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.onPrimary,
+                                  ),
                                 ),
                               )
                             : Icon(Icons.camera_alt, color: AppTheme.onPrimary),
@@ -490,7 +505,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         ),
                       ),
                     ),
-                    
+
                     if (_selectedFile != null) ...[
                       SizedBox(height: 20.h),
                       SizedBox(
@@ -522,8 +537,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         ),
                       ),
                     ],
-                    
-                    SizedBox(height: 100.h), // extra space so button never gets hidden
+
+                    SizedBox(
+                      height: 100.h,
+                    ), // extra space so button never gets hidden
                   ],
                 ),
               ),

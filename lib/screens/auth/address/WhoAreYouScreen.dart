@@ -10,13 +10,21 @@ class WhoAreYouScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, designSize: const Size(375, 812));
-    
+
     final selectedRole = AppConfig.selectedRole ?? 'resident';
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? AppTheme.backgroundDark : AppTheme.backgroundLight;
-    final surfaceColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
-    final textColor = isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight;
-    final secondaryTextColor = isDarkMode ? AppTheme.onPrimary.withValues(alpha: 0.7) : AppTheme.onBackgroundLight;
+    final backgroundColor = isDarkMode
+        ? AppTheme.backgroundDark
+        : AppTheme.backgroundLight;
+    final surfaceColor = isDarkMode
+        ? AppTheme.surfaceDark
+        : AppTheme.surfaceLight;
+    final textColor = isDarkMode
+        ? AppTheme.onPrimary
+        : AppTheme.onBackgroundLight;
+    final secondaryTextColor = isDarkMode
+        ? AppTheme.onPrimary.withValues(alpha: 0.7)
+        : AppTheme.onBackgroundLight;
     final iconColor = AppTheme.primary;
 
     final options = [
@@ -41,8 +49,8 @@ class WhoAreYouScreen extends StatelessWidget {
                   colors: [AppTheme.primary, AppTheme.primaryDark],
                 ),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+                  bottomLeft: Radius.circular(30.r),
+                  bottomRight: Radius.circular(30.r),
                 ),
               ),
               child: Stack(
@@ -87,7 +95,9 @@ class WhoAreYouScreen extends StatelessWidget {
                             Container(
                               padding: EdgeInsets.all(12.r),
                               decoration: BoxDecoration(
-                                color: AppTheme.onPrimary.withValues(alpha: 0.2),
+                                color: AppTheme.onPrimary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Icon(
@@ -107,7 +117,9 @@ class WhoAreYouScreen extends StatelessWidget {
                                 Text(
                                   'Registering as',
                                   style: TextStyle(
-                                    color: AppTheme.onPrimary.withValues(alpha: 0.9),
+                                    color: AppTheme.onPrimary.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontSize: 14.sp,
                                   ),
                                 ),
@@ -157,58 +169,70 @@ class WhoAreYouScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ...options.map((opt) => Padding(
-                          padding: EdgeInsets.only(bottom: 20.h),
-                          child: GestureDetector(
-                            onTap: () {
-                              debugPrint('Selected: ${opt['title']}');
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const VerificationScreen()));
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(24.w),
-                              decoration: BoxDecoration(
-                                color: surfaceColor,
-                                borderRadius: BorderRadius.circular(20.r),
-                                boxShadow: isDarkMode
-                                    ? []
-                                    : [
-                                        BoxShadow(
-                                          color: AppTheme.onBackgroundLight.withValues(alpha: 0.15),
-                                          blurRadius: 12.r,
-                                          offset: Offset(0, 4.h),
-                                        )
-                                      ],
+                    ...options.map(
+                      (opt) => Padding(
+                        padding: EdgeInsets.only(bottom: 20.h),
+                        child: GestureDetector(
+                          onTap: () {
+                            debugPrint('Selected: ${opt['title']}');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const VerificationScreen(),
                               ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(16.r),
-                                    decoration: BoxDecoration(
-                                      color: iconColor.withValues(alpha: 0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(opt['icon'] as IconData, size: 36.sp, color: iconColor),
-                                  ),
-                                  SizedBox(width: 20.w),
-                                  Expanded(
-                                    child: Text(
-                                      opt['title'] as String,
-                                      style: TextStyle(
-                                        fontSize: 20.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: textColor,
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(24.w),
+                            decoration: BoxDecoration(
+                              color: surfaceColor,
+                              borderRadius: BorderRadius.circular(20.r),
+                              boxShadow: isDarkMode
+                                  ? []
+                                  : [
+                                      BoxShadow(
+                                        color: AppTheme.onBackgroundLight
+                                            .withValues(alpha: 0.15),
+                                        blurRadius: 12.r,
+                                        offset: Offset(0, 4.h),
                                       ),
+                                    ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(16.r),
+                                  decoration: BoxDecoration(
+                                    color: iconColor.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    opt['icon'] as IconData,
+                                    size: 36.sp,
+                                    color: iconColor,
+                                  ),
+                                ),
+                                SizedBox(width: 20.w),
+                                Expanded(
+                                  child: Text(
+                                    opt['title'] as String,
+                                    style: TextStyle(
+                                      fontSize: 20.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
                                     ),
                                   ),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: textColor.withValues(alpha: 0.5),
-                                  ),
-                                ],
-                              ),
+                                ),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: textColor.withValues(alpha: 0.5),
+                                ),
+                              ],
                             ),
                           ),
-                        )),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
