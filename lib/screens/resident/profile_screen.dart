@@ -304,16 +304,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildProfileHeader() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
       decoration: BoxDecoration(
-        // gradient: LinearGradient(
-        //   begin: Alignment.topLeft,
-        //   end: Alignment.bottomRight,
-        //   colors: [
-        //     Theme.of(context).primaryColor,
-        //     Theme.of(context).primaryColor.withValues(alpha: 0.9),
-        //   ],
-        // ),
         color: Theme.of(context).primaryColor,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20.r),
@@ -1082,7 +1074,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 // Trigger logout event in AuthBloc
                 context.read<AuthBloc>().add(LogoutRequested());
                 // Navigate to login screen
-                Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/auth', (route) => false);
               },
               child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),
