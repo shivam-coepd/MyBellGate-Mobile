@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/config/app_config.dart';
@@ -36,23 +38,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  void _onLoginRequested(
-      LoginRequested event, Emitter<AuthState> emit) async {
+  void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      final user = await userRepository.login(event.phone, event.otp);
+      final user = await userRepository.login(event.phone, event.password);
+      log("User Login Response: $user");
       if (user != null) {
         emit(Authenticated(user: user));
       } else {
         emit(AuthError('Login failed'));
       }
     } catch (e) {
-      emit(AuthError('Login failed: $e'));
+      log("User Login Exception: $e");
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }
 
   void _onRegisterRequested(
-      RegisterRequested event, Emitter<AuthState> emit) async {
+    RegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       final user = await userRepository.register(
@@ -62,6 +67,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         societyId: event.societyId,
         unit: event.unit,
         role: event.role,
+        password: event.password,
       );
       if (user != null) {
         emit(Authenticated(user: user));
@@ -69,7 +75,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError('Registration failed'));
       }
     } catch (e) {
-      emit(AuthError('Registration failed: $e'));
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }
 
@@ -84,7 +90,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  void _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
+  void _onLogoutRequested(
+    LogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     await userRepository.logout();
     // Clear selected role if remember device is disabled
     if (!AppConfig.rememberDevice) {
@@ -99,7 +108,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onOnboardingCompleted(
-      OnboardingCompleted event, Emitter<AuthState> emit) async {
+    OnboardingCompleted event,
+    Emitter<AuthState> emit,
+  ) async {
     await AppConfig.setOnboardingComplete(true);
     emit(Unauthenticated());
   }

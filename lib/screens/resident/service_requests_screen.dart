@@ -279,11 +279,11 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
             duration: const Duration(milliseconds: 250),
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: category['color'].withOpacity(0.12),
+              color: category['color'].withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12.r),
               boxShadow: [
                 BoxShadow(
-                  color: category['color'].withOpacity(0.15),
+                  color: category['color'].withValues(alpha: 0.15),
                   blurRadius: 4,
                   offset: const Offset(2, 4),
                 ),

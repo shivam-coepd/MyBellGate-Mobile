@@ -4,6 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_event.dart';
+import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
+import 'package:mygate_coepd/blocs/profile/profile_event.dart';
+import 'package:mygate_coepd/blocs/profile/profile_state.dart';
+import 'package:mygate_coepd/repositories/user_repository.dart';
+import 'package:mygate_coepd/screens/resident/edit_profile_screen.dart';
+import 'package:mygate_coepd/models/user.dart';
+import 'package:mygate_coepd/theme/app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,40 +23,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     with TickerProviderStateMixin {
   bool _biometricEnabled = false;
   bool _notificationsEnabled = true;
-  TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> _filteredFamilyMembers = [];
+  final TextEditingController _searchController = TextEditingController();
+  List<FamilyMember> _filteredFamilyMembers = [];
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  final List<Map<String, dynamic>> _profileSections = [
-    {
-      'title': 'Personal Information',
-      'items': [
-        {'label': 'Name', 'value': 'John Doe'},
-        {'label': 'Email', 'value': 'john.doe@example.com'},
-        {'label': 'Phone', 'value': '+91 9876543210'},
-        {'label': 'Unit', 'value': 'A-101'},
-        {'label': 'Society', 'value': 'Green Valley Apartments'},
-      ],
-    },
-    {
-      'title': 'Family Members',
-      'items': [
-        {
-          'name': 'Jane Doe',
-          'relationship': 'Spouse',
-          'image':
-              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
-        },
-        {
-          'name': 'Jimmy Doe',
-          'relationship': 'Son',
-          'image':
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
-        },
-      ],
-    },
-  ];
 
   final List<Map<String, dynamic>> _settings = [
     {
@@ -77,12 +54,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    // Initialize filtered family members with all members
-    _filteredFamilyMembers = List<Map<String, dynamic>>.from(
-      _profileSections.firstWhere(
-        (section) => section['title'] == 'Family Members',
-      )['items'],
-    );
+    // Dispatch FetchProfile to get latest profile from backend
+    context.read<ProfileBloc>().add(FetchProfile());
+
     _searchController.addListener(_filterFamilyMembers);
 
     _animationController = AnimationController(
@@ -95,29 +69,25 @@ class _ProfileScreenState extends State<ProfileScreen>
       curve: Curves.easeInOut,
     );
 
-    // Start animations after a small delay
+    // Start animations
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
     });
   }
 
   void _filterFamilyMembers() {
-    setState(() {
-      String searchTerm = _searchController.text.toLowerCase();
-
-      List<Map<String, dynamic>> allFamilyMembers =
-          List<Map<String, dynamic>>.from(
-            _profileSections.firstWhere(
-              (section) => section['title'] == 'Family Members',
-            )['items'],
-          );
-
-      _filteredFamilyMembers = allFamilyMembers.where((member) {
-        return searchTerm.isEmpty ||
-            member['name'].toLowerCase().contains(searchTerm) ||
-            member['relationship'].toLowerCase().contains(searchTerm);
-      }).toList();
-    });
+    final state = context.read<ProfileBloc>().state;
+    if (state is ProfileLoaded) {
+      final allMembers = state.user.familyMembers ?? [];
+      final searchTerm = _searchController.text.toLowerCase();
+      setState(() {
+        _filteredFamilyMembers = allMembers.where((member) {
+          return searchTerm.isEmpty ||
+              member.name.toLowerCase().contains(searchTerm) ||
+              member.relationship.toLowerCase().contains(searchTerm);
+        }).toList();
+      });
+    }
   }
 
   @override
@@ -128,835 +98,533 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
+  Future<void> _refreshProfile() async {
+    context.read<ProfileBloc>().add(FetchProfile());
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile', style: TextStyle(fontSize: 18.sp)),
-        // actions: [
-        //   ScaleTransition(
-        //     scale: _fadeAnimation,
-        //     child: IconButton(
-        //       icon: Icon(Icons.search, size: 24.sp),
-        //       onPressed: _showSearchBar,
-        //     ),
-        //   ),
-        // ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Profile Header
-            _buildProfileHeader(),
-            SizedBox(height: 20.h),
-            // Profile Sections
-            _buildProfileSections(),
-            SizedBox(height: 20.h),
-            // Settings
-            ScaleTransition(
-              scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-                CurvedAnimation(
-                  parent: _animationController,
-                  curve: const Interval(0.6, 0.9, curve: Curves.elasticOut),
-                ),
-              ),
-              child: Card(
-                margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
+    return BlocConsumer<ProfileBloc, ProfileState>(
+      listener: (context, state) {
+        if (state is ProfileLoaded) {
+          // Update the search lists when profile loads
+          _filterFamilyMembers();
+        }
+      },
+      builder: (context, state) {
+        if (state is ProfileLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state is ProfileError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Profile')),
+            body: Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.w),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: EdgeInsets.all(16.w),
-                      child: Text(
-                        'Settings',
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    Text(
+                      'Error: ${state.message}',
+                      style: TextStyle(fontSize: 16.sp, color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
-                    ..._settings.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final setting = entry.value;
-                      return Column(
-                        children: [
-                          ListTile(
-                            leading: Container(
-                              padding: EdgeInsets.all(10.w),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).primaryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Icon(
-                                setting['icon'],
-                                color: Theme.of(context).primaryColor,
-                                size: 24.sp,
-                              ),
-                            ),
-                            title: Text(
-                              setting['title'],
-                              style: TextStyle(fontSize: 16.sp),
-                            ),
-                            subtitle: Text(
-                              setting['subtitle'],
-                              style: TextStyle(fontSize: 14.sp),
-                            ),
-                            trailing: index < 2
-                                ? Switch(
-                                    value: index == 0
-                                        ? _biometricEnabled
-                                        : _notificationsEnabled,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        if (index == 0) {
-                                          _biometricEnabled = value;
-                                        } else {
-                                          _notificationsEnabled = value;
-                                        }
-                                      });
-                                    },
-                                  )
-                                : Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 16.sp,
-                                    color: Colors.grey,
-                                  ),
-                            onTap: () {
-                              if (index >= 2) {
-                                // Handle settings navigation
-                                switch (index) {
-                                  case 2:
-                                    _showPrivacyDialog();
-                                    break;
-                                  case 3:
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Language settings would open here',
-                                          style: TextStyle(fontSize: 14.sp),
-                                        ),
-                                      ),
-                                    );
-                                    break;
-                                }
-                              }
-                            },
-                          ),
-                          if (index < _settings.length - 1)
-                            Divider(
-                              height: 1.h,
-                              thickness: 0.5,
-                              color: Colors.grey.withValues(alpha: 0.3),
-                              indent: 16.w,
-                              endIndent: 16.w,
-                            ),
-                        ],
-                      );
-                    }),
+                    SizedBox(height: 16.h),
+                    ElevatedButton(
+                      onPressed: _refreshProfile,
+                      child: const Text('Try Again'),
+                    ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20.h),
-            // Logout Button
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-                  CurvedAnimation(
-                    parent: _animationController,
-                    curve: const Interval(0.7, 1.0, curve: Curves.elasticOut),
-                  ),
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _showLogoutConfirmation,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
+          );
+        }
+
+        // Use the user from ProfileLoaded, or fallback to current repository user
+        final user = (state is ProfileLoaded)
+            ? state.user
+            : context.read<UserRepository>().getCurrentUser();
+
+        if (user == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Profile')),
+            body: const Center(
+              child: Text('No user profile found. Please login again.'),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Profile', style: TextStyle(fontSize: 18.sp)),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Edit Profile',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => EditProfileScreen(user: user),
                     ),
-                    child: Text(
-                      'Logout',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
+                  );
+                },
+              ),
+            ],
+          ),
+          body: RefreshIndicator(
+            onRefresh: _refreshProfile,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  // Profile Header
+                  _buildProfileHeader(user),
+                  SizedBox(height: 20.h),
+                  // About Me/Bio Card if present
+                  if (user.bio != null && user.bio!.isNotEmpty)
+                    _buildBioCard(user),
+                  // Profile Details Sections
+                  _buildProfileSections(user),
+                  SizedBox(height: 20.h),
+                  // Settings
+                  _buildSettingsCard(),
+                  SizedBox(height: 20.h),
+                  // Logout Button
+                  _buildLogoutButton(),
+                  SizedBox(height: 40.h),
+                ],
               ),
             ),
-            SizedBox(height: 20.h),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileHeader(User user) {
+    // return Container(
+    //   padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
+    //   decoration: BoxDecoration(
+    //     color: Theme.of(context).primaryColor,
+    //     borderRadius: BorderRadius.only(
+    //       bottomLeft: Radius.circular(20.r),
+    //       bottomRight: Radius.circular(20.r),
+    //     ),
+    //   ),
+    //   child: Row(
+    //     children: [
+    //       ScaleTransition(
+    //         scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+    //           CurvedAnimation(
+    //             parent: _animationController,
+    //             curve: const Interval(0.0, 0.3, curve: Curves.elasticOut),
+    //           ),
+    //         ),
+    //         child: Container(
+    //           decoration: BoxDecoration(
+    //             borderRadius: BorderRadius.circular(50.r),
+    //             border: Border.all(color: Colors.white, width: 3.w),
+    //           ),
+    //           child: CircleAvatar(
+    //             radius: 40.r,
+    //             backgroundImage: NetworkImage(
+    //               user.profileImage ??
+    //                   'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
+    //             ),
+    //           ),
+    //         ),
+    //       ),
+    //       SizedBox(width: 20.w),
+    //       Expanded(
+    //         child: Column(
+    //           crossAxisAlignment: CrossAxisAlignment.start,
+    //           children: [
+    //             FadeTransition(
+    //               opacity: _fadeAnimation,
+    //               child: Text(
+    //                 user.name,
+    //                 style: TextStyle(
+    //                   fontSize: 22.sp,
+    //                   fontWeight: FontWeight.bold,
+    //                   color: Colors.white,
+    //                 ),
+    //               ),
+    //             ),
+    //             SizedBox(height: 5.h),
+    //             FadeTransition(
+    //               opacity: _fadeAnimation,
+    //               child: Text(
+    //                 user.unit != null ? 'Resident • ${user.unit}' : 'Resident',
+    //                 style: TextStyle(fontSize: 14.sp, color: Colors.white70),
+    //               ),
+    //             ),
+    //             SizedBox(height: 10.h),
+    //             FadeTransition(
+    //               opacity: _fadeAnimation,
+    //               child: Container(
+    //                 padding: EdgeInsets.symmetric(
+    //                   horizontal: 12.w,
+    //                   vertical: 6.h,
+    //                 ),
+    //                 decoration: BoxDecoration(
+    //                   color: Colors.white.withOpacity(0.2),
+    //                   borderRadius: BorderRadius.circular(20.r),
+    //                   border: Border.all(color: Colors.white.withOpacity(0.3)),
+    //                 ),
+    //                 child: Text(
+    //                   user.isApproved == true
+    //                       ? 'Verified Resident'
+    //                       : 'Pending Approval',
+    //                   style: TextStyle(fontSize: 12.sp, color: Colors.white),
+    //                 ),
+    //               ),
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //     ],
+    //   ),
+    // );
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).primaryColor;
+    final surfaceColor = isDarkMode
+        ? AppTheme.surfaceDark
+        : AppTheme.surfaceLight;
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        // Cover photo banner
+        Container(
+          height: 170.h,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, primaryColor.withOpacity(0.7)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            image: DecorationImage(
+              image: NetworkImage(
+                user.coverImageUrl ??
+                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
+              ),
+              fit: BoxFit.cover,
+            ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(20.r),
+              bottomRight: Radius.circular(20.r),
+            ),
+          ),
+        ),
+        // Avatar profile photo
+        Positioned(
+          bottom: -50.h,
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4.w),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 50.r,
+                  backgroundColor: surfaceColor,
+                  backgroundImage: NetworkImage(user.profileImage ?? ""),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBioCard(User user) {
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'About Me',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              user.bio ?? '',
+              style: TextStyle(fontSize: 14.sp, height: 1.4),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileHeader() {
-    return Container(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20.r),
-          bottomRight: Radius.circular(20.r),
-        ),
-      ),
-      child: Row(
-        children: [
-          ScaleTransition(
-            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
-              CurvedAnimation(
-                parent: _animationController,
-                curve: const Interval(0.0, 0.3, curve: Curves.elasticOut),
-              ),
-            ),
-            child: Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50.r),
-                    border: Border.all(color: Colors.white, width: 3.w),
-                  ),
-                  child: CircleAvatar(
-                    radius: 40.r,
-                    backgroundImage: const CachedNetworkImageProvider(
-                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(4.w),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.edit,
-                      size: 16.sp,
-                      color: const Color(0xFF006D77),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+  Widget _buildProfileSections(User user) {
+    final personalItems = [
+      {'label': 'Name', 'value': user.name},
+      {'label': 'Email', 'value': user.email.isEmpty ? 'N/A' : user.email},
+      {'label': 'Phone', 'value': user.phone},
+      {'label': 'Unit', 'value': user.unit ?? 'N/A'},
+      {'label': 'Society ID', 'value': user.societyId ?? 'N/A'},
+      if (user.residentType != null)
+        {'label': 'Resident Type', 'value': user.residentType!},
+      if (user.profession != null && user.profession!.isNotEmpty)
+        {'label': 'Profession', 'value': user.profession!},
+      if (user.hometown != null && user.hometown!.isNotEmpty)
+        {'label': 'Hometown', 'value': user.hometown!},
+    ];
+
+    final familyMembersList = user.familyMembers ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Personal Info Section
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            bottom: 8.h,
+            top: 40.h,
           ),
-          SizedBox(width: 20.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Text(
-                    'John Doe',
-                    style: TextStyle(
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+          child: Text(
+            'Personal Information',
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: personalItems.map((item) {
+              return ListTile(
+                title: Text(
+                  item['label']!,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15.sp,
                   ),
                 ),
-                SizedBox(height: 5.h),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Text(
-                    'Resident • A-101',
-                    style: TextStyle(fontSize: 14.sp, color: Colors.white70),
-                  ),
+                trailing: Text(
+                  item['value']!,
+                  style: TextStyle(color: Colors.grey, fontSize: 14.sp),
                 ),
-                SizedBox(height: 10.h),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
+              );
+            }).toList(),
+          ),
+        ),
+
+        // Family Members Section
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Text(
+            'Family Members',
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: [
+              if (familyMembersList.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.w),
+                  child: Text(
+                    'No family members listed.',
+                    style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                  ),
+                )
+              else
+                ...familyMembersList.map((member) {
+                  return ListTile(
+                    leading: CircleAvatar(
+                      radius: 20.r,
+                      backgroundImage: NetworkImage(
+                        member.profileImage ??
+                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
                       ),
                     ),
-                    child: Text(
-                      'Verified Resident',
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white),
+                    title: Text(member.name, style: TextStyle(fontSize: 15.sp)),
+                    subtitle: Text(
+                      member.relationship,
+                      style: TextStyle(fontSize: 13.sp),
                     ),
-                  ),
-                ),
-              ],
-            ),
+                  );
+                }),
+            ],
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsCard() {
+    return ScaleTransition(
+      scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: const Interval(0.6, 0.9, curve: Curves.elasticOut),
+        ),
       ),
-    );
-  }
-
-  Widget _buildProfileSections() {
-    return Column(
-      children: _profileSections.map((section) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  section['title'],
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (section['title'] == 'Personal Information')
-                _buildPersonalInfoSection(section['items'])
-              else if (section['title'] == 'Family Members')
-                _buildFamilyMembersSection(section['items'])
-              else
-                _buildGenericSection(section['items']),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildPersonalInfoSection(List<dynamic> items) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).cardTheme.color!,
-              Theme.of(context).cardTheme.color!.withValues(alpha: 0.95),
-            ],
-          ),
+      child: Card(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
-          children: items.map((item) {
-            return ListTile(
-              title: Text(
-                item['label'],
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.sp),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Text(
+                'Settings',
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
-              trailing: Text(
-                item['value'],
-                style: TextStyle(color: Colors.grey, fontSize: 14.sp),
-              ),
-              onTap: () {
-                _showEditInfoDialog(item['label'], item['value']);
-              },
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFamilyMembersSection(List<dynamic> items) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Column(
-        children: [
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r),
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).cardTheme.color!,
-                    Theme.of(context).cardTheme.color!.withValues(alpha: 0.95),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Column(
+            ..._settings.asMap().entries.map((entry) {
+              final index = entry.key;
+              final setting = entry.value;
+              return Column(
                 children: [
-                  ...items.map((member) {
-                    return ListTile(
-                      leading: CircleAvatar(
-                        radius: 20.r,
-                        backgroundImage: CachedNetworkImageProvider(
-                          member['image'],
-                        ),
-                      ),
-                      title: Text(
-                        member['name'],
-                        style: TextStyle(fontSize: 16.sp),
-                      ),
-                      subtitle: Text(
-                        member['relationship'],
-                        style: TextStyle(fontSize: 14.sp),
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: Colors.grey.shade600,
-                          size: 24.sp,
-                        ),
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _showEditFamilyMemberDialog(member);
-                          } else if (value == 'delete') {
-                            _showDeleteFamilyMemberDialog(member);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Text(
-                              'Edit',
-                              style: TextStyle(fontSize: 14.sp),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Text(
-                              'Delete',
-                              style: TextStyle(fontSize: 14.sp),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                  Divider(
-                    color: Colors.grey.withValues(alpha: 0.3),
-                    height: 1.h,
-                  ),
                   ListTile(
                     leading: Container(
-                      padding: EdgeInsets.all(12.w),
+                      padding: EdgeInsets.all(10.w),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(30.r),
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Icon(
-                        Icons.add,
+                        setting['icon'],
                         color: Theme.of(context).primaryColor,
                         size: 24.sp,
                       ),
                     ),
                     title: Text(
-                      'Add Family Member',
-                      style: TextStyle(fontSize: 16.sp),
+                      setting['title'],
+                      style: TextStyle(fontSize: 15.sp),
                     ),
-                    onTap: _showAddFamilyMemberDialog,
+                    subtitle: Text(
+                      setting['subtitle'],
+                      style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                    ),
+                    trailing: index < 2
+                        ? Switch(
+                            value: index == 0
+                                ? _biometricEnabled
+                                : _notificationsEnabled,
+                            onChanged: (value) {
+                              setState(() {
+                                if (index == 0) {
+                                  _biometricEnabled = value;
+                                } else {
+                                  _notificationsEnabled = value;
+                                }
+                              });
+                            },
+                          )
+                        : Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16.sp,
+                            color: Colors.grey,
+                          ),
+                    onTap: () {
+                      if (index >= 2) {
+                        switch (index) {
+                          case 2:
+                            // _showPrivacyDialog();
+                            Navigator.of(context).pushNamed('/settings');
+                            break;
+                          case 3:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Language settings coming soon!'),
+                              ),
+                            );
+                            break;
+                        }
+                      }
+                    },
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGenericSection(List<dynamic> items) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).cardTheme.color!,
-              Theme.of(context).cardTheme.color!.withValues(alpha: 0.95),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Column(
-          children: items.map((item) {
-            return ListTile(
-              leading: Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: item['icon'] == Icons.fingerprint
-                      ? (_biometricEnabled
-                            ? Colors.green.withValues(alpha: 0.1)
-                            : Colors.grey.withValues(alpha: 0.1))
-                      : item['icon'] == Icons.notifications
-                      ? (_notificationsEnabled
-                            ? Colors.blue.withValues(alpha: 0.1)
-                            : Colors.grey.withValues(alpha: 0.1))
-                      : Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  item['icon'],
-                  color: item['icon'] == Icons.fingerprint
-                      ? (_biometricEnabled ? Colors.green : Colors.grey)
-                      : item['icon'] == Icons.notifications
-                      ? (_notificationsEnabled ? Colors.blue : Colors.grey)
-                      : Colors.grey,
-                  size: 24.sp,
-                ),
-              ),
-              title: Text(item['title'], style: TextStyle(fontSize: 16.sp)),
-              subtitle: Text(
-                item['subtitle'],
-                style: TextStyle(fontSize: 14.sp),
-              ),
-              trailing: item['icon'] == Icons.fingerprint
-                  ? Switch(
-                      value: _biometricEnabled,
-                      onChanged: (value) {
-                        setState(() {
-                          _biometricEnabled = value;
-                        });
-                      },
-                      activeThumbColor: Theme.of(context).primaryColor,
-                    )
-                  : item['icon'] == Icons.notifications
-                  ? Switch(
-                      value: _notificationsEnabled,
-                      onChanged: (value) {
-                        setState(() {
-                          _notificationsEnabled = value;
-                        });
-                      },
-                      activeThumbColor: Theme.of(context).primaryColor,
-                    )
-                  : Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16.sp,
-                      color: Colors.grey,
+                  if (index < _settings.length - 1)
+                    Divider(
+                      height: 1.h,
+                      thickness: 0.5,
+                      color: Colors.grey.withOpacity(0.2),
+                      indent: 16.w,
+                      endIndent: 16.w,
                     ),
-              onTap: () {
-                // Handle generic section item tap
-              },
-            );
-          }).toList(),
+                ],
+              );
+            }),
+          ],
         ),
       ),
     );
   }
 
-  void _showEditInfoDialog(String label, String value) {
-    final TextEditingController _controller = TextEditingController(
-      text: value,
-    );
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit $label'),
-          content: TextField(
-            controller: _controller,
-            decoration: InputDecoration(hintText: 'Enter $label'),
+  Widget _buildLogoutButton() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.7, 1.0, curve: Curves.elasticOut),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _showLogoutConfirmation,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 16.h),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('$label updated successfully')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
+            child: Text(
+              'Logout',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
-              child: const Text('Save'),
             ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showAddFamilyMemberDialog() {
-    final TextEditingController _nameController = TextEditingController();
-    final TextEditingController _relationshipController =
-        TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Family Member'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(hintText: 'Name'),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _relationshipController,
-                decoration: const InputDecoration(hintText: 'Relationship'),
-              ),
-            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (_nameController.text.trim().isNotEmpty &&
-                    _relationshipController.text.trim().isNotEmpty) {
-                  Navigator.of(context).pop();
-                  _addFamilyMember(
-                    _nameController.text.trim(),
-                    _relationshipController.text.trim(),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-              ),
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _addFamilyMember(String name, String relationship) {
-    // Add to family members list
-    final newMember = {
-      'name': name,
-      'relationship': relationship,
-      'image':
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
-    };
-
-    setState(() {
-      // Find family members section and add new member
-      for (var i = 0; i < _profileSections.length; i++) {
-        if (_profileSections[i]['title'] == 'Family Members') {
-          _profileSections[i]['items'].add(newMember);
-          break;
-        }
-      }
-      _filterFamilyMembers(); // Refresh filtered list
-    });
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Family member added successfully')),
-    );
-  }
-
-  void _showEditFamilyMemberDialog(Map<String, dynamic> member) {
-    final TextEditingController _nameController = TextEditingController(
-      text: member['name'],
-    );
-    final TextEditingController _relationshipController = TextEditingController(
-      text: member['relationship'],
-    );
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Family Member'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(hintText: 'Name'),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _relationshipController,
-                decoration: const InputDecoration(hintText: 'Relationship'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (_nameController.text.trim().isNotEmpty &&
-                    _relationshipController.text.trim().isNotEmpty) {
-                  Navigator.of(context).pop();
-                  _editFamilyMember(
-                    member,
-                    _nameController.text.trim(),
-                    _relationshipController.text.trim(),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-              ),
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _editFamilyMember(
-    Map<String, dynamic> member,
-    String name,
-    String relationship,
-  ) {
-    setState(() {
-      // Find and update the family member
-      for (var i = 0; i < _profileSections.length; i++) {
-        if (_profileSections[i]['title'] == 'Family Members') {
-          for (var j = 0; j < _profileSections[i]['items'].length; j++) {
-            if (_profileSections[i]['items'][j]['name'] == member['name']) {
-              _profileSections[i]['items'][j] = {
-                'name': name,
-                'relationship': relationship,
-                'image': member['image'],
-              };
-              break;
-            }
-          }
-          break;
-        }
-      }
-      _filterFamilyMembers(); // Refresh filtered list
-    });
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Family member updated successfully')),
-    );
-  }
-
-  void _showDeleteFamilyMemberDialog(Map<String, dynamic> member) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Family Member'),
-          content: Text('Are you sure you want to delete ${member['name']}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteFamilyMember(member);
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteFamilyMember(Map<String, dynamic> member) {
-    setState(() {
-      // Find and remove the family member
-      for (var i = 0; i < _profileSections.length; i++) {
-        if (_profileSections[i]['title'] == 'Family Members') {
-          _profileSections[i]['items'].removeWhere(
-            (item) => item['name'] == member['name'],
-          );
-          break;
-        }
-      }
-      _filterFamilyMembers(); // Refresh filtered list
-    });
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${member['name']} deleted successfully')),
-    );
-  }
-
-  void _showLanguageDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Language'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text('English'),
-                trailing: Radio<String>(
-                  value: 'en',
-                  groupValue: 'en',
-                  onChanged: (value) {},
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Language set to English')),
-                  );
-                },
-              ),
-              ListTile(
-                title: const Text('Hindi'),
-                trailing: Radio<String>(
-                  value: 'hi',
-                  groupValue: null,
-                  onChanged: (value) {},
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Language set to Hindi')),
-                  );
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -1004,53 +672,6 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: const Text('Close'),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  void _showSearchBar() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search family members...',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF006D77),
-                  ),
-                  child: const Text('Search'),
-                ),
-              ),
-            ],
-          ),
         );
       },
     );

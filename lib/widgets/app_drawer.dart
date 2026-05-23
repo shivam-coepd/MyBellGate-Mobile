@@ -10,10 +10,7 @@ import 'package:mygate_coepd/theme/app_theme.dart';
 class AppDrawer extends StatefulWidget {
   final User user;
 
-  const AppDrawer({
-    super.key,
-    required this.user,
-  });
+  const AppDrawer({super.key, required this.user});
 
   @override
   State<AppDrawer> createState() => _AppDrawerState();
@@ -40,10 +37,16 @@ class _AppDrawerState extends State<AppDrawer> {
             children: [
               Text('MyGateBell App Help', style: TextStyle(fontSize: 15.sp)),
               SizedBox(height: 12.h),
-              Text('For technical support, please contact:', style: TextStyle(fontSize: 14.sp)),
+              Text(
+                'For technical support, please contact:',
+                style: TextStyle(fontSize: 14.sp),
+              ),
               Text('support@mygatebell.com', style: TextStyle(fontSize: 14.sp)),
               SizedBox(height: 12.h),
-              Text('For general inquiries, please contact:', style: TextStyle(fontSize: 14.sp)),
+              Text(
+                'For general inquiries, please contact:',
+                style: TextStyle(fontSize: 14.sp),
+              ),
               Text('info@mygatebell.com', style: TextStyle(fontSize: 14.sp)),
               SizedBox(height: 12.h),
               Text('Phone: +91 9876543210', style: TextStyle(fontSize: 14.sp)),
@@ -65,18 +68,26 @@ class _AppDrawerState extends State<AppDrawer> {
       context: context,
       builder: (_) => AlertDialog(
         title: Text('Logout', style: TextStyle(fontSize: 18.sp)),
-        content: Text('Are you sure you want to logout?', style: TextStyle(fontSize: 15.sp)),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(fontSize: 15.sp),
+        ),
         actions: [
           TextButton(
             child: Text('Cancel', style: TextStyle(fontSize: 15.sp)),
             onPressed: () => Navigator.of(context).pop(),
           ),
           TextButton(
-            child: Text('Logout', style: TextStyle(fontSize: 15.sp, color: Colors.red)),
+            child: Text(
+              'Logout',
+              style: TextStyle(fontSize: 15.sp, color: Colors.red),
+            ),
             onPressed: () {
               Navigator.of(context).pop();
               context.read<AuthBloc>().add(LogoutRequested());
-              Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/auth', (route) => false);
             },
           ),
         ],
@@ -94,8 +105,9 @@ class _AppDrawerState extends State<AppDrawer> {
       leading: Icon(icon, size: 26.sp),
       title: Text(title, style: TextStyle(fontSize: 15.sp)),
       selected: index != null && _currentIndex == index,
-      selectedTileColor: Colors.grey.withOpacity(0.1),
-      onTap: onTap ??
+      selectedTileColor: Colors.grey.withValues(alpha: 0.1),
+      onTap:
+          onTap ??
           () {
             Navigator.pop(context);
             if (index != null) _onTabTapped(index);
@@ -129,7 +141,11 @@ class _AppDrawerState extends State<AppDrawer> {
                           ? NetworkImage(user.profileImage!)
                           : null,
                       child: user.profileImage == null
-                          ? const Icon(Icons.person, color: Colors.white, size: 40)
+                          ? const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 40,
+                            )
                           : null,
                     ),
                     SizedBox(height: 10.h),
@@ -162,7 +178,9 @@ class _AppDrawerState extends State<AppDrawer> {
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Settings screen will be implemented')),
+                    const SnackBar(
+                      content: Text('Settings screen will be implemented'),
+                    ),
                   );
                 },
               ),

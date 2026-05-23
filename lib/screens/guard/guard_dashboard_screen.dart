@@ -11,12 +11,7 @@ import 'package:mygate_coepd/screens/guard/details/group_visitor_entry_screen.da
 import 'package:mygate_coepd/screens/guard/details/vendor_access_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/utility_vehicle_tracking_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/guard_patrolling_screen.dart';
-import 'package:mygate_coepd/screens/guard/details/guard_calling_screen.dart';
-import 'package:mygate_coepd/screens/guard/details/temperature_mask_screen.dart';
-import 'package:mygate_coepd/screens/auth/voice_command_entry_screen.dart';
-import 'package:mygate_coepd/screens/guard/details/e_intercom_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/offline_mode_screen.dart';
-import 'package:mygate_coepd/screens/guard/details/multilingual_support_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class GuardDashboardScreen extends StatefulWidget {

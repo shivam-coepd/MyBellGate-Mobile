@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,7 +9,6 @@ import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/screens/resident/resident_main_screen.dart';
 import 'package:mygate_coepd/screens/guard/guard_main_screen.dart';
 import 'package:mygate_coepd/screens/auth/approval_pending_screen.dart';
-import 'package:mygate_coepd/screens/auth/otp_verification_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -22,6 +20,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
+  bool _obscurePassword = true;
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -30,6 +29,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _unitController = TextEditingController();
   final TextEditingController _societyIdController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -49,36 +49,32 @@ class _AuthScreenState extends State<AuthScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
     _unitController.dispose();
     _societyIdController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       if (_isLogin) {
-        // Navigate to OTP verification screen for login
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => OtpVerificationScreen(
-              phone: _phoneController.text,
-              isLogin: true,
-            ),
+        context.read<AuthBloc>().add(
+          LoginRequested(
+            phone: _phoneController.text,
+            password: _passwordController.text,
           ),
         );
       } else {
-        // Navigate to OTP verification screen for registration
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => OtpVerificationScreen(
-              phone: _phoneController.text,
-              isLogin: false,
-              name: _nameController.text,
-              email: _emailController.text,
-              societyId: _societyIdController.text,
-              unit: _unitController.text,
-              role: AppConfig.selectedRole ?? 'resident',
-            ),
+        context.read<AuthBloc>().add(
+          RegisterRequested(
+            name: _nameController.text,
+            phone: _phoneController.text,
+            email: _emailController.text,
+            societyId: _societyIdController.text,
+            unit: _unitController.text,
+            role: AppConfig.selectedRole ?? 'resident',
+            password: _passwordController.text,
           ),
         );
       }
@@ -529,7 +525,66 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         if (!_isLogin) SizedBox(height: 20.h),
+
+                        // Password
+                        Container(
+                          decoration: BoxDecoration(
+                            color: surfaceColor,
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: isDarkMode
+                                ? []
+                                : [
+                                    BoxShadow(
+                                      color: AppTheme.onBackgroundLight
+                                          .withValues(alpha: 0.1),
+                                      blurRadius: 10.r,
+                                      offset: Offset(0, 5.h),
+                                    ),
+                                  ],
+                          ),
+                          child: TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            style: TextStyle(color: textColor),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              labelStyle: TextStyle(color: secondaryTextColor),
+                              prefixIcon: Icon(
+                                Icons.lock_outline,
+                                color: iconColor,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  color: iconColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 18.h,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              if (!_isLogin && value.length < 8) {
+                                return 'Password must be at least 8 characters long';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
                         SizedBox(height: 30.h),
+
                         SizedBox(
                           width: double.infinity,
                           height: 55.h,
@@ -548,14 +603,23 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                                   elevation: isDarkMode ? 2 : 5,
                                 ),
-                                child: Text(
-                                  _isLogin ? 'Send OTP' : 'Send OTP',
-                                  style: TextStyle(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.onPrimary,
-                                  ),
-                                ),
+                                child: state is AuthLoading
+                                    ? SizedBox(
+                                        height: 20.h,
+                                        width: 20.h,
+                                        child: CircularProgressIndicator(
+                                          color: AppTheme.onPrimary,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        _isLogin ? 'Sign In' : 'Sign Up',
+                                        style: TextStyle(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.onPrimary,
+                                        ),
+                                      ),
                               );
                             },
                           ),

@@ -9,15 +9,22 @@ class AnnouncementsScreen extends StatefulWidget {
   State<AnnouncementsScreen> createState() => _AnnouncementsScreenState();
 }
 
-class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerProviderStateMixin {
+class _AnnouncementsScreenState extends State<AnnouncementsScreen>
+    with TickerProviderStateMixin {
   String _selectedCategory = 'All';
   int _selectedAnnouncement = -1;
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _filteredAnnouncements = [];
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  final List<String> _categories = ['All', 'Important', 'Event', 'Amenity', 'Maintenance'];
+  final List<String> _categories = [
+    'All',
+    'Important',
+    'Event',
+    'Amenity',
+    'Maintenance',
+  ];
 
   final List<Map<String, dynamic>> _announcements = [
     {
@@ -71,17 +78,17 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
     super.initState();
     _filteredAnnouncements = _announcements;
     _searchController.addListener(_filterAnnouncements);
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-    
+
     // Start animations after a small delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
@@ -91,15 +98,17 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
   void _filterAnnouncements() {
     setState(() {
       String searchTerm = _searchController.text.toLowerCase();
-      
+
       _filteredAnnouncements = _announcements.where((announcement) {
-        bool matchesCategory = _selectedCategory == 'All' || 
+        bool matchesCategory =
+            _selectedCategory == 'All' ||
             announcement['tag'] == _selectedCategory;
-        
-        bool matchesSearch = searchTerm.isEmpty || 
+
+        bool matchesSearch =
+            searchTerm.isEmpty ||
             announcement['title'].toLowerCase().contains(searchTerm) ||
             announcement['description'].toLowerCase().contains(searchTerm);
-        
+
         return matchesCategory && matchesSearch;
       }).toList();
     });
@@ -172,8 +181,12 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.white
-                                  : Theme.of(context).textTheme.bodyLarge?.color,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  : Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               fontSize: 14.sp,
                             ),
                           ),
@@ -206,7 +219,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
   Widget _buildAnnouncementItem(int index) {
     final announcement = _filteredAnnouncements[index];
     final isSelected = _selectedAnnouncement == announcement['id'];
-    
+
     return ScaleTransition(
       scale: Tween<double>(begin: 0.9, end: 1.0).animate(
         CurvedAnimation(
@@ -219,8 +232,12 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
         ),
       ),
       child: GestureDetector(
-        onTap: () => setState(() => _selectedAnnouncement = 
-          _selectedAnnouncement == announcement['id'] ? -1 : announcement['id']),
+        onTap: () => setState(
+          () => _selectedAnnouncement =
+              _selectedAnnouncement == announcement['id']
+              ? -1
+              : announcement['id'],
+        ),
         child: Card(
           margin: EdgeInsets.only(bottom: 16.h),
           shape: RoundedRectangleBorder(
@@ -284,7 +301,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                           borderRadius: BorderRadius.circular(20.r),
                           boxShadow: [
                             BoxShadow(
-                              color: announcement['tagColor'].withValues(alpha: 0.3),
+                              color: announcement['tagColor'].withValues(
+                                alpha: 0.3,
+                              ),
                               blurRadius: 4.w,
                               offset: Offset(0, 2.h),
                             ),
@@ -328,10 +347,14 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                               vertical: 5.h,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12.r),
                               border: Border.all(
-                                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.3),
                                 width: 1.w,
                               ),
                             ),
@@ -361,10 +384,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                       if (isSelected)
                         Text(
                           announcement['description'],
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14.sp,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 14.sp),
                         ),
                     ],
                   ),
@@ -426,7 +446,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
 
   void _showFilterOptions() {
     String selectedCategory = _selectedCategory;
-    
+
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -452,19 +472,28 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                   SizedBox(height: 20.h),
                   Text(
                     'Filter Announcements',
-                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   SizedBox(height: 20.h),
                   Text(
                     'Category',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.sp,
+                    ),
                   ),
                   SizedBox(height: 10.h),
                   Wrap(
                     spacing: 10.w,
                     children: _categories.map<Widget>((category) {
                       return FilterChip(
-                        label: Text(category, style: TextStyle(fontSize: 14.sp)),
+                        label: Text(
+                          category,
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
                         selected: selectedCategory == category,
                         onSelected: (selected) {
                           setState(() {
@@ -478,7 +507,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                   SizedBox(height: 20.h),
                   Text(
                     'Date Range',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.sp,
+                    ),
                   ),
                   SizedBox(height: 10.h),
                   Row(
@@ -488,7 +520,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                           onPressed: () {
                             // Show date picker for start date
                           },
-                          child: Text('Start Date', style: TextStyle(fontSize: 14.sp)),
+                          child: Text(
+                            'Start Date',
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
                         ),
                       ),
                       SizedBox(width: 10.w),
@@ -497,7 +532,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                           onPressed: () {
                             // Show date picker for end date
                           },
-                          child: Text('End Date', style: TextStyle(fontSize: 14.sp)),
+                          child: Text(
+                            'End Date',
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
                         ),
                       ),
                     ],
@@ -508,7 +546,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
                         ),
                       ),
                       SizedBox(width: 10.w),
@@ -522,14 +563,20 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Filters applied', style: TextStyle(fontSize: 14.sp)),
+                                content: Text(
+                                  'Filters applied',
+                                  style: TextStyle(fontSize: 14.sp),
+                                ),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
                           ),
-                          child: Text('Apply', style: TextStyle(fontSize: 14.sp)),
+                          child: Text(
+                            'Apply',
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
                         ),
                       ),
                     ],
@@ -599,10 +646,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
                 SizedBox(height: 16.h),
                 Text(
                   announcement['description'],
-                  style: TextStyle(
-                    height: 1.5,
-                    fontSize: 14.sp,
-                  ),
+                  style: TextStyle(height: 1.5, fontSize: 14.sp),
                 ),
               ],
             ),
@@ -621,7 +665,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
   void _shareAnnouncement(Map<String, dynamic> announcement) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Sharing "${announcement['title']}"', style: TextStyle(fontSize: 14.sp)),
+        content: Text(
+          'Sharing "${announcement['title']}"',
+          style: TextStyle(fontSize: 14.sp),
+        ),
       ),
     );
   }
@@ -629,7 +676,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with TickerPr
   void _bookmarkAnnouncement(Map<String, dynamic> announcement) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Bookmarking "${announcement['title']}"', style: TextStyle(fontSize: 14.sp)),
+        content: Text(
+          'Bookmarking "${announcement['title']}"',
+          style: TextStyle(fontSize: 14.sp),
+        ),
       ),
     );
   }

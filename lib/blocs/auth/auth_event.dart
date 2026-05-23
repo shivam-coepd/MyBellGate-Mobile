@@ -11,12 +11,12 @@ class AppStarted extends AuthEvent {}
 
 class LoginRequested extends AuthEvent {
   final String phone;
-  final String otp;
+  final String password;
 
-  const LoginRequested({required this.phone, required this.otp});
+  const LoginRequested({required this.phone, required this.password});
 
   @override
-  List<Object?> get props => [phone, otp];
+  List<Object?> get props => [phone, password];
 }
 
 class RegisterRequested extends AuthEvent {
@@ -26,6 +26,7 @@ class RegisterRequested extends AuthEvent {
   final String societyId;
   final String unit;
   final String role;
+  final String password;
 
   const RegisterRequested({
     required this.name,
@@ -34,10 +35,11 @@ class RegisterRequested extends AuthEvent {
     required this.societyId,
     required this.unit,
     required this.role,
+    required this.password,
   });
 
   @override
-  List<Object?> get props => [name, phone, email, societyId, unit, role];
+  List<Object?> get props => [name, phone, email, societyId, unit, role, password];
 }
 
 class OtpRequested extends AuthEvent {

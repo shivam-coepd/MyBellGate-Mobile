@@ -828,13 +828,13 @@ class FilterChipsWidget extends StatelessWidget {
                 border: Border.all(
                   color: isSelected
                       ? colorScheme.primary
-                      : colorScheme.outline.withOpacity(0.2),
+                      : colorScheme.outline.withValues(alpha: 0.2),
                   width: isSelected ? 1.5 : 1,
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.25),
+                          color: colorScheme.primary.withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -983,10 +983,10 @@ class NotificationBannerWidget extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18.r),
         color: theme.scaffoldBackgroundColor,
-        border: Border.all(color: colorScheme.primary.withOpacity(0.25)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.15),
+            color: colorScheme.primary.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -1002,7 +1002,7 @@ class NotificationBannerWidget extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.15),
+                  color: colorScheme.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -1185,7 +1185,7 @@ class VisitorCardWidget extends StatelessWidget {
     final status = visitor['status'] as String;
     final statusColor = _getStatusColor(status, colorScheme);
     final statusBgColor = isDark
-        ? statusColor.withOpacity(0.15)
+        ? statusColor.withValues(alpha: 0.15)
         : _getStatusBgColor(status);
 
     return Padding(
@@ -1255,12 +1255,12 @@ class VisitorCardWidget extends StatelessWidget {
               border: Border.all(
                 color: isSelected
                     ? colorScheme.primary
-                    : statusColor.withOpacity(0.2),
+                    : statusColor.withValues(alpha: 0.2),
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -1287,7 +1287,9 @@ class VisitorCardWidget extends StatelessWidget {
                         border: Border.all(
                           color: isSelected
                               ? colorScheme.primary
-                              : colorScheme.onSurfaceVariant.withOpacity(0.4),
+                              : colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.4,
+                                ),
                           width: 2,
                         ),
                       ),
@@ -1310,12 +1312,12 @@ class VisitorCardWidget extends StatelessWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16.r),
                           border: Border.all(
-                            color: statusColor.withOpacity(0.3),
+                            color: statusColor.withValues(alpha: 0.3),
                             width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: statusColor.withOpacity(0.2),
+                              color: statusColor.withValues(alpha: 0.2),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -1329,7 +1331,7 @@ class VisitorCardWidget extends StatelessWidget {
                             height: 56.w,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               child: Icon(
                                 Icons.person_rounded,
                                 size: 28.sp,
@@ -1355,7 +1357,7 @@ class VisitorCardWidget extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: statusColor.withOpacity(0.4),
+                                color: statusColor.withValues(alpha: 0.4),
                                 blurRadius: 4,
                               ),
                             ],
@@ -1390,7 +1392,7 @@ class VisitorCardWidget extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        
+
                         SizedBox(height: 5.h),
 
                         Container(
@@ -1399,7 +1401,7 @@ class VisitorCardWidget extends StatelessWidget {
                             vertical: 3.h,
                           ),
                           decoration: BoxDecoration(
-                            color: colorScheme.primary.withOpacity(0.08),
+                            color: colorScheme.primary.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Row(
@@ -1432,8 +1434,8 @@ class VisitorCardWidget extends StatelessWidget {
                             Icon(
                               Icons.schedule_rounded,
                               size: 12.sp,
-                              color: colorScheme.onSurfaceVariant.withOpacity(
-                                0.7,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.7,
                               ),
                             ),
                             SizedBox(width: 4.w),
@@ -1442,8 +1444,8 @@ class VisitorCardWidget extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11.sp,
                                 fontWeight: FontWeight.w500,
-                                color: colorScheme.onSurfaceVariant.withOpacity(
-                                  0.8,
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.8,
                                 ),
                                 letterSpacing: 0.1,
                               ),
@@ -1467,7 +1469,7 @@ class VisitorCardWidget extends StatelessWidget {
                           color: statusBgColor,
                           borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(
-                            color: statusColor.withOpacity(0.25),
+                            color: statusColor.withValues(alpha: 0.25),
                           ),
                         ),
                         child: Column(
@@ -1511,7 +1513,7 @@ class VisitorCardWidget extends StatelessWidget {
   }) {
     return CustomSlidableAction(
       onPressed: onTap,
-      backgroundColor: color.withOpacity(0.12),
+      backgroundColor: color.withValues(alpha: 0.12),
       foregroundColor: color,
       padding: EdgeInsets.zero,
       child: Column(
@@ -1520,7 +1522,7 @@ class VisitorCardWidget extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 18.sp, color: color),
@@ -1551,7 +1553,7 @@ class VisitorCardWidget extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -1570,7 +1572,7 @@ class VisitorCardWidget extends StatelessWidget {
                   width: 36.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.2),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -1581,9 +1583,11 @@ class VisitorCardWidget extends StatelessWidget {
                 padding: EdgeInsets.all(14.w),
                 margin: EdgeInsets.only(bottom: 12.h),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.06),
+                  color: statusColor.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: statusColor.withOpacity(0.15)),
+                  border: Border.all(
+                    color: statusColor.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -1597,7 +1601,7 @@ class VisitorCardWidget extends StatelessWidget {
                         errorBuilder: (_, __, ___) => Container(
                           width: 40.w,
                           height: 40.w,
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           child: Icon(Icons.person_rounded, color: statusColor),
                         ),
                       ),
@@ -1633,7 +1637,7 @@ class VisitorCardWidget extends StatelessWidget {
                         vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
@@ -1720,7 +1724,7 @@ class VisitorCardWidget extends StatelessWidget {
                   width: 44.w,
                   height: 44.w,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Icon(icon, color: color, size: 20.sp),
@@ -1753,7 +1757,9 @@ class VisitorCardWidget extends StatelessWidget {
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 20.sp,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
               ],
             ),
@@ -1763,7 +1769,7 @@ class VisitorCardWidget extends StatelessWidget {
           Divider(
             height: 1,
             indent: 58.w,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.1),
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
           ),
       ],
     );
@@ -1850,7 +1856,7 @@ class _AppTextFieldState extends State<AppTextField> {
         boxShadow: [
           if (_isFocused)
             BoxShadow(
-              color: theme.colorScheme.primary.withOpacity(0.15),
+              color: theme.colorScheme.primary.withValues(alpha: 0.15),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

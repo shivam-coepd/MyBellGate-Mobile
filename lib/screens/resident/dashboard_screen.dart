@@ -6,6 +6,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/models/user.dart';
+import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -823,7 +824,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
         borderRadius: BorderRadius.circular(18.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -886,7 +887,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                         decoration: BoxDecoration(
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.1),
+                          ).primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Row(
@@ -995,6 +996,8 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
 
   // --- Header Info Section ---
   Widget buildInfoHeader() {
+    final user = context.read<UserRepository>().getCurrentUser();
+    final firstName = (user?.name ?? 'Resident').split(' ').first;
     return Padding(
       padding: EdgeInsets.only(right: 20.w, left: 20.w, bottom: 20.h),
       child: Row(
@@ -1007,10 +1010,14 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 24.r,
-                      backgroundImage: const NetworkImage(
-                        'https://i.pravatar.cc/150?img=5', // Placeholder image
+                    InkWell(
+                      onTap: () => Navigator.pushNamed(context, '/profile'),
+                      child: CircleAvatar(
+                        radius: 24.r,
+                        backgroundImage: NetworkImage(
+                          user?.profileImage ??
+                              'https://i.pravatar.cc/150?img=5',
+                        ),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -1018,16 +1025,17 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Hello, Shivam",
+                          "Hello, $firstName",
                           style: TextStyle(
                             fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
-                            // color: const Color(0xFF1E1E1E),
                           ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          "Ready to Achieve More Today?",
+                          user?.unit != null
+                              ? "Unit: ${user!.unit}"
+                              : "Ready to Achieve More Today?",
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: const Color(0xFF8E8E8E),
@@ -1050,7 +1058,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                   ),
                 ],
@@ -1103,13 +1111,13 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     void handleStatAction(BuildContext context, String type) {
       switch (type) {
         case 'maintenance':
-          Navigator.pushNamed(context, '/payments-screen');
+          Navigator.pushNamed(context, '/bills');
           break;
         case 'visitors':
-          Navigator.pushNamed(context, '/visitor-management-screen');
+          Navigator.pushNamed(context, '/visitors');
           break;
         case 'complaints':
-          Navigator.pushNamed(context, '/complaints-management-screen');
+          Navigator.pushNamed(context, '/services');
           break;
       }
     }
@@ -1125,12 +1133,12 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [cardColor, cardColor.withOpacity(0.8)],
+            colors: [cardColor, cardColor.withValues(alpha: 0.8)],
           ),
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: cardColor.withOpacity(0.3),
+              color: cardColor.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -1154,7 +1162,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                     Container(
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Icon(icon, color: Colors.white, size: 28.sp),
@@ -1165,7 +1173,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Text(
@@ -1184,7 +1192,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                     Text(
                       stat['title'] as String,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1210,7 +1218,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                           Text(
                             stat['subtitle'] as String,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                         ],
@@ -1220,7 +1228,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                       Text(
                         stat['dueDate'] as String,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -1269,7 +1277,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(
                             context,
-                          ).colorScheme.outline.withOpacity(0.3),
+                          ).colorScheme.outline.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                 );

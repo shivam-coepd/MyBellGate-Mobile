@@ -37,4 +37,17 @@ class AppConfig {
       await _prefs.setString(_keySelectedRole, role);
     }
   }
-}
+
+  // Token
+  static const String _keyToken = 'auth_token';
+
+  static String? get token => _prefs.getString(_keyToken);
+
+  static Future<void> setToken(String? value) async {
+    if (value == null) {
+      await _prefs.remove(_keyToken);
+    } else {
+      await _prefs.setString(_keyToken, value);
+    }
+  }
+}

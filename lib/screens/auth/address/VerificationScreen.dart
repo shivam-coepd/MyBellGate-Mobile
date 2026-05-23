@@ -320,7 +320,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16.sp,
-                        color: textColor.withOpacity(0.7),
+                        color: textColor.withValues(alpha: 0.7),
                       ),
                     ),
                     SizedBox(height: 40.h),
@@ -335,7 +335,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             border: Border.all(color: iconColor, width: 4.w),
                             borderRadius: BorderRadius.circular(24.r),
                             color: _selectedFile == null
-                                ? AppTheme.onBackgroundDark.withOpacity(0.3)
+                                ? AppTheme.onBackgroundDark.withValues(
+                                    alpha: 0.3,
+                                  )
                                 : null,
                           ),
                           child: _selectedFile == null
