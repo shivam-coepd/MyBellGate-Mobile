@@ -999,7 +999,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     final user = context.read<UserRepository>().getCurrentUser();
     final firstName = (user?.name ?? 'Resident').split(' ').first;
     return Padding(
-      padding: EdgeInsets.only(right: 20.w, left: 20.w, bottom: 20.h),
+      padding: EdgeInsets.only(right: 20.w, left: 20.w, bottom: 20.h, top: 4.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1031,7 +1031,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 4.h),
+                        SizedBox(height: 2.h),
                         Text(
                           user?.unit != null
                               ? "Unit: ${user!.unit}"

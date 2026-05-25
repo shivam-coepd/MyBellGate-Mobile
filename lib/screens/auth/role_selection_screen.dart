@@ -174,7 +174,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                               color: textColor,
                             ),
                           ),
-                          SizedBox(height: 12.h),
                           Text(
                             'Select how you\'ll be using MyGateBell',
                             style: TextStyle(
@@ -183,7 +182,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                               height: 1.4,
                             ),
                           ),
-                          SizedBox(height: 40.h),
+                          SizedBox(height: 20.h),
 
                           // Role Cards
                           _buildRoleCard(
@@ -224,7 +223,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final cardColor = isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
     final borderColor = isDarkMode
         ? AppTheme.onBackgroundLight.withValues(alpha: 0.4)
-        : AppTheme.onBackgroundLight.withValues(alpha: 0.2);
+        : AppTheme.onBackgroundLight.withValues(alpha: 0.08);
     final shadowColor = isDarkMode
         ? AppTheme.onBackgroundLight.withValues(alpha: 0.15)
         : AppTheme.onBackgroundDark.withValues(alpha: 0.5);
@@ -238,7 +237,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
-        padding: EdgeInsets.all(18.r),
+        padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(24.r),
@@ -253,16 +252,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           ],
         ),
         child: Row(
+          spacing: 14.w,
           children: [
             Container(
-              padding: EdgeInsets.all(16.r),
+              padding: EdgeInsets.all(14.r),
               decoration: BoxDecoration(
                 color: primaryColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(18.r),
               ),
               child: Icon(icon, color: primaryColor, size: 36.r),
             ),
-            SizedBox(width: 20.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +274,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       color: textColor,
                     ),
                   ),
-                  SizedBox(height: 6.h),
                   Text(
                     description,
                     style: TextStyle(

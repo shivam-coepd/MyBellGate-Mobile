@@ -38,6 +38,7 @@ dependencies:
   another_flushbar: ^1.12.32
   camera: ^0.11.3
   carousel_slider: ^5.1.1
+  flutter_contacts: ^2.1.0
 
 dev_dependencies:
   flutter_test:
