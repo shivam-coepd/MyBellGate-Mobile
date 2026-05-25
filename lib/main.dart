@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/screens/auth/address/LocationSelectionScreen.dart';
-import 'package:mygate_coepd/screens/resident/mygate_settings_screen.dart';
+import 'package:mygate_coepd/screens/resident/profile_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
@@ -24,7 +24,7 @@ import 'package:mygate_coepd/screens/resident/service_requests_screen.dart';
 import 'package:mygate_coepd/screens/resident/bills_payments_screen.dart';
 import 'package:mygate_coepd/screens/resident/amenity_booking_screen.dart';
 import 'package:mygate_coepd/screens/resident/community_screen.dart';
-import 'package:mygate_coepd/screens/resident/profile_screen.dart';
+import 'package:mygate_coepd/screens/resident/profile_details_screen.dart';
 import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
 import 'package:sizer/sizer.dart';
 
@@ -176,7 +176,7 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
       '/amenities': (context) => const AmenityBookingScreen(),
       '/community': (context) => const CommunityScreen(),
       '/profile': (context) => const ProfileScreen(),
-      '/settings': (context) => const SettingsScreen(),
+      '/profile-details': (context) => const ProfileDetailsScreen(),
       '/location-selection': (context) => const LocationSelectionScreen(),
       '/otp-verification': (context) => throw UnimplementedError(
         'OTP Verification Screen requires parameters',

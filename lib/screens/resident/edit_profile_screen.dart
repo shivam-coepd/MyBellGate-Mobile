@@ -7,16 +7,17 @@ import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 
-class EditProfileScreen extends StatefulWidget {
+class EditProfileDetailsScreen extends StatefulWidget {
   final User user;
 
-  const EditProfileScreen({super.key, required this.user});
+  const EditProfileDetailsScreen({super.key, required this.user});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  State<EditProfileDetailsScreen> createState() =>
+      _EditProfileDetailsScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;

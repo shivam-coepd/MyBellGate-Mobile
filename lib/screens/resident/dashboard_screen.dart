@@ -212,99 +212,6 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     );
   }
 
-  Widget getAppBarUI(User user) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.grey.withValues(alpha: 0.2),
-            offset: Offset(0, 2.h),
-            blurRadius: 4.w,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top,
-          left: 16.w,
-          right: 16.w,
-          bottom: 16.h,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Text(
-                      'Welcome back',
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Text(
-                      user.name,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: IconButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/announcements');
-                },
-                icon: Icon(Icons.notifications, size: 24.sp),
-                color: Theme.of(context).iconTheme.color,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, '/profile');
-                },
-                child: CircleAvatar(
-                  radius: 20.r,
-                  backgroundImage: user.profileImage != null
-                      ? CachedNetworkImageProvider(user.profileImage!)
-                      : null,
-                  child: user.profileImage == null
-                      ? Icon(
-                          Icons.person,
-                          color: Theme.of(context).primaryColor,
-                          size: 24.sp,
-                        )
-                      : null,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget getQuickStatsUI() {
     return Container(
       width: double.infinity,
@@ -697,9 +604,6 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                     context,
                                     '/announcements',
                                   );
-                                  break;
-                                case 'profile':
-                                  Navigator.pushNamed(context, '/profile');
                                   break;
                               }
                             },
