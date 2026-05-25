@@ -359,13 +359,11 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 onPressed: () {
                   Navigator.pushNamed(context, '/announcements');
                 },
-                child: Text(
-                  'View All',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).primaryColor,
+                  padding: EdgeInsets.zero,
                 ),
+                child: Text('View All', style: TextStyle(fontSize: 14.sp)),
               ),
             ],
           ),
@@ -402,14 +400,13 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                         50 * (1.0 - animation.value),
                         0.0,
                       ),
-                      child: Container(
+                      child: SizedBox(
                         width: 250.w,
-                        margin: EdgeInsets.only(right: 15.w),
                         child: Card(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.r),
                           ),
-                          elevation: 3,
+                          elevation: 2,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(16.r),
                             child: Stack(
@@ -903,7 +900,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     final user = context.read<UserRepository>().getCurrentUser();
     final firstName = (user?.name ?? 'Resident').split(' ').first;
     return Padding(
-      padding: EdgeInsets.only(right: 20.w, left: 20.w, bottom: 20.h, top: 4.h),
+      padding: EdgeInsets.only(right: 10.w, left: 10.w, bottom: 20.h, top: 4.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

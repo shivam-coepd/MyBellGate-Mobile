@@ -7,6 +7,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
+import 'package:mygate_coepd/repositories/visitor_repository.dart';
 
 enum FieldType { name, phone, purpose }
 
@@ -26,76 +27,16 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
   final Set<int> _selectedVisitors = {};
   Map<String, dynamic>? _activeNotification;
 
-  // Mock visitor data
-  final List<Map<String, dynamic>> _allVisitors = [
-    {
-      'id': 1,
-      'name': 'Rajesh Kumar',
-      'phone': '+91 98765 43210',
-      'purpose': 'Delivery - Amazon Package',
-      'photo':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_1236e79c3-1763294023133.png',
-      'photoSemanticLabel':
-          'Indian man with short black hair and mustache wearing blue shirt',
-      'expectedTime': '22/12/2025 02:30 PM',
-      'status': 'Pending',
-    },
-    {
-      'id': 2,
-      'name': 'Priya Sharma',
-      'phone': '+91 87654 32109',
-      'purpose': 'Guest Visit',
-      'photo':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_1dc96d634-1763295460493.png',
-      'photoSemanticLabel':
-          'Indian woman with long black hair wearing traditional saree',
-      'expectedTime': '22/12/2025 04:00 PM',
-      'status': 'Approved',
-    },
-    {
-      'id': 3,
-      'name': 'Amit Patel',
-      'phone': '+91 76543 21098',
-      'purpose': 'Maintenance Work',
-      'photo':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_15e90c3d0-1763293909345.png',
-      'photoSemanticLabel':
-          'Indian man with glasses and short hair wearing work uniform',
-      'expectedTime': '22/12/2025 10:00 AM',
-      'status': 'Approved',
-    },
-    {
-      'id': 4,
-      'name': 'Sneha Reddy',
-      'phone': '+91 65432 10987',
-      'purpose': 'Food Delivery - Swiggy',
-      'photo':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_1ec6b40c2-1763294215713.png',
-      'photoSemanticLabel':
-          'Young Indian woman with ponytail wearing delivery uniform',
-      'expectedTime': '22/12/2025 01:15 PM',
-      'status': 'Rejected',
-    },
-    {
-      'id': 5,
-      'name': 'Vikram Singh',
-      'phone': '+91 54321 09876',
-      'purpose': 'Courier - BlueDart',
-      'photo':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_10525d709-1763292629057.png',
-      'photoSemanticLabel':
-          'Indian man with beard wearing courier company uniform',
-      'expectedTime': '22/12/2025 11:30 AM',
-      'status': 'Pending',
-    },
-  ];
-
+  final VisitorRepository _visitorRepository = VisitorRepository();
+  List<Map<String, dynamic>> _allVisitors = [];
   List<Map<String, dynamic>> _filteredVisitors = [];
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _filteredVisitors = List.from(_allVisitors);
+    _fetchVisitors();
     _simulateVisitorArrival();
   }
 
@@ -103,6 +44,78 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  String _formatVisitTime(Map<String, dynamic> visitor) {
+    final date = visitor['visit_date'] ?? '';
+    final time = visitor['visit_time'] ?? '';
+    if (date.isEmpty) return 'Not specified';
+
+    // YYYY-MM-DD to DD/MM/YYYY
+    String formattedDate = date;
+    try {
+      final parts = date.split('-');
+      if (parts.length == 3) {
+        formattedDate = "${parts[2]}/${parts[1]}/${parts[0]}";
+      }
+    } catch (_) {}
+
+    if (time.isEmpty) return formattedDate;
+
+    // HH:MM:SS to 12h AM/PM
+    String formattedTime = time;
+    try {
+      final parts = time.split(':');
+      if (parts.length >= 2) {
+        int hour = int.parse(parts[0]);
+        final minute = parts[1];
+        final ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12;
+        if (hour == 0) hour = 12;
+        formattedTime = "${hour.toString().padLeft(2, '0')}:$minute $ampm";
+      }
+    } catch (_) {}
+
+    return "$formattedDate $formattedTime";
+  }
+
+  Future<void> _fetchVisitors() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final list = await _visitorRepository.getVisitors();
+
+      final adaptedList = list.map((visitor) {
+        final Map<String, dynamic> adapted = Map<String, dynamic>.from(visitor);
+
+        final rawId = visitor['id'];
+        adapted['id'] = rawId is int
+            ? rawId
+            : int.tryParse(rawId?.toString() ?? '') ?? 0;
+        adapted['photo'] =
+            visitor['image_url'] ??
+            'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png';
+        adapted['expectedTime'] = _formatVisitTime(visitor);
+
+        return adapted;
+      }).toList();
+
+      setState(() {
+        _allVisitors = adaptedList;
+        _isLoading = false;
+      });
+
+      _filterVisitors();
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isLoading = false;
+      });
+    }
   }
 
   void _simulateVisitorArrival() {
@@ -116,16 +129,25 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
   }
 
   void _filterVisitors() {
+    final now = DateTime.now();
+    final todayStr =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
     setState(() {
       _filteredVisitors = _allVisitors.where((visitor) {
         final matchesSearch = visitor['name'].toString().toLowerCase().contains(
           _searchController.text.toLowerCase(),
         );
 
-        final matchesFilter =
-            _selectedFilter == 'Today' ||
-            visitor['status'].toString().toLowerCase() ==
-                _selectedFilter.toLowerCase();
+        bool matchesFilter = false;
+        if (_selectedFilter == 'Today') {
+          // Checks if visit_date is today
+          matchesFilter = visitor['visit_date'] == todayStr;
+        } else {
+          matchesFilter =
+              visitor['status'].toString().toLowerCase() ==
+              _selectedFilter.toLowerCase();
+        }
 
         return matchesSearch && matchesFilter;
       }).toList();
@@ -148,34 +170,60 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
     ).show(context);
   }
 
-  void _approveVisitor(int visitorId) {
-    setState(() {
+  Future<void> _approveVisitor(int visitorId) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      await _visitorRepository.updateVisitorStatus(visitorId, 'approved');
+
       final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
       if (index != -1) {
-        _allVisitors[index]['status'] = 'Approved';
+        setState(() {
+          _allVisitors[index]['status'] = 'approved';
+        });
         _filterVisitors();
       }
-    });
-    _showSuccessMessage('Visitor approved successfully');
+      _showSuccessMessage('Visitor approved successfully');
+    } catch (e) {
+      _showSuccessMessage(
+        'Failed to approve visitor: ${e.toString().replaceAll('Exception: ', '')}',
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  void _rejectVisitor(int visitorId) {
-    setState(() {
+  Future<void> _rejectVisitor(int visitorId) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      await _visitorRepository.updateVisitorStatus(visitorId, 'rejected');
+
       final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
       if (index != -1) {
-        _allVisitors[index]['status'] = 'Rejected';
+        setState(() {
+          _allVisitors[index]['status'] = 'rejected';
+        });
         _filterVisitors();
       }
-    });
-    _showSuccessMessage('Visitor rejected');
+      _showSuccessMessage('Visitor rejected');
+    } catch (e) {
+      _showSuccessMessage(
+        'Failed to reject visitor: ${e.toString().replaceAll('Exception: ', '')}',
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _deleteVisitor(int visitorId) {
-    setState(() {
-      _allVisitors.removeWhere((v) => v['id'] == visitorId);
-      _filterVisitors();
-    });
-    _showSuccessMessage('Visitor removed');
+    _showSuccessMessage('Only administrators can delete visitor log entries.');
   }
 
   void _callVisitor(String phone) {
@@ -230,7 +278,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -272,8 +319,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
       body: RefreshIndicator(
         onRefresh: () async {
           HapticFeedback.mediumImpact();
-          await Future.delayed(const Duration(seconds: 1));
-          setState(() => _filterVisitors());
+          await _fetchVisitors();
         },
         child: Stack(
           children: [
@@ -295,7 +341,53 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
                 ),
                 SizedBox(height: 1.h),
                 Expanded(
-                  child: _filteredVisitors.isEmpty
+                  child: _isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: colorScheme.primary,
+                          ),
+                        )
+                      : _errorMessage != null
+                      ? Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 24.w),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.wifi_off_rounded,
+                                  size: 64,
+                                  color: colorScheme.error.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                ),
+                                SizedBox(height: 2.h),
+                                Text(
+                                  'Failed to load visitors',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 1.h),
+                                Text(
+                                  _errorMessage!,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                SizedBox(height: 3.h),
+                                ElevatedButton.icon(
+                                  onPressed: _fetchVisitors,
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _filteredVisitors.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -312,6 +404,16 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
                                 'No visitors found',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              SizedBox(height: 1.h),
+                              Text(
+                                _selectedFilter == 'Today'
+                                    ? 'No visitors scheduled for today'
+                                    : 'No ${_selectedFilter.toLowerCase()} visitors',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -387,11 +489,23 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreenNew> {
               ),
               child: AddVisitorBottomSheet(
                 onVisitorAdded: (visitor) {
+                  // Adapt the newly created visitor to our display format
+                  final rawId = visitor['id'];
+                  final adapted = Map<String, dynamic>.from(visitor);
+                  adapted['id'] = rawId is int
+                      ? rawId
+                      : int.tryParse(rawId?.toString() ?? '') ?? 0;
+                  adapted['photo'] =
+                      visitor['image_url'] ??
+                      'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png';
+                  adapted['expectedTime'] = visitor['visit_date'] != null
+                      ? '${visitor['visit_date']} ${visitor['visit_time'] ?? ''}'
+                      : 'Not specified';
                   setState(() {
-                    _allVisitors.insert(0, visitor);
+                    _allVisitors.insert(0, adapted);
                     _filterVisitors();
                   });
-                  _showSuccessMessage('Visitor added successfully');
+                  _showSuccessMessage('Visitor pre-approved successfully');
                 },
               ),
             ),
@@ -425,6 +539,17 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
   XFile? _capturedImage;
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
+  String _selectedVisitorType = 'guest';
+  bool _isSubmitting = false;
+
+  final VisitorRepository _visitorRepository = VisitorRepository();
+
+  static const List<Map<String, String>> _visitorTypes = [
+    {'value': 'guest', 'label': 'Guest', 'icon': '👤'},
+    {'value': 'delivery', 'label': 'Delivery', 'icon': '📦'},
+    {'value': 'service', 'label': 'Service', 'icon': '🔧'},
+    {'value': 'other', 'label': 'Other', 'icon': '📋'},
+  ];
 
   CameraController? _cameraController;
   List<CameraDescription> _cameras = [];
@@ -549,25 +674,66 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
     }
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final visitor = {
-        'id': DateTime.now().millisecondsSinceEpoch,
-        'name': _nameController.text,
-        'phone': _phoneController.text,
-        'purpose': _purposeController.text,
-        'photo':
-            _capturedImage?.path ??
-            'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png',
-        'photoSemanticLabel':
-            'Visitor photo captured for ${_nameController.text}',
-        'expectedTime': _selectedDate != null && _selectedTime != null
-            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year} ${_selectedTime!.format(context)}'
-            : 'Not specified',
-        'status': 'Pending',
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      // Format date and time to backend formats
+      String? visitDate;
+      String? visitTime;
+      if (_selectedDate != null) {
+        visitDate =
+            '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+      }
+      if (_selectedTime != null) {
+        visitTime =
+            '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00';
+      }
+
+      final result = await _visitorRepository.addVisitor(
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        purpose: _purposeController.text.trim(),
+        visitDate: visitDate,
+        visitTime: visitTime,
+        visitorType: _selectedVisitorType,
+      );
+
+      // result contains { visitor_id: X } from backend
+      final createdVisitor = {
+        'id': result['visitor_id'],
+        'name': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'purpose': _purposeController.text.trim(),
+        'visitor_type': _selectedVisitorType,
+        'visit_date': visitDate,
+        'visit_time': visitTime,
+        'status': 'pending',
+        'image_url': null,
       };
-      widget.onVisitorAdded(visitor);
-      Navigator.pop(context);
+
+      if (mounted) {
+        widget.onVisitorAdded(createdVisitor);
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -734,6 +900,70 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                   type: FieldType.purpose,
                 ),
                 SizedBox(height: 12.h),
+                // Visitor Type Selector
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Visitor Type',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 6.h,
+                  children: _visitorTypes.map((type) {
+                    final isSelected = _selectedVisitorType == type['value'];
+                    return GestureDetector(
+                      onTap: () =>
+                          setState(() => _selectedVisitorType = type['value']!),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 8.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? colorScheme.primary
+                              : isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(24.r),
+                          border: Border.all(
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colorScheme.outline.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              type['icon']!,
+                              style: TextStyle(fontSize: 14.sp),
+                            ),
+                            SizedBox(width: 6.w),
+                            Text(
+                              type['label']!,
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w500,
+                                color: isSelected
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 12.h),
                 Row(
                   spacing: 8.w,
                   children: [
@@ -772,9 +1002,22 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                 SizedBox(height: 16.h),
                 SizedBox(
                   width: double.infinity,
+                  height: 52.h,
                   child: ElevatedButton(
-                    onPressed: _submitForm,
-                    child: const Text('Add Visitor'),
+                    onPressed: _isSubmitting ? null : _submitForm,
+                    child: _isSubmitting
+                        ? SizedBox(
+                            width: 22.w,
+                            height: 22.w,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: colorScheme.onPrimary,
+                            ),
+                          )
+                        : const Text(
+                            'Add Visitor',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
                   ),
                 ),
               ],
@@ -803,7 +1046,14 @@ class FilterChipsWidget extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    final filters = ['Today', 'Pending', 'Approved', 'Rejected'];
+    final filters = [
+      'Today',
+      'Entered',
+      'Pending',
+      'Approved',
+      'Exited',
+      'Rejected',
+    ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -1041,7 +1291,7 @@ class NotificationBannerWidget extends StatelessWidget {
                   padding: EdgeInsets.all(6.w),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: colorScheme.surfaceVariant,
+                    color: colorScheme.surfaceContainerHighest,
                   ),
                   child: Icon(Icons.close, size: 16.sp),
                 ),
@@ -1133,6 +1383,10 @@ class VisitorCardWidget extends StatelessWidget {
         return const Color(0xFFF59E0B); // amber
       case 'rejected':
         return const Color(0xFFEF4444); // red
+      case 'entered':
+        return const Color(0xFF3B82F6); // blue
+      case 'exited':
+        return const Color(0xFF8B5CF6); // purple
       default:
         return colorScheme.onSurfaceVariant;
     }
@@ -1146,6 +1400,10 @@ class VisitorCardWidget extends StatelessWidget {
         return const Color(0xFFFEF3C7);
       case 'rejected':
         return const Color(0xFFFEE2E2);
+      case 'entered':
+        return const Color(0xFFDBEAFE);
+      case 'exited':
+        return const Color(0xFFEDE9FE);
       default:
         return const Color(0xFFF1F5F9);
     }
@@ -1159,6 +1417,10 @@ class VisitorCardWidget extends StatelessWidget {
         return Icons.hourglass_top_rounded;
       case 'rejected':
         return Icons.remove_circle_rounded;
+      case 'entered':
+        return Icons.login_rounded;
+      case 'exited':
+        return Icons.logout_rounded;
       default:
         return Icons.help_outline_rounded;
     }
@@ -1172,8 +1434,12 @@ class VisitorCardWidget extends StatelessWidget {
         return 'Pending';
       case 'rejected':
         return 'Rejected';
+      case 'entered':
+        return 'Inside';
+      case 'exited':
+        return 'Exited';
       default:
-        return status;
+        return status[0].toUpperCase() + status.substring(1);
     }
   }
 
@@ -1813,8 +2079,8 @@ class _AppTextFieldState extends State<AppTextField> {
 
       case FieldType.phone:
         if (v.isEmpty) return 'Please enter phone number';
-        if (!RegExp(r'^[0-9]{10}$').hasMatch(v)) {
-          return 'Enter valid 10-digit number';
+        if (!RegExp(r'^[0-9]{10,15}$').hasMatch(v)) {
+          return 'Enter valid 10-15 digit number';
         }
         return null;
 

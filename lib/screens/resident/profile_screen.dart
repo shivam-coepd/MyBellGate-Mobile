@@ -714,7 +714,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'ID - ${user.appUserId}',
+                    'ID: ${user.appUserId}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -871,13 +871,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                       width: 52.w,
                       height: 52.w,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerLow,
+                        // color: theme.colorScheme.surfaceContainerLow,
+                        color: theme.primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         item['icon'],
                         size: 28,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        // color: theme.colorScheme.onSurfaceVariant,
+                        color: theme.primaryColor,
                       ),
                     ),
                     const SizedBox(height: 8),
