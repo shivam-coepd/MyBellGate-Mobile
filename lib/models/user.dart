@@ -77,6 +77,13 @@ class User extends Equatable {
   @HiveField(23)
   final String? updatedAt;
 
+  // ── Household ──────────────────────────────────────
+  @HiveField(24)
+  final List<ResidentVehicle>? vehicles;
+
+  @HiveField(25)
+  final List<ResidentPet>? pets;
+
   const User({
     required this.id,
     required this.name,
@@ -102,28 +109,48 @@ class User extends Equatable {
     this.facebookId,
     this.createdAt,
     this.updatedAt,
+    this.vehicles,
+    this.pets,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     List<FamilyMember>? parsedFamilyMembers;
+    List<ResidentVehicle>? parsedVehicles;
+    List<ResidentPet>? parsedPets;
     String? parsedUnit;
 
     if (json['resident_data'] != null) {
       final resData = json['resident_data'] as Map<String, dynamic>;
 
+      // Family Members
       if (resData['family_members'] != null) {
         final List<dynamic> fmList = resData['family_members'];
         parsedFamilyMembers = fmList.map((fm) => FamilyMember(
           id: fm['id'].toString(),
           name: fm['name'] ?? '',
           relationship: fm['relation'] ?? '',
+          phone: fm['phone'],
           profileImage: fm['image_url'],
+          isActive: fm['is_active'] == 1 || fm['is_active'] == true,
         )).toList();
       }
 
+      // Flats → derive unit display string
       if (resData['flats'] != null && (resData['flats'] as List).isNotEmpty) {
         final flat = (resData['flats'] as List).first;
         parsedUnit = '${flat['building_name'] ?? ''} - ${flat['flat_number'] ?? ''}';
+      }
+
+      // Vehicles
+      if (resData['vehicles'] != null) {
+        final List<dynamic> vList = resData['vehicles'];
+        parsedVehicles = vList.map((v) => ResidentVehicle.fromJson(v)).toList();
+      }
+
+      // Pets
+      if (resData['pets'] != null) {
+        final List<dynamic> pList = resData['pets'];
+        parsedPets = pList.map((p) => ResidentPet.fromJson(p)).toList();
       }
     }
 
@@ -152,6 +179,8 @@ class User extends Equatable {
       facebookId: json['facebook_id'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
+      vehicles: parsedVehicles,
+      pets: parsedPets,
     );
   }
 
@@ -180,6 +209,8 @@ class User extends Equatable {
     String? facebookId,
     String? createdAt,
     String? updatedAt,
+    List<ResidentVehicle>? vehicles,
+    List<ResidentPet>? pets,
   }) {
     return User(
       id: id ?? this.id,
@@ -206,6 +237,8 @@ class User extends Equatable {
       facebookId: facebookId ?? this.facebookId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      vehicles: vehicles ?? this.vehicles,
+      pets: pets ?? this.pets,
     );
   }
 
@@ -235,9 +268,14 @@ class User extends Equatable {
         facebookId,
         createdAt,
         updatedAt,
+        vehicles,
+        pets,
       ];
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  FamilyMember
+// ═══════════════════════════════════════════════════════════════════════════
 @HiveType(typeId: 1)
 class FamilyMember extends Equatable {
   @HiveField(0)
@@ -252,18 +290,165 @@ class FamilyMember extends Equatable {
   @HiveField(3)
   final String? profileImage;
 
+  @HiveField(4)
+  final String? phone;
+
+  @HiveField(5)
+  final bool isActive;
+
   const FamilyMember({
     required this.id,
     required this.name,
     required this.relationship,
     this.profileImage,
+    this.phone,
+    this.isActive = true,
   });
 
   @override
-  List<Object?> get props => [
-        id,
-        name,
-        relationship,
-        profileImage,
-      ];
+  List<Object?> get props => [id, name, relationship, profileImage, phone, isActive];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ResidentVehicle
+// ═══════════════════════════════════════════════════════════════════════════
+@HiveType(typeId: 2)
+class ResidentVehicle extends Equatable {
+  @HiveField(0)
+  final String id;
+
+  @HiveField(1)
+  final String registrationNumber;
+
+  @HiveField(2)
+  final String? typeName;
+
+  @HiveField(3)
+  final String? make;
+
+  @HiveField(4)
+  final String? model;
+
+  @HiveField(5)
+  final String? color;
+
+  @HiveField(6)
+  final String? parkingSpot;
+
+  @HiveField(7)
+  final int vehicleTypeId;
+
+  @HiveField(8)
+  final int? isElectric;
+
+  const ResidentVehicle({
+    required this.id,
+    required this.registrationNumber,
+    this.typeName,
+    this.make,
+    this.model,
+    this.color,
+    this.parkingSpot,
+    this.vehicleTypeId = 0,
+    this.isElectric,
+  });
+
+  factory ResidentVehicle.fromJson(Map<String, dynamic> json) {
+    return ResidentVehicle(
+      id: json['id'].toString(),
+      registrationNumber: json['registration_number'] ?? '',
+      typeName: json['type_name'],
+      make: json['make'],
+      model: json['model'],
+      color: json['color'],
+      parkingSpot: json['parking_spot'],
+      vehicleTypeId: int.tryParse(json['vehicle_type_id']?.toString() ?? '0') ?? 0,
+      isElectric: json['is_electric'] != null ? int.tryParse(json['is_electric'].toString()) : null,
+    );
+  }
+
+  /// Display-friendly label e.g. "MH12AB1234 · Car"
+  String get label {
+    final parts = <String>[registrationNumber];
+    if (typeName != null && typeName!.isNotEmpty) parts.add(typeName!);
+    return parts.join(' · ');
+  }
+
+  @override
+  List<Object?> get props => [id, registrationNumber, typeName, make, model, color, parkingSpot, isElectric];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ResidentPet
+// ═══════════════════════════════════════════════════════════════════════════
+@HiveType(typeId: 3)
+class ResidentPet extends Equatable {
+  @HiveField(0)
+  final String id;
+
+  @HiveField(1)
+  final String name;
+
+  @HiveField(2)
+  final String? petTypeName;
+
+  @HiveField(3)
+  final String? breed;
+
+  @HiveField(4)
+  final int? age;
+
+  @HiveField(5)
+  final double? weight;
+
+  @HiveField(6)
+  final String? vaccinationStatus;
+
+  @HiveField(7)
+  final String? imageUrl;
+
+  @HiveField(8)
+  final String? notes;
+
+  @HiveField(9)
+  final int petTypeId;
+
+  const ResidentPet({
+    required this.id,
+    required this.name,
+    this.petTypeName,
+    this.breed,
+    this.age,
+    this.weight,
+    this.vaccinationStatus,
+    this.imageUrl,
+    this.notes,
+    this.petTypeId = 0,
+  });
+
+  factory ResidentPet.fromJson(Map<String, dynamic> json) {
+    return ResidentPet(
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      petTypeName: json['pet_type_name'],
+      breed: json['breed'],
+      age: json['age'] != null ? int.tryParse(json['age'].toString()) : null,
+      weight: json['weight'] != null ? double.tryParse(json['weight'].toString()) : null,
+      vaccinationStatus: json['vaccination_status'],
+      imageUrl: json['image_url'],
+      notes: json['notes'],
+      petTypeId: int.tryParse(json['pet_type_id']?.toString() ?? '0') ?? 0,
+    );
+  }
+
+  /// Display-friendly label e.g. "Bruno · Dog"
+  String get label {
+    final parts = <String>[name];
+    if (petTypeName != null && petTypeName!.isNotEmpty) parts.add(petTypeName!);
+    if (breed != null && breed!.isNotEmpty) parts.add(breed!);
+    return parts.join(' · ');
+  }
+
+  @override
+  List<Object?> get props => [id, name, petTypeName, breed, age, vaccinationStatus];
 }

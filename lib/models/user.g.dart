@@ -41,13 +41,15 @@ class UserAdapter extends TypeAdapter<User> {
       facebookId: fields[21] as String?,
       createdAt: fields[22] as String?,
       updatedAt: fields[23] as String?,
+      vehicles: (fields[24] as List?)?.cast<ResidentVehicle>(),
+      pets: (fields[25] as List?)?.cast<ResidentPet>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(24)
+      ..writeByte(26)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -95,7 +97,11 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(22)
       ..write(obj.createdAt)
       ..writeByte(23)
-      ..write(obj.updatedAt);
+      ..write(obj.updatedAt)
+      ..writeByte(24)
+      ..write(obj.vehicles)
+      ..writeByte(25)
+      ..write(obj.pets);
   }
 
   @override
@@ -124,13 +130,15 @@ class FamilyMemberAdapter extends TypeAdapter<FamilyMember> {
       name: fields[1] as String,
       relationship: fields[2] as String,
       profileImage: fields[3] as String?,
+      phone: fields[4] as String?,
+      isActive: fields[5] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, FamilyMember obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -138,7 +146,11 @@ class FamilyMemberAdapter extends TypeAdapter<FamilyMember> {
       ..writeByte(2)
       ..write(obj.relationship)
       ..writeByte(3)
-      ..write(obj.profileImage);
+      ..write(obj.profileImage)
+      ..writeByte(4)
+      ..write(obj.phone)
+      ..writeByte(5)
+      ..write(obj.isActive);
   }
 
   @override
@@ -148,6 +160,125 @@ class FamilyMemberAdapter extends TypeAdapter<FamilyMember> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is FamilyMemberAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class ResidentVehicleAdapter extends TypeAdapter<ResidentVehicle> {
+  @override
+  final int typeId = 2;
+
+  @override
+  ResidentVehicle read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return ResidentVehicle(
+      id: fields[0] as String,
+      registrationNumber: fields[1] as String,
+      typeName: fields[2] as String?,
+      make: fields[3] as String?,
+      model: fields[4] as String?,
+      color: fields[5] as String?,
+      parkingSpot: fields[6] as String?,
+      vehicleTypeId: fields[7] as int,
+      isElectric: fields[8] as int?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ResidentVehicle obj) {
+    writer
+      ..writeByte(9)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.registrationNumber)
+      ..writeByte(2)
+      ..write(obj.typeName)
+      ..writeByte(3)
+      ..write(obj.make)
+      ..writeByte(4)
+      ..write(obj.model)
+      ..writeByte(5)
+      ..write(obj.color)
+      ..writeByte(6)
+      ..write(obj.parkingSpot)
+      ..writeByte(7)
+      ..write(obj.vehicleTypeId)
+      ..writeByte(8)
+      ..write(obj.isElectric);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResidentVehicleAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class ResidentPetAdapter extends TypeAdapter<ResidentPet> {
+  @override
+  final int typeId = 3;
+
+  @override
+  ResidentPet read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return ResidentPet(
+      id: fields[0] as String,
+      name: fields[1] as String,
+      petTypeName: fields[2] as String?,
+      breed: fields[3] as String?,
+      age: fields[4] as int?,
+      weight: fields[5] as double?,
+      vaccinationStatus: fields[6] as String?,
+      imageUrl: fields[7] as String?,
+      notes: fields[8] as String?,
+      petTypeId: fields[9] as int,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ResidentPet obj) {
+    writer
+      ..writeByte(10)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.name)
+      ..writeByte(2)
+      ..write(obj.petTypeName)
+      ..writeByte(3)
+      ..write(obj.breed)
+      ..writeByte(4)
+      ..write(obj.age)
+      ..writeByte(5)
+      ..write(obj.weight)
+      ..writeByte(6)
+      ..write(obj.vaccinationStatus)
+      ..writeByte(7)
+      ..write(obj.imageUrl)
+      ..writeByte(8)
+      ..write(obj.notes)
+      ..writeByte(9)
+      ..write(obj.petTypeId);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResidentPetAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

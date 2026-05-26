@@ -12,6 +12,7 @@ import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
+import 'package:mygate_coepd/repositories/household_repository.dart';
 import 'package:mygate_coepd/screens/auth/splash_screen.dart';
 import 'package:mygate_coepd/screens/auth/onboarding_screen.dart';
 import 'package:mygate_coepd/screens/auth/role_selection_screen.dart';
@@ -69,6 +70,8 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(UserAdapter());
   Hive.registerAdapter(FamilyMemberAdapter());
+  Hive.registerAdapter(ResidentVehicleAdapter());
+  Hive.registerAdapter(ResidentPetAdapter());
 
   // Initialize app configuration
   await AppConfig.init();
@@ -123,8 +126,15 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
           // designSize: Size(screenWidth, screenHeight), // According to current device size
           minTextAdapt: true,
           splitScreenMode: true,
-          child: RepositoryProvider(
-            create: (context) => UserRepository(),
+          child: MultiRepositoryProvider(
+            providers: [
+              RepositoryProvider<UserRepository>(
+                create: (context) => UserRepository(),
+              ),
+              RepositoryProvider<HouseholdRepository>(
+                create: (context) => HouseholdRepository(),
+              ),
+            ],
             child: MultiBlocProvider(
               providers: [
                 BlocProvider<AuthBloc>(
@@ -134,6 +144,7 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
                 BlocProvider<ProfileBloc>(
                   create: (context) => ProfileBloc(
                     userRepository: context.read<UserRepository>(),
+                    householdRepository: context.read<HouseholdRepository>(),
                   ),
                 ),
               ],

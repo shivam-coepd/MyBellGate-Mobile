@@ -711,6 +711,10 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
         ),
         TextButton(
           onPressed: () => Navigator.pushNamed(context, '/announcements'),
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).primaryColor,
+            padding: EdgeInsets.zero,
+          ),
           child: Text('View All', style: TextStyle(fontSize: 14.sp)),
         ),
       ],

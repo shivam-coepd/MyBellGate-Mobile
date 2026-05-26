@@ -7,6 +7,7 @@ import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
 import 'package:mygate_coepd/blocs/profile/profile_event.dart';
 import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
+import 'package:mygate_coepd/repositories/household_repository.dart';
 import 'package:mygate_coepd/screens/resident/edit_profile_screen.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
@@ -26,6 +27,8 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
   List<FamilyMember> _filteredFamilyMembers = [];
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  List<Map<String, dynamic>> _dailyHelpers = [];
+  bool _isLoadingHelpers = true;
 
   final List<Map<String, dynamic>> _settings = [
     {
@@ -55,6 +58,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
     super.initState();
     // Dispatch FetchProfile to get latest profile from backend
     context.read<ProfileBloc>().add(FetchProfile());
+    _loadDailyHelpers();
 
     _searchController.addListener(_filterFamilyMembers);
 
@@ -72,6 +76,24 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
     });
+  }
+
+  Future<void> _loadDailyHelpers() async {
+    try {
+      final helpers = await context
+          .read<HouseholdRepository>()
+          .getDailyHelpers();
+      if (mounted) {
+        setState(() {
+          _dailyHelpers = helpers;
+          _isLoadingHelpers = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingHelpers = false);
+      }
+    }
   }
 
   void _filterFamilyMembers() {
@@ -99,6 +121,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
 
   Future<void> _refreshProfile() async {
     context.read<ProfileBloc>().add(FetchProfile());
+    await _loadDailyHelpers();
   }
 
   @override
@@ -109,6 +132,18 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
         if (state is ProfileLoaded) {
           // Update the search lists when profile loads
           _filterFamilyMembers();
+        } else if (state is HouseholdUpdateSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadDailyHelpers();
+        } else if (state is HouseholdError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
         }
       },
       builder: (context, state) {
@@ -199,7 +234,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                   if (user.bio != null && user.bio!.isNotEmpty)
                     _buildBioCard(user),
                   // Profile Details Sections
-                  _buildProfileSections(user),
+                  _buildProfileSections(user, theme),
                   SizedBox(height: 20.h),
                 ],
               ),
@@ -301,7 +336,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
     );
   }
 
-  Widget _buildProfileSections(User user) {
+  Widget _buildProfileSections(User user, ThemeData theme) {
     final personalItems = [
       {'label': 'Name', 'value': user.name},
       {'label': 'Email', 'value': user.email.isEmpty ? 'N/A' : user.email},
@@ -402,12 +437,283 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                       member.relationship,
                       style: TextStyle(fontSize: 13.sp),
                     ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () {
+                        _showDeleteConfirmDialog(
+                          title: 'Remove Family Member',
+                          content:
+                              'Are you sure you want to remove ${member.name}?',
+                          onDelete: () {
+                            context.read<ProfileBloc>().add(
+                              DeleteFamilyMember(member.id),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }),
+            ],
+          ),
+        ),
+
+        // Vehicles Section
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Text(
+            'Vehicles',
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: [
+              if ((user.vehicles ?? []).isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.w),
+                  child: Text(
+                    'No vehicles listed.',
+                    style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                  ),
+                )
+              else
+                ...(user.vehicles ?? []).map((vehicle) {
+                  return ListTile(
+                    leading: Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.directions_car_outlined,
+                        color: theme.primaryColor,
+                      ),
+                    ),
+                    title: Row(
+                      children: [
+                        Text(
+                          vehicle.registrationNumber,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (vehicle.isElectric == 1) ...[
+                          SizedBox(width: 8.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Text(
+                              'EV',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    subtitle: Text(
+                      vehicle.typeName ?? 'Vehicle',
+                      style: TextStyle(fontSize: 13.sp),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () {
+                        _showDeleteConfirmDialog(
+                          title: 'Remove Vehicle',
+                          content:
+                              'Are you sure you want to remove ${vehicle.registrationNumber}?',
+                          onDelete: () {
+                            context.read<ProfileBloc>().add(
+                              DeleteVehicle(vehicle.id),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }),
+            ],
+          ),
+        ),
+
+        // Pets Section
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Text(
+            'Pets',
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: [
+              if ((user.pets ?? []).isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.w),
+                  child: Text(
+                    'No pets listed.',
+                    style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                  ),
+                )
+              else
+                ...(user.pets ?? []).map((pet) {
+                  return ListTile(
+                    leading: CircleAvatar(
+                      radius: 20.r,
+                      backgroundImage:
+                          pet.imageUrl != null && pet.imageUrl!.isNotEmpty
+                          ? NetworkImage(pet.imageUrl!)
+                          : null,
+                      child: pet.imageUrl == null || pet.imageUrl!.isEmpty
+                          ? const Icon(Icons.pets, color: Colors.grey)
+                          : null,
+                    ),
+                    title: Text(pet.name, style: TextStyle(fontSize: 15.sp)),
+                    subtitle: Text(
+                      '${pet.petTypeName ?? "Pet"}${pet.breed != null ? " · ${pet.breed}" : ""}',
+                      style: TextStyle(fontSize: 13.sp),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () {
+                        _showDeleteConfirmDialog(
+                          title: 'Remove Pet',
+                          content:
+                              'Are you sure you want to remove ${pet.name}?',
+                          onDelete: () {
+                            context.read<ProfileBloc>().add(DeletePet(pet.id));
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }),
+            ],
+          ),
+        ),
+
+        // Daily Helpers Section
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Text(
+            'Daily Help / Service Providers',
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: [
+              if (_isLoadingHelpers)
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  child: const CircularProgressIndicator(),
+                )
+              else if (_dailyHelpers.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.w),
+                  child: Text(
+                    'No daily helpers listed.',
+                    style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                  ),
+                )
+              else
+                ..._dailyHelpers.map((helper) {
+                  return ListTile(
+                    leading: Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.support_agent_outlined,
+                        color: theme.primaryColor,
+                      ),
+                    ),
+                    title: Text(
+                      helper['name'] ?? '',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${helper['purpose'] ?? "Service"}${helper['phone'] != null ? " · ${helper['phone']}" : ""}',
+                      style: TextStyle(fontSize: 13.sp),
+                    ),
                   );
                 }),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _showDeleteConfirmDialog({
+    required String title,
+    required String content,
+    required VoidCallback onDelete,
+  }) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onDelete();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }
