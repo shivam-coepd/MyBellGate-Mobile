@@ -86,7 +86,6 @@ class ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -95,6 +94,17 @@ class ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                margin: EdgeInsets.only(top: 14.h),
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey[500],
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+              ),
+            ),
             Padding(
               padding: EdgeInsets.only(top: 24.w, left: 20.w, right: 20.w),
               child: Text(
@@ -191,7 +201,6 @@ class ProfileScreenState extends State<ProfileScreen> {
     ];
     showModalBottomSheet(
       context: context,
-      backgroundColor: theme.colorScheme.onSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -252,7 +261,6 @@ class ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: theme.colorScheme.onSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -478,10 +486,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           );
         } else if (state is HouseholdError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
       },
@@ -618,9 +623,10 @@ class ProfileScreenState extends State<ProfileScreen> {
                 SliverToBoxAdapter(
                   child: _buildNavItem(
                     icon: Icons.apartment_outlined,
-                    title: 'Unit 402 - Wing A',
+                    // title: 'Unit 402 - Wing A',
+                    title: '${user.unit}',
                     subtitle: 'PRIMARY ADDRESS',
-                    onTap: () => _navigateTo('Unit 402 - Wing A'),
+                    onTap: () => _navigateTo('${user.unit}'),
                     theme: theme,
                   ),
                 ),
@@ -1293,7 +1299,8 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
   }
 
   void _addFamily() {
-    if (_nameController.text.trim().isEmpty || _mobileController.text.trim().isEmpty) {
+    if (_nameController.text.trim().isEmpty ||
+        _mobileController.text.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
@@ -1302,18 +1309,22 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
     final cleanPhone = _mobileController.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (cleanPhone.length != 10) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
+        const SnackBar(
+          content: Text('Please enter a valid 10-digit mobile number'),
+        ),
       );
       return;
     }
     final formattedPhone = '+91$cleanPhone';
     final relation = _selectedTab == 0 ? 'Adult' : 'Kid';
 
-    context.read<ProfileBloc>().add(AddFamilyMember(
-      name: _nameController.text.trim(),
-      relation: relation,
-      phone: formattedPhone,
-    ));
+    context.read<ProfileBloc>().add(
+      AddFamilyMember(
+        name: _nameController.text.trim(),
+        relation: relation,
+        phone: formattedPhone,
+      ),
+    );
     Navigator.pop(context);
   }
 
@@ -1780,33 +1791,38 @@ class _AddDailyHelpBottomSheetState extends State<AddDailyHelpBottomSheet> {
   }
 
   void _addDailyHelp() {
-    if (_nameController.text.trim().isEmpty || _mobileController.text.trim().isEmpty) {
+    if (_nameController.text.trim().isEmpty ||
+        _mobileController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter name and mobile number')),
       );
       return;
     }
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
       return;
     }
     final cleanPhone = _mobileController.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (cleanPhone.length != 10) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
+        const SnackBar(
+          content: Text('Please enter a valid 10-digit mobile number'),
+        ),
       );
       return;
     }
     final formattedPhone = '+91$cleanPhone';
 
-    context.read<ProfileBloc>().add(AddDailyHelper(
-      name: _nameController.text.trim(),
-      phone: formattedPhone,
-      serviceType: _selectedCategory!,
-      visitTime: '$_selectedDate · $_selectedDuration',
-    ));
+    context.read<ProfileBloc>().add(
+      AddDailyHelper(
+        name: _nameController.text.trim(),
+        phone: formattedPhone,
+        serviceType: _selectedCategory!,
+        visitTime: '$_selectedDate · $_selectedDuration',
+      ),
+    );
     Navigator.pop(context);
   }
 
@@ -2346,14 +2362,21 @@ class _AddVehicleBottomSheetState extends State<AddVehicleBottomSheet> {
   void _addVehicle() {
     if (_numberController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a vehicle registration number')),
+        const SnackBar(
+          content: Text('Please enter a vehicle registration number'),
+        ),
       );
       return;
     }
-    final cleanNumber = _numberController.text.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+    final cleanNumber = _numberController.text.replaceAll(
+      RegExp(r'[^a-zA-Z0-9]'),
+      '',
+    );
     if (cleanNumber.length < 5 || cleanNumber.length > 15) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration must be 5-15 alphanumeric characters')),
+        const SnackBar(
+          content: Text('Registration must be 5-15 alphanumeric characters'),
+        ),
       );
       return;
     }
@@ -2365,23 +2388,37 @@ class _AddVehicleBottomSheetState extends State<AddVehicleBottomSheet> {
     }
 
     int? isElectricInt;
-    if (_isElectric == 'yes') isElectricInt = 1;
-    else if (_isElectric == 'no') isElectricInt = 0;
+    if (_isElectric == 'yes')
+      isElectricInt = 1;
+    else if (_isElectric == 'no')
+      isElectricInt = 0;
 
     int? isParkedInt;
-    if (_isParked == 'yes') isParkedInt = 1;
-    else if (_isParked == 'no') isParkedInt = 0;
+    if (_isParked == 'yes')
+      isParkedInt = 1;
+    else if (_isParked == 'no')
+      isParkedInt = 0;
 
-    context.read<ProfileBloc>().add(AddVehicle(
-      registrationNumber: cleanNumber.toUpperCase(),
-      vehicleTypeId: _selectedVehicleTypeId!,
-      make: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
-      model: _modelController.text.trim().isNotEmpty ? _modelController.text.trim() : null,
-      color: _colorController.text.trim().isNotEmpty ? _colorController.text.trim() : null,
-      parkingSpot: _parkingSpotController.text.trim().isNotEmpty ? _parkingSpotController.text.trim() : null,
-      isElectric: isElectricInt,
-      isParked: isParkedInt,
-    ));
+    context.read<ProfileBloc>().add(
+      AddVehicle(
+        registrationNumber: cleanNumber.toUpperCase(),
+        vehicleTypeId: _selectedVehicleTypeId!,
+        make: _nameController.text.trim().isNotEmpty
+            ? _nameController.text.trim()
+            : null,
+        model: _modelController.text.trim().isNotEmpty
+            ? _modelController.text.trim()
+            : null,
+        color: _colorController.text.trim().isNotEmpty
+            ? _colorController.text.trim()
+            : null,
+        parkingSpot: _parkingSpotController.text.trim().isNotEmpty
+            ? _parkingSpotController.text.trim()
+            : null,
+        isElectric: isElectricInt,
+        isParked: isParkedInt,
+      ),
+    );
     Navigator.pop(context);
   }
 
@@ -2662,11 +2699,17 @@ class _AddVehicleBottomSheetState extends State<AddVehicleBottomSheet> {
                               setState(() => _selectedVehicleTypeId = typeId);
                             }
                           },
-                          selectedColor: theme.primaryColor.withValues(alpha: 0.2),
+                          selectedColor: theme.primaryColor.withValues(
+                            alpha: 0.2,
+                          ),
                           checkmarkColor: theme.primaryColor,
                           labelStyle: TextStyle(
-                            color: isSelected ? theme.primaryColor : Colors.black87,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: isSelected
+                                ? theme.primaryColor
+                                : Colors.black87,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                             fontSize: 14.sp,
                           ),
                         );
@@ -2852,12 +2895,12 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  
+
   List<Map<String, dynamic>> _petTypes = [];
   int? _selectedPetTypeId;
   bool _isLoadingTypes = true;
   String _vaccinationStatus = 'pending';
-  
+
   XFile? _pickedImage;
 
   @override
@@ -2946,11 +2989,13 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
   void _addPet() {
     if (_nameController.text.trim().isEmpty || _selectedPetTypeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill required fields (Name and Pet Type)')),
+        const SnackBar(
+          content: Text('Please fill required fields (Name and Pet Type)'),
+        ),
       );
       return;
     }
-    
+
     int? age;
     if (_ageController.text.trim().isNotEmpty) {
       age = int.tryParse(_ageController.text.trim());
@@ -2960,17 +3005,23 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
     if (_weightController.text.trim().isNotEmpty) {
       weight = double.tryParse(_weightController.text.trim());
     }
-    
-    context.read<ProfileBloc>().add(AddPet(
-      name: _nameController.text.trim(),
-      petTypeId: _selectedPetTypeId!,
-      breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
-      age: age,
-      weight: weight,
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-      vaccinationStatus: _vaccinationStatus,
-    ));
-    
+
+    context.read<ProfileBloc>().add(
+      AddPet(
+        name: _nameController.text.trim(),
+        petTypeId: _selectedPetTypeId!,
+        breed: _breedController.text.trim().isEmpty
+            ? null
+            : _breedController.text.trim(),
+        age: age,
+        weight: weight,
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
+        vaccinationStatus: _vaccinationStatus,
+      ),
+    );
+
     Navigator.pop(context);
   }
 
@@ -3156,7 +3207,9 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
                           ),
                           child: TextField(
                             controller: _weightController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             decoration: InputDecoration(
                               hintText: 'Weight (kg)',
                               hintStyle: TextStyle(
@@ -3201,13 +3254,12 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _vaccinationStatus.replaceAll('_', ' ').toUpperCase(),
+                            _vaccinationStatus
+                                .replaceAll('_', ' ')
+                                .toUpperCase(),
                             style: TextStyle(fontSize: 16.sp),
                           ),
-                          const Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.grey,
-                          ),
+                          const Icon(Icons.arrow_drop_down, color: Colors.grey),
                         ],
                       ),
                     ),
@@ -3293,11 +3345,17 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
                                 setState(() => _selectedPetTypeId = typeId);
                               }
                             },
-                            selectedColor: theme.primaryColor.withValues(alpha: 0.2),
+                            selectedColor: theme.primaryColor.withValues(
+                              alpha: 0.2,
+                            ),
                             checkmarkColor: theme.primaryColor,
                             labelStyle: TextStyle(
-                              color: isSelected ? theme.primaryColor : Colors.black87,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected
+                                  ? theme.primaryColor
+                                  : Colors.black87,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                               fontSize: 14.sp,
                             ),
                           );

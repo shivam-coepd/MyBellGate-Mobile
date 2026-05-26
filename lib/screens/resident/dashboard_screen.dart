@@ -112,7 +112,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
       'screen': 'bills',
     },
     {
-      'icon': Icons.calendar_today,
+      'icon': Icons.calendar_month,
       'label': 'Amenities',
       'color': Colors.purple,
       'screen': 'amenities',
@@ -369,7 +369,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           ),
         ),
         SizedBox(
-          height: 180.h,
+          height: 181.h,
           child: ListView.builder(
             padding: EdgeInsets.symmetric(horizontal: 18.w),
             scrollDirection: Axis.horizontal,
@@ -570,19 +570,19 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                               switch (action['screen']) {
                                 case 'visitors':
                                   // We need to access the parent ResidentMainScreen to change tabs
-                                  Navigator.pushNamed(
+                                  Navigator.pushReplacementNamed(
                                     context,
                                     '/resident-main/visitors',
                                   );
                                   break;
                                 case 'services':
-                                  Navigator.pushNamed(
+                                  Navigator.pushReplacementNamed(
                                     context,
                                     '/resident-main/services',
                                   );
                                   break;
                                 case 'bills':
-                                  Navigator.pushNamed(
+                                  Navigator.pushReplacementNamed(
                                     context,
                                     '/resident-main/bills',
                                   );
@@ -591,7 +591,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                   Navigator.pushNamed(context, '/amenities');
                                   break;
                                 case 'community':
-                                  Navigator.pushNamed(
+                                  Navigator.pushReplacementNamed(
                                     context,
                                     '/resident-main/community',
                                   );
@@ -600,6 +600,12 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                   Navigator.pushNamed(
                                     context,
                                     '/announcements',
+                                  );
+                                  break;
+                                case 'profile':
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/profile-details',
                                   );
                                   break;
                               }
@@ -1038,7 +1044,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [cardColor, cardColor.withValues(alpha: 0.8)],
+            colors: [cardColor, cardColor.withValues(alpha: 0.7)],
           ),
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
@@ -1056,10 +1062,10 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
             handleStatAction(context, stat['type'] as String);
           },
           child: Padding(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.all(14.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1091,53 +1097,56 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                     ),
                   ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stat['title'] as String,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (stat['amount'] != null)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
                       Text(
-                        stat['amount'] as String,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    else
-                      Row(
-                        children: [
-                          Text(
-                            '${stat['count']}',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            stat['subtitle'] as String,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (stat['dueDate'] != null) ...[
-                      SizedBox(height: 4.h),
-                      Text(
-                        stat['dueDate'] as String,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
+                        stat['title'] as String,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
+                      if (stat['amount'] != null)
+                        Text(
+                          stat['amount'] as String,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      else
+                        Row(
+                          children: [
+                            Text(
+                              '${stat['count']}',
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              stat['subtitle'] as String,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (stat['dueDate'] != null) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          stat['dueDate'] as String,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),

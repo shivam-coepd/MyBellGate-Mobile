@@ -9,7 +9,8 @@ class AmenityBookingScreen extends StatefulWidget {
   State<AmenityBookingScreen> createState() => _AmenityBookingScreenState();
 }
 
-class _AmenityBookingScreenState extends State<AmenityBookingScreen> with TickerProviderStateMixin {
+class _AmenityBookingScreenState extends State<AmenityBookingScreen>
+    with TickerProviderStateMixin {
   String _selectedDate = '2023-05-15';
   String _selectedTime = '18:00';
   int _selectedAmenityId = 1; // Use ID instead of index
@@ -84,19 +85,21 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
   void initState() {
     super.initState();
     _filteredAmenities = _amenities;
-    _selectedAmenityId = _amenities.isNotEmpty ? _amenities[0]['id'] : 1; // Set initial ID
+    _selectedAmenityId = _amenities.isNotEmpty
+        ? _amenities[0]['id']
+        : 1; // Set initial ID
     _searchController.addListener(_filterAmenities);
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-    
+
     // Start animations after a small delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
@@ -106,9 +109,9 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
   void _filterAmenities() {
     setState(() {
       String searchTerm = _searchController.text.toLowerCase();
-      
+
       _filteredAmenities = _amenities.where((amenity) {
-        return searchTerm.isEmpty || 
+        return searchTerm.isEmpty ||
             amenity['name'].toLowerCase().contains(searchTerm) ||
             amenity['description'].toLowerCase().contains(searchTerm);
       }).toList();
@@ -150,7 +153,10 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                 children: [
                   Text(
                     'Select Amenity',
-                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   SizedBox(height: 16.h),
                   _filteredAmenities.isEmpty
@@ -163,25 +169,29 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                             itemBuilder: (context, index) {
                               final amenity = _filteredAmenities[index];
                               return ScaleTransition(
-                                scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-                                  CurvedAnimation(
-                                    parent: _animationController,
-                                    curve: Interval(
-                                      0.1 * index,
-                                      0.3 + (0.1 * index),
-                                      curve: Curves.elasticOut,
+                                scale: Tween<double>(begin: 0.9, end: 1.0)
+                                    .animate(
+                                      CurvedAnimation(
+                                        parent: _animationController,
+                                        curve: Interval(
+                                          0.1 * index,
+                                          0.3 + (0.1 * index),
+                                          curve: Curves.elasticOut,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
                                 child: GestureDetector(
-                                  onTap: () => setState(() => _selectedAmenityId = amenity['id']),
+                                  onTap: () => setState(
+                                    () => _selectedAmenityId = amenity['id'],
+                                  ),
                                   child: Container(
                                     width: 150.w,
                                     margin: EdgeInsets.only(right: 16.w),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(16.r),
                                       border: Border.all(
-                                        color: _selectedAmenityId == amenity['id']
+                                        color:
+                                            _selectedAmenityId == amenity['id']
                                             ? Theme.of(context).primaryColor
                                             : Colors.transparent,
                                         width: 2.w,
@@ -203,7 +213,9 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                                                 end: Alignment.bottomCenter,
                                                 colors: [
                                                   Colors.transparent,
-                                                  Colors.black.withValues(alpha: 0.7),
+                                                  Colors.black.withValues(
+                                                    alpha: 0.7,
+                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -282,7 +294,10 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                   children: [
                     Text(
                       'Select Date',
-                      style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 16.h),
                     Container(
@@ -295,7 +310,9 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                         scrollDirection: Axis.horizontal,
                         itemCount: 7,
                         itemBuilder: (context, index) {
-                          final date = DateTime.now().add(Duration(days: index));
+                          final date = DateTime.now().add(
+                            Duration(days: index),
+                          );
                           final formattedDate =
                               '${date.day}/${date.month}/${date.year}';
                           final isSelected =
@@ -372,7 +389,10 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                   children: [
                     Text(
                       'Select Time Slot',
-                      style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 16.h),
                     Wrap(
@@ -386,18 +406,20 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                             final slot = entry.value;
                             final isSelected = _selectedTime == slot;
                             return ScaleTransition(
-                              scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-                                CurvedAnimation(
-                                  parent: _animationController,
-                                  curve: Interval(
-                                    0.05 * index,
-                                    0.25 + (0.05 * index),
-                                    curve: Curves.elasticOut,
+                              scale: Tween<double>(begin: 0.9, end: 1.0)
+                                  .animate(
+                                    CurvedAnimation(
+                                      parent: _animationController,
+                                      curve: Interval(
+                                        0.05 * index,
+                                        0.25 + (0.05 * index),
+                                        curve: Curves.elasticOut,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
                               child: GestureDetector(
-                                onTap: () => setState(() => _selectedTime = slot),
+                                onTap: () =>
+                                    setState(() => _selectedTime = slot),
                                 child: Container(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: 20.w,
@@ -420,7 +442,9 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                                     style: TextStyle(
                                       color: isSelected
                                           ? Colors.white
-                                          : Theme.of(context).textTheme.bodyLarge?.color,
+                                          : Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge?.color,
                                       fontWeight: isSelected
                                           ? FontWeight.bold
                                           : FontWeight.normal,
@@ -451,7 +475,6 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                     child: ElevatedButton(
                       onPressed: _confirmBooking,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF006D77),
                         padding: EdgeInsets.symmetric(vertical: 16.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.r),
@@ -459,7 +482,10 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
                       ),
                       child: Text(
                         'Book Amenity',
-                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -537,21 +563,33 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
 
   void _confirmBooking() {
     final selectedAmenity = _getSelectedAmenity();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm Amenity Booking', style: TextStyle(fontSize: 18.sp)),
+          title: Text(
+            'Confirm Amenity Booking',
+            style: TextStyle(fontSize: 18.sp),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Amenity: ${selectedAmenity['name']}', style: TextStyle(fontSize: 16.sp)),
-              Text('Date: ${_formatSelectedDate()}', style: TextStyle(fontSize: 16.sp)),
+              Text(
+                'Amenity: ${selectedAmenity['name']}',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              Text(
+                'Date: ${_formatSelectedDate()}',
+                style: TextStyle(fontSize: 16.sp),
+              ),
               Text('Time: $_selectedTime', style: TextStyle(fontSize: 16.sp)),
               SizedBox(height: 16.h),
-              Text('Please confirm to proceed with booking', style: TextStyle(fontSize: 14.sp)),
+              Text(
+                'Please confirm to proceed with booking',
+                style: TextStyle(fontSize: 14.sp),
+              ),
             ],
           ),
           actions: [
@@ -578,7 +616,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
 
   void _completeBooking() {
     final selectedAmenity = _getSelectedAmenity();
-    
+
     // Show booking processing
     showDialog(
       context: context,
@@ -605,15 +643,19 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen> with Ticker
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Booking confirmed for ${selectedAmenity['name']} on ${_formatSelectedDate()} at $_selectedTime',
-              style: TextStyle(fontSize: 14.sp)),
+            'Booking confirmed for ${selectedAmenity['name']} on ${_formatSelectedDate()} at $_selectedTime',
+            style: TextStyle(fontSize: 14.sp),
+          ),
           backgroundColor: Colors.green,
         ),
       );
 
       // Reset selection
       setState(() {
-        _selectedDate = DateTime.now().add(const Duration(days: 1)).toString().split(' ')[0];
+        _selectedDate = DateTime.now()
+            .add(const Duration(days: 1))
+            .toString()
+            .split(' ')[0];
         _selectedTime = selectedAmenity['availableSlots'][0];
       });
     });

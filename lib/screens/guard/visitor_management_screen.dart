@@ -12,15 +12,16 @@ import 'package:mygate_coepd/screens/guard/details/qr_generator_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class VisitorManagementScreen extends StatefulWidget {
-  const VisitorManagementScreen({super.key});
+class GuardVisitorManagementScreen extends StatefulWidget {
+  const GuardVisitorManagementScreen({super.key});
 
   @override
-  State<VisitorManagementScreen> createState() =>
+  State<GuardVisitorManagementScreen> createState() =>
       _VisitorManagementScreenState();
 }
 
-class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
+class _VisitorManagementScreenState
+    extends State<GuardVisitorManagementScreen> {
   int _selectedIndex = 0;
   bool _isOffline = false;
 

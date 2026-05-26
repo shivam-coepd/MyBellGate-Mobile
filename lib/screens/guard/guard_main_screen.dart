@@ -6,9 +6,9 @@ import 'package:mygate_coepd/blocs/auth/auth_event.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/screens/guard/guard_dashboard_screen.dart';
-import 'package:mygate_coepd/screens/guard/visitor_management_screen.dart';
 import 'package:mygate_coepd/screens/guard/attendance_screen.dart';
 import 'package:mygate_coepd/screens/guard/profile_screen.dart';
+import 'package:mygate_coepd/screens/guard/visitor_management_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 
 class GuardMainScreen extends StatefulWidget {
@@ -33,7 +33,7 @@ class _GuardMainScreenState extends State<GuardMainScreen>
     super.initState();
     _screens = [
       const GuardDashboardScreen(),
-      const VisitorManagementScreen(),
+      const GuardVisitorManagementScreen(),
       const AttendanceScreen(),
       const GuardProfileScreen(),
     ];

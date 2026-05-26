@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/screens/resident/dashboard_screen.dart';
-import 'package:mygate_coepd/screens/resident/visitor_management_new.dart';
+import 'package:mygate_coepd/screens/resident/visitor_management_screen.dart';
 import 'package:mygate_coepd/screens/resident/service_requests_screen.dart';
 import 'package:mygate_coepd/screens/resident/bills_payments_screen.dart';
 import 'package:mygate_coepd/screens/society/events_and_community_screen.dart';
@@ -24,7 +24,7 @@ class _ResidentMainScreenState extends State<ResidentMainScreen>
 
   final List<Widget> _screens = [
     const ResidentDashboardScreen(),
-    const VisitorManagementScreenNew(),
+    const VisitorManagementScreen(),
     const ServiceRequestsScreen(),
     const BillsPaymentsScreen(),
     const EventsAndCommunityScreen(),
@@ -107,7 +107,7 @@ class _ResidentMainScreenState extends State<ResidentMainScreen>
 
     return Scaffold(
       key: _scaffoldKey,
-     backgroundColor:theme.scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
 
       body: _screens[_currentIndex],
       bottomNavigationBar: _buildPremiumNavigationBar(theme, primaryColor),
