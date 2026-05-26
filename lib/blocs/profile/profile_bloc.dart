@@ -22,6 +22,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<AddPet>(_onAddPet);
     on<DeletePet>(_onDeletePet);
     on<AddDailyHelper>(_onAddDailyHelper);
+    on<DeleteDailyHelper>(_onDeleteDailyHelper);
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -302,6 +303,31 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       }
     } catch (e) {
       log('AddDailyHelper error: $e');
+      emit(HouseholdError(
+        message: e.toString().replaceFirst('Exception: ', ''),
+        user: currentUser,
+      ));
+      if (currentUser != null) emit(ProfileLoaded(user: currentUser));
+    }
+  }
+
+  Future<void> _onDeleteDailyHelper(
+    DeleteDailyHelper event,
+    Emitter<ProfileState> emit,
+  ) async {
+    final currentUser = _getCurrentUser();
+    emit(HouseholdUpdating());
+    try {
+      await householdRepository.deleteDailyHelper(event.helperId);
+      if (currentUser != null) {
+        emit(HouseholdUpdateSuccess(
+          user: currentUser,
+          message: 'Daily helper removed successfully',
+        ));
+        emit(ProfileLoaded(user: currentUser));
+      }
+    } catch (e) {
+      log('DeleteDailyHelper error: $e');
       emit(HouseholdError(
         message: e.toString().replaceFirst('Exception: ', ''),
         user: currentUser,

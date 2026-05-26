@@ -681,6 +681,21 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                       '${helper['purpose'] ?? "Service"}${helper['phone'] != null ? " · ${helper['phone']}" : ""}',
                       style: TextStyle(fontSize: 13.sp),
                     ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () {
+                        final helperId = int.tryParse(helper['id'].toString()) ?? 0;
+                        _showDeleteConfirmDialog(
+                          title: 'Remove Daily Help',
+                          content: 'Are you sure you want to remove ${helper['name'] ?? "this helper"}?',
+                          onDelete: () {
+                            context.read<ProfileBloc>().add(
+                              DeleteDailyHelper(helperId),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   );
                 }),
             ],

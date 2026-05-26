@@ -155,3 +155,11 @@ class AddDailyHelper extends ProfileEvent {
   @override
   List<Object?> get props => [name, phone, serviceType];
 }
+
+class DeleteDailyHelper extends ProfileEvent {
+  final int helperId;
+  const DeleteDailyHelper(this.helperId);
+
+  @override
+  List<Object?> get props => [helperId];
+}

@@ -324,4 +324,18 @@ class HouseholdRepository {
       throw Exception(msg);
     }
   }
+
+  /// DELETE /api/visitors/{id}
+  Future<void> deleteDailyHelper(int id) async {
+    try {
+      final response = await _apiService.dio.delete('/visitors/$id');
+      log('deleteDailyHelper($id): ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to delete daily helper');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
 }
