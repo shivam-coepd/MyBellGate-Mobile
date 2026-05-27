@@ -82,6 +82,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
         bottom: TabBar(
           controller: _tabController,
           // labelColor: theme.colorScheme.onSurface,
+          dividerColor: Colors.transparent,
           labelColor: Colors.white,
           indicatorColor: Colors.white,
           unselectedLabelColor: Colors.white,

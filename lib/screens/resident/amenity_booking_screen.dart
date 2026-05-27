@@ -58,8 +58,9 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
       context.read<AmenityBloc>().add(const LoadAmenities());
     });
     _tabController.addListener(() {
-      if (_tabController.index == 1)
+      if (_tabController.index == 1) {
         context.read<AmenityBloc>().add(const LoadMyBookings());
+      }
     });
   }
 
@@ -180,23 +181,27 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
   Widget _buildBookTab() {
     return BlocBuilder<AmenityBloc, AmenityState>(
       builder: (ctx, state) {
-        if (state is AmenityLoading)
+        if (state is AmenityLoading) {
           return const Center(child: CircularProgressIndicator());
-        if (state is AmenityError)
+        }
+        if (state is AmenityError) {
           return _errorWidget(
             state.message,
             () => ctx.read<AmenityBloc>().add(const LoadAmenities()),
           );
+        }
         if (state is AmenitiesLoaded) {
           _amenities = state.amenities;
-          if (_selected == null && _amenities.isNotEmpty)
+          if (_selected == null && _amenities.isNotEmpty) {
             _selected = _amenities.first;
+          }
         }
-        if (_amenities.isEmpty)
+        if (_amenities.isEmpty) {
           return _emptyWidget(
             'No Amenities',
             'No active amenities in your society.',
           );
+        }
         return _bookContent(state);
       },
     );
@@ -227,7 +232,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
                     width: 140.w,
                     margin: EdgeInsets.only(right: 14.w),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
                         color: sel
                             ? Theme.of(context).primaryColor
@@ -236,7 +241,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
                       ),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(13.r),
+                      borderRadius: BorderRadius.circular(9.r),
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
@@ -519,19 +524,22 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
   Widget _buildMyBookingsTab() {
     return BlocBuilder<AmenityBloc, AmenityState>(
       builder: (ctx, state) {
-        if (state is AmenityLoading)
+        if (state is AmenityLoading) {
           return const Center(child: CircularProgressIndicator());
-        if (state is AmenityError)
+        }
+        if (state is AmenityError) {
           return _errorWidget(
             state.message,
             () => ctx.read<AmenityBloc>().add(const LoadMyBookings()),
           );
+        }
         if (state is BookingsLoaded) {
-          if (state.bookings.isEmpty)
+          if (state.bookings.isEmpty) {
             return _emptyWidget(
               'No Bookings',
               'Book an amenity to see it here.',
             );
+          }
           return RefreshIndicator(
             onRefresh: () async =>
                 ctx.read<AmenityBloc>().add(const LoadMyBookings()),
@@ -550,6 +558,9 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
                     break;
                   case 'completed':
                     sc = Colors.blue;
+                    break;
+                  case 'already_booked':
+                    sc = Colors.deepOrange;
                     break;
                   default:
                     sc = Colors.orange;

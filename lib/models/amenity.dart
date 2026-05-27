@@ -68,7 +68,7 @@ class AmenityBooking extends Equatable {
   final String bookingDate;
   final String startTime;
   final String endTime;
-  final String status; // requested | confirmed | cancelled | completed
+  final String status; // requested | confirmed | cancelled | completed | already_booked
   final double totalAmount;
   final String? createdAt;
 
@@ -119,6 +119,8 @@ class AmenityBooking extends Equatable {
         return 'Cancelled';
       case 'completed':
         return 'Completed';
+      case 'already_booked':
+        return 'Already Booked';
       default:
         return 'Requested';
     }
