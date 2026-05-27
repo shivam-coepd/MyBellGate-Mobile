@@ -846,284 +846,283 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
+      margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 36.h),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.w),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 50.w,
-                  height: 5.h,
-                  decoration: BoxDecoration(
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(16.w),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 50.w,
+                height: 5.h,
+                decoration: BoxDecoration(
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                SizedBox(height: 6.h),
-                Text(
-                  'Add New Visitor',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                'Add New Visitor',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
-                SizedBox(height: 6.h),
-                // Camera/Photo Section
-                Container(
-                  height: 240.h,
-                  width: double.infinity,
-                  // margin: EdgeInsets.only(top: 4.h),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF1E293B)
-                        : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
-                  child: _capturedImage != null
-                      ? Stack(
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 6.h),
+              // Camera/Photo Section
+              Container(
+                height: 240.h,
+                width: double.infinity,
+                // margin: EdgeInsets.only(top: 4.h),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+                child: _capturedImage != null
+                    ? Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: Image.network(
+                              _capturedImage!.path,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 2.w,
+                            right: 2.w,
+                            child: IconButton(
+                              icon: Container(
+                                padding: EdgeInsets.all(2.w),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.error,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  color: colorScheme.onError,
+                                  size: 20.sp,
+                                ),
+                              ),
+                              onPressed: () =>
+                                  setState(() => _capturedImage = null),
+                            ),
+                          ),
+                        ],
+                      )
+                    : _isCameraInitialized && _cameraController != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: CameraPreview(_cameraController!),
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16.r),
-                              child: Image.network(
-                                _capturedImage!.path,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.cover,
+                            Icon(
+                              Icons.photo_camera,
+                              size: 48.sp,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.5,
                               ),
                             ),
-                            Positioned(
-                              top: 2.w,
-                              right: 2.w,
-                              child: IconButton(
-                                icon: Container(
-                                  padding: EdgeInsets.all(2.w),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.error,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.close,
-                                    color: colorScheme.onError,
-                                    size: 20.sp,
-                                  ),
-                                ),
-                                onPressed: () =>
-                                    setState(() => _capturedImage = null),
+                            SizedBox(height: 1.h),
+                            Text(
+                              'Camera not available',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
-                        )
-                      : _isCameraInitialized && _cameraController != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: CameraPreview(_cameraController!),
-                        )
-                      : Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.photo_camera,
-                                size: 48.sp,
-                                color: colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                              SizedBox(height: 1.h),
-                              Text(
-                                'Camera not available',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
-                ),
-                SizedBox(height: 16.h),
-                Row(
-                  spacing: 8.w,
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _capturePhoto,
-                        icon: Icon(
-                          Icons.camera_alt,
-                          color: colorScheme.onPrimary,
-                          size: 20.sp,
-                        ),
-                        label: const Text('Capture'),
                       ),
-                    ),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickFromGallery,
-                        icon: Icon(
-                          Icons.photo_library,
-                          color: colorScheme.primary,
-                          size: 20.sp,
-                        ),
-                        label: const Text('Gallery'),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                spacing: 8.w,
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _capturePhoto,
+                      icon: Icon(
+                        Icons.camera_alt,
+                        color: colorScheme.onPrimary,
+                        size: 20.sp,
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                AppTextField(
-                  controller: _nameController,
-                  label: 'Visitor Name',
-                  hint: 'Enter full name',
-                  icon: Icons.person_outline,
-                  type: FieldType.name,
-                  keyboardType: TextInputType.name,
-                ),
-                SizedBox(height: 12.h),
-                AppTextField(
-                  controller: _phoneController,
-                  label: 'Phone Number',
-                  hint: 'Enter 10-digit number',
-                  icon: Icons.phone_outlined,
-                  type: FieldType.phone,
-                  keyboardType: TextInputType.phone,
-                ),
-                SizedBox(height: 12.h),
-                AppTextField(
-                  controller: _purposeController,
-                  label: 'Purpose of Visit',
-                  hint: 'Why are you visiting?',
-                  icon: Icons.work_outline,
-                  type: FieldType.purpose,
-                ),
-                SizedBox(height: 12.h),
-                // Visitor Type Selector
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Visitor Type',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
+                      label: const Text('Capture'),
                     ),
                   ),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickFromGallery,
+                      icon: Icon(
+                        Icons.photo_library,
+                        color: colorScheme.primary,
+                        size: 20.sp,
+                      ),
+                      label: const Text('Gallery'),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              AppTextField(
+                controller: _nameController,
+                label: 'Visitor Name',
+                hint: 'Enter full name',
+                icon: Icons.person_outline,
+                type: FieldType.name,
+                keyboardType: TextInputType.name,
+              ),
+              SizedBox(height: 12.h),
+              AppTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                hint: 'Enter 10-digit number',
+                icon: Icons.phone_outlined,
+                type: FieldType.phone,
+                keyboardType: TextInputType.phone,
+              ),
+              SizedBox(height: 12.h),
+              AppTextField(
+                controller: _purposeController,
+                label: 'Purpose of Visit',
+                hint: 'Why are you visiting?',
+                icon: Icons.work_outline,
+                type: FieldType.purpose,
+              ),
+              SizedBox(height: 12.h),
+              // Visitor Type Selector
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Visitor Type',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                SizedBox(height: 8.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 6.h,
-                  children: _visitorTypes.map((type) {
-                    final isSelected = _selectedVisitorType == type['value'];
-                    return GestureDetector(
-                      onTap: () =>
-                          setState(() => _selectedVisitorType = type['value']!),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 14.w,
-                          vertical: 8.h,
-                        ),
-                        decoration: BoxDecoration(
+              ),
+              SizedBox(height: 8.h),
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 6.h,
+                children: _visitorTypes.map((type) {
+                  final isSelected = _selectedVisitorType == type['value'];
+                  return GestureDetector(
+                    onTap: () =>
+                        setState(() => _selectedVisitorType = type['value']!),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 8.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? colorScheme.primary
+                            : isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(24.r),
+                        border: Border.all(
                           color: isSelected
                               ? colorScheme.primary
-                              : isDark
-                              ? const Color(0xFF1E293B)
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(24.r),
-                          border: Border.all(
-                            color: isSelected
-                                ? colorScheme.primary
-                                : colorScheme.outline.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              type['icon']!,
-                              style: TextStyle(fontSize: 14.sp),
-                            ),
-                            SizedBox(width: 6.w),
-                            Text(
-                              type['label']!,
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w500,
-                                color: isSelected
-                                    ? colorScheme.onPrimary
-                                    : colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
+                              : colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 12.h),
-                Row(
-                  spacing: 8.w,
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _selectDate,
-                        icon: Icon(
-                          Icons.calendar_today,
-                          color: colorScheme.primary,
-                          size: 20.sp,
-                        ),
-                        label: Text(
-                          _selectedDate != null
-                              ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                              : 'Select Date',
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            type['icon']!,
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            type['label']!,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? colorScheme.onPrimary
+                                  : colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _selectTime,
-                        icon: Icon(
-                          Icons.access_time,
-                          color: colorScheme.primary,
-                          size: 20.sp,
-                        ),
-                        label: Text(
-                          _selectedTime != null
-                              ? _selectedTime!.format(context)
-                              : 'Select Time',
-                        ),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                spacing: 8.w,
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _selectDate,
+                      icon: Icon(
+                        Icons.calendar_today,
+                        color: colorScheme.primary,
+                        size: 20.sp,
+                      ),
+                      label: Text(
+                        _selectedDate != null
+                            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                            : 'Select Date',
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52.h,
-                  child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitForm,
-                    child: _isSubmitting
-                        ? SizedBox(
-                            width: 22.w,
-                            height: 22.w,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: colorScheme.onPrimary,
-                            ),
-                          )
-                        : const Text(
-                            'Add Visitor',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
                   ),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _selectTime,
+                      icon: Icon(
+                        Icons.access_time,
+                        color: colorScheme.primary,
+                        size: 20.sp,
+                      ),
+                      label: Text(
+                        _selectedTime != null
+                            ? _selectedTime!.format(context)
+                            : 'Select Time',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              SizedBox(
+                width: double.infinity,
+                height: 52.h,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitForm,
+                  child: _isSubmitting
+                      ? SizedBox(
+                          width: 22.w,
+                          height: 22.w,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: colorScheme.onPrimary,
+                          ),
+                        )
+                      : const Text(
+                          'Add Visitor',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

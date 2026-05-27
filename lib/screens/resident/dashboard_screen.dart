@@ -5,10 +5,14 @@ import 'package:carousel_slider/carousel_slider.dart';
 
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
-import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
+import 'package:mygate_coepd/repositories/visitor_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
+import 'package:mygate_coepd/models/announcement.dart';
+import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
+import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 
 class ResidentDashboardScreen extends StatefulWidget {
   const ResidentDashboardScreen({super.key});
@@ -21,60 +25,6 @@ class ResidentDashboardScreen extends StatefulWidget {
 class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  final List<Map<String, dynamic>> _quickStats = [
-    {
-      'label': 'Visitors',
-      'value': 3,
-      'icon': Icons.people,
-      'color': Colors.blue,
-    },
-    {
-      'label': 'Bills Due',
-      'value': 2,
-      'icon': Icons.credit_card,
-      'color': Colors.orange,
-    },
-    {
-      'label': 'Updates',
-      'value': 4,
-      'icon': Icons.notifications,
-      'color': Colors.purple,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _announcements = [
-    {
-      'title': 'Water Supply Interruption',
-      'date': 'Today, 10:00 AM - 2:00 PM',
-      'description':
-          'Due to maintenance work, there will be a water supply interruption.',
-      'image':
-          'https://images.unsplash.com/photo-1536566482680-fca31930a0bd?auto=format&fit=crop&q=80&w=400&h=300',
-      'tag': 'Important',
-      'tagColor': Colors.red,
-    },
-    {
-      'title': 'Annual General Meeting',
-      'date': 'May 15, 6:00 PM',
-      'description':
-          'All residents are requested to attend the Annual General Meeting.',
-      'image':
-          'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400&h=300',
-      'tag': 'Event',
-      'tagColor': Colors.blue,
-    },
-    {
-      'title': 'New Gym Equipment',
-      'date': 'Starting Next Week',
-      'description': 'We have installed new equipment in the community gym.',
-      'image':
-          'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=400&h=300',
-      'tag': 'Amenity',
-      'tagColor': Colors.green,
-    },
-  ];
-
   final List<Map<String, dynamic>> _upcomingEvents = [
     {
       'title': 'Weekend Pool Party',
@@ -140,6 +90,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   final ScrollController _scrollController = ScrollController();
+  int _pendingVisitorsCount = 0;
 
   @override
   void initState() {
@@ -156,9 +107,27 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     // Start animations after a small delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
+      context.read<CommunicationsBloc>().add(const LoadAnnouncements(isDraft: false));
+      context.read<AccountingBloc>().add(const LoadInvoices());
+      context.read<HelpdeskBloc>().add(const LoadTickets());
+      _fetchVisitorsCount();
     });
 
     super.initState();
+  }
+
+  Future<void> _fetchVisitorsCount() async {
+    try {
+      final repository = VisitorRepository();
+      final visitors = await repository.getVisitors(status: 'pending');
+      if (mounted) {
+        setState(() {
+          _pendingVisitorsCount = visitors.length;
+        });
+      }
+    } catch (e) {
+      // ignore on dashboard
+    }
   }
 
   @override
@@ -170,11 +139,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is Authenticated) {
-          final user = state.user;
           return SafeArea(
             child: Scaffold(
               key: _scaffoldKey,
@@ -213,295 +180,356 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   }
 
   Widget getQuickStatsUI() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20.r),
-          bottomRight: Radius.circular(20.r),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.grey.withValues(alpha: 0.2),
-            blurRadius: 6.w,
-            offset: Offset(0, 4.h),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: _quickStats.asMap().entries.map((entry) {
-          final index = entry.key;
-          final stat = entry.value;
+    return BlocBuilder<AccountingBloc, AccountingState>(
+      builder: (context, accState) {
+        return BlocBuilder<CommunicationsBloc, CommunicationsState>(
+          builder: (context, commState) {
+            int billsDue = 0;
+            if (accState is InvoicesLoaded) {
+              billsDue = accState.invoices.where((i) => i.status != 'paid').length;
+            }
+            int updatesCount = 0;
+            if (commState is AnnouncementsLoaded) {
+              updatesCount = commState.announcements.length;
+            }
 
-          return Expanded(
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.8, end: 1.0).animate(
-                CurvedAnimation(
-                  parent: _animationController,
-                  curve: Interval(
-                    0.1 * index,
-                    0.5 + (0.1 * index),
-                    curve: Curves.elasticOut,
-                  ),
-                ),
-              ),
-              child: GestureDetector(
-                onTap: () {
-                  // Navigate to respective screens based on stat type
-                  switch (stat['label']) {
-                    case 'Visitors':
-                      Navigator.pushNamed(context, '/visitors');
-                      break;
-                    case 'Bills Due':
-                      Navigator.pushNamed(context, '/bills');
-                      break;
-                    case 'Updates':
-                      Navigator.pushNamed(context, '/announcements');
-                      break;
-                  }
-                },
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  elevation: 2,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Theme.of(context).cardTheme.color!,
-                          Theme.of(
-                            context,
-                          ).cardTheme.color!.withValues(alpha: 0.95),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(12.w),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(10.w),
-                            decoration: BoxDecoration(
-                              color: stat['color'].withValues(
-                                alpha:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? 0.2
-                                    : 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(30.r),
-                            ),
-                            child: Icon(
-                              stat['icon'] as IconData,
-                              color: stat['color'],
-                              size: 28.sp,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            stat['label'] as String,
-                            style: TextStyle(
-                              color: stat['color'],
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            '${stat['value']}',
-                            style: TextStyle(
-                              color: stat['color'],
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+            final List<Map<String, dynamic>> dynamicStats = [
+              {
+                'label': 'Visitors',
+                'value': _pendingVisitorsCount,
+                'icon': Icons.people,
+                'color': Colors.blue,
+              },
+              {
+                'label': 'Bills Due',
+                'value': billsDue,
+                'icon': Icons.credit_card,
+                'color': Colors.orange,
+              },
+              {
+                'label': 'Updates',
+                'value': updatesCount,
+                'icon': Icons.notifications,
+                'color': Colors.purple,
+              },
+            ];
 
-  Widget getAnnouncementsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Latest Updates',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.titleLarge?.color,
+            return Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20.r),
+                  bottomRight: Radius.circular(20.r),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.2),
+                    blurRadius: 6.w,
+                    offset: Offset(0, 4.h),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/announcements');
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).primaryColor,
-                  padding: EdgeInsets.zero,
-                ),
-                child: Text('View All', style: TextStyle(fontSize: 14.sp)),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 181.h,
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 18.w),
-            scrollDirection: Axis.horizontal,
-            itemCount: _announcements.length,
-            itemBuilder: (context, index) {
-              final int count = _announcements.length;
-              final Animation<double> animation =
-                  Tween<double>(begin: 0.0, end: 1.0).animate(
-                    CurvedAnimation(
-                      parent: _animationController,
-                      curve: Interval(
-                        (1 / count) * index,
-                        1.0,
-                        curve: Curves.fastOutSlowIn,
-                      ),
-                    ),
-                  );
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: dynamicStats.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final stat = entry.value;
 
-              final announcement = _announcements[index];
-              return AnimatedBuilder(
-                animation: animation,
-                builder: (BuildContext context, Widget? child) {
-                  return Opacity(
-                    opacity: animation.value,
-                    child: Transform(
-                      transform: Matrix4.translationValues(
-                        0.0,
-                        50 * (1.0 - animation.value),
-                        0.0,
+                  return Expanded(
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+                        CurvedAnimation(
+                          parent: _animationController,
+                          curve: Interval(
+                            0.1 * index,
+                            0.5 + (0.1 * index),
+                            curve: Curves.elasticOut,
+                          ),
+                        ),
                       ),
-                      child: SizedBox(
-                        width: 250.w,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Navigate to respective screens based on stat type
+                          switch (stat['label']) {
+                            case 'Visitors':
+                              Navigator.pushNamed(context, '/visitors');
+                              break;
+                            case 'Bills Due':
+                              Navigator.pushNamed(context, '/bills');
+                              break;
+                            case 'Updates':
+                              Navigator.pushNamed(context, '/announcements');
+                              break;
+                          }
+                        },
                         child: Card(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(12.r),
                           ),
                           elevation: 2,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16.r),
-                            child: Stack(
-                              children: [
-                                CachedNetworkImage(
-                                  imageUrl: announcement['image'],
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.black.withValues(
-                                                alpha: 0.7,
-                                              )
-                                            : Colors.black.withValues(
-                                                alpha: 0.5,
-                                              ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 15.h,
-                                  left: 15.w,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10.w,
-                                      vertical: 5.h,
-                                    ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Theme.of(context).cardTheme.color!,
+                                  Theme.of(
+                                    context,
+                                  ).cardTheme.color!.withValues(alpha: 0.95),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(12.w),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(10.w),
                                     decoration: BoxDecoration(
-                                      color: announcement['tagColor'],
-                                      borderRadius: BorderRadius.circular(20.r),
-                                    ),
-                                    child: Text(
-                                      announcement['tag'],
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.bold,
+                                      color: stat['color'].withValues(
+                                        alpha:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? 0.2
+                                            : 0.1,
                                       ),
+                                      borderRadius: BorderRadius.circular(30.r),
+                                    ),
+                                    child: Icon(
+                                      stat['icon'] as IconData,
+                                      color: stat['color'],
+                                      size: 28.sp,
                                     ),
                                   ),
-                                ),
-                                Positioned(
-                                  bottom: 15.h,
-                                  left: 15.w,
-                                  right: 15.w,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        announcement['title'],
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16.sp,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      SizedBox(height: 5.h),
-                                      Text(
-                                        announcement['date'],
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.8,
-                                          ),
-                                          fontSize: 12.sp,
-                                        ),
-                                      ),
-                                    ],
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    stat['label'] as String,
+                                    style: TextStyle(
+                                      color: stat['color'],
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    '${stat['value']}',
+                                    style: TextStyle(
+                                      color: stat['color'],
+                                      fontSize: 20.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   );
+                }).toList(),
+              ),
+            );
+          }
+        );
+      }
+    );
+  }
+
+  Widget getAnnouncementsSection() {
+    return BlocBuilder<CommunicationsBloc, CommunicationsState>(
+      builder: (context, state) {
+        List<Announcement> items = [];
+        if (state is AnnouncementsLoaded) {
+          items = state.announcements.take(5).toList();
+        }
+        if (items.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Latest Updates',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/announcements');
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).primaryColor,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: Text('View All', style: TextStyle(fontSize: 14.sp)),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 181.h,
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 18.w),
+                scrollDirection: Axis.horizontal,
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final int count = items.length;
+                  final Animation<double> animation =
+                      Tween<double>(begin: 0.0, end: 1.0).animate(
+                        CurvedAnimation(
+                          parent: _animationController,
+                          curve: Interval(
+                            (1 / count) * index,
+                            1.0,
+                            curve: Curves.fastOutSlowIn,
+                          ),
+                        ),
+                      );
+
+                  final announcement = items[index];
+                  
+                  Color tagColor;
+                  switch (announcement.sendVia) {
+                    case 'sms': tagColor = Colors.orange; break;
+                    case 'email': tagColor = Colors.blue; break;
+                    case 'whatsapp': tagColor = Colors.green; break;
+                    default: tagColor = const Color(0xFF006D77);
+                  }
+
+                  final String fallbackImage = index % 2 == 0 
+                      ? 'https://images.unsplash.com/photo-1536566482680-fca31930a0bd?auto=format&fit=crop&q=80&w=400&h=300'
+                      : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400&h=300';
+
+                  return AnimatedBuilder(
+                    animation: animation,
+                    builder: (BuildContext context, Widget? child) {
+                      return Opacity(
+                        opacity: animation.value,
+                        child: Transform(
+                          transform: Matrix4.translationValues(
+                            0.0,
+                            50 * (1.0 - animation.value),
+                            0.0,
+                          ),
+                          child: SizedBox(
+                            width: 250.w,
+                            child: Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              elevation: 2,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16.r),
+                                child: Stack(
+                                  children: [
+                                    CachedNetworkImage(
+                                      imageUrl: fallbackImage,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Colors.transparent,
+                                            Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.black.withValues(
+                                                    alpha: 0.7,
+                                                  )
+                                                : Colors.black.withValues(
+                                                    alpha: 0.5,
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 15.h,
+                                      left: 15.w,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10.w,
+                                          vertical: 5.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: tagColor,
+                                          borderRadius: BorderRadius.circular(20.r),
+                                        ),
+                                        child: Text(
+                                          announcement.sendVia.toUpperCase(),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12.sp,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 15.h,
+                                      left: 15.w,
+                                      right: 15.w,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            announcement.title,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          SizedBox(height: 5.h),
+                                          Text(
+                                            announcement.createdAt ?? '',
+                                            style: TextStyle(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.8,
+                                              ),
+                                              fontSize: 12.sp,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
-              );
-            },
-          ),
-        ),
-      ],
+              ),
+            ),
+          ],
+        );
+      }
     );
   }
 
@@ -987,37 +1015,50 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   }
 
   Widget statsCarouselWidget() {
-    final List<Map<String, dynamic>> statsData = [
-      {
-        "type": "maintenance",
-        "title": "Maintenance Due",
-        "amount": "₹ 8,500",
-        "dueDate": "Due by 31 Dec 2025",
-        "icon": Icons.account_balance_wallet,
-        "color": const Color(0xFF7C7296),
-        "action": "Pay Now",
-      },
-      {
-        "type": "visitors",
-        "title": "Visitor Requests",
-        "count": 2,
-        "subtitle": "Pending approval",
-        "icon": Icons.people,
-        "color": const Color(0xFFC9A74D),
-        "action": "Review",
-      },
-      {
-        "type": "complaints",
-        "title": "Active Complaints",
-        "count": 1,
-        "subtitle": "In progress",
-        "icon": Icons.report_problem,
-        "color": const Color.fromARGB(255, 178, 59, 59),
-        "action": "Track",
-      },
-    ];
+    return BlocBuilder<AccountingBloc, AccountingState>(
+      builder: (context, accState) {
+        return BlocBuilder<HelpdeskBloc, HelpdeskState>(
+          builder: (context, helpState) {
+            double totalDue = 0;
+            if (accState is InvoicesLoaded) {
+               totalDue = accState.invoices.where((i) => i.status != 'paid').fold(0.0, (sum, item) => sum + item.totalAmount);
+            }
+            int activeTickets = 0;
+            if (helpState is TicketsLoaded) {
+               activeTickets = helpState.tickets.where((t) => t.status != 'resolved' && t.status != 'closed').length;
+            }
 
-    int currentPage = 0;
+            final List<Map<String, dynamic>> statsData = [
+              {
+                "type": "maintenance",
+                "title": "Maintenance Due",
+                "amount": "₹ ${totalDue.toStringAsFixed(0)}",
+                "dueDate": totalDue > 0 ? "Pay before due date" : "All clear",
+                "icon": Icons.account_balance_wallet,
+                "color": const Color(0xFF7C7296),
+                "action": "Pay Now",
+              },
+              {
+                "type": "visitors",
+                "title": "Visitor Requests",
+                "count": _pendingVisitorsCount,
+                "subtitle": _pendingVisitorsCount == 1 ? "Pending approval" : "Pending approvals",
+                "icon": Icons.people,
+                "color": const Color(0xFFC9A74D),
+                "action": "Review",
+              },
+              {
+                "type": "complaints",
+                "title": "Active Complaints",
+                "count": activeTickets,
+                "subtitle": "In progress",
+                "icon": Icons.report_problem,
+                "color": const Color.fromARGB(255, 178, 59, 59),
+                "action": "Track",
+              },
+            ];
+
+            int currentPage = 0;
 
     void handleStatAction(BuildContext context, String type) {
       switch (type) {
@@ -1197,9 +1238,11 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 );
               }),
             ),
-          ],
-        );
-      },
-    );
+            ],
+          );
+        },
+      );
+    });
+    });
   }
 }

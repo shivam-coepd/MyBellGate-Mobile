@@ -27,6 +27,14 @@ import 'package:mygate_coepd/screens/resident/amenity_booking_screen.dart';
 import 'package:mygate_coepd/screens/resident/community_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_details_screen.dart';
 import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
+import 'package:mygate_coepd/repositories/amenity_repository.dart';
+import 'package:mygate_coepd/repositories/helpdesk_repository.dart';
+import 'package:mygate_coepd/repositories/communications_repository.dart';
+import 'package:mygate_coepd/repositories/accounting_repository.dart';
+import 'package:mygate_coepd/blocs/amenity/amenity_bloc.dart';
+import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
+import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
+import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:sizer/sizer.dart';
 
 void main() async {
@@ -134,6 +142,18 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
               RepositoryProvider<HouseholdRepository>(
                 create: (context) => HouseholdRepository(),
               ),
+              RepositoryProvider<AmenityRepository>(
+                create: (context) => AmenityRepository(),
+              ),
+              RepositoryProvider<HelpdeskRepository>(
+                create: (context) => HelpdeskRepository(),
+              ),
+              RepositoryProvider<CommunicationsRepository>(
+                create: (context) => CommunicationsRepository(),
+              ),
+              RepositoryProvider<AccountingRepository>(
+                create: (context) => AccountingRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -145,6 +165,26 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
                   create: (context) => ProfileBloc(
                     userRepository: context.read<UserRepository>(),
                     householdRepository: context.read<HouseholdRepository>(),
+                  ),
+                ),
+                BlocProvider<AmenityBloc>(
+                  create: (context) => AmenityBloc(
+                    repository: context.read<AmenityRepository>(),
+                  ),
+                ),
+                BlocProvider<HelpdeskBloc>(
+                  create: (context) => HelpdeskBloc(
+                    repository: context.read<HelpdeskRepository>(),
+                  ),
+                ),
+                BlocProvider<CommunicationsBloc>(
+                  create: (context) => CommunicationsBloc(
+                    repository: context.read<CommunicationsRepository>(),
+                  ),
+                ),
+                BlocProvider<AccountingBloc>(
+                  create: (context) => AccountingBloc(
+                    repository: context.read<AccountingRepository>(),
                   ),
                 ),
               ],
