@@ -94,6 +94,45 @@ class HelpdeskRepository {
     }
   }
 
+  Future<void> updateTicket(
+    String id, {
+    String? title,
+    String? description,
+    String? category,
+    String? priority,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {};
+      if (title != null) body['title'] = title;
+      if (description != null) body['description'] = description;
+      if (category != null) body['category'] = category;
+      if (priority != null) body['priority'] = priority;
+
+      final response = await _apiService.dio.patch(
+        '/helpdesk/tickets/$id',
+        data: body,
+      );
+      log('Update Ticket: ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to update ticket');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+    }
+  }
+
+  Future<void> deleteTicket(String id) async {
+    try {
+      final response = await _apiService.dio.delete('/helpdesk/tickets/$id');
+      log('Delete Ticket: ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to delete ticket');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+    }
+  }
+
   Future<String> addComment(String ticketId, String comment) async {
     try {
       final response = await _apiService.dio.post(

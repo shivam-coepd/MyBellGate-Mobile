@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/models/announcement.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -108,7 +109,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     return BlocBuilder<CommunicationsBloc, CommunicationsState>(
       builder: (ctx, state) {
         if (state is CommunicationsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _AnnouncementListShimmer();
         }
         if (state is CommunicationsError) {
           return _errorWidget(
@@ -304,7 +305,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     return BlocBuilder<CommunicationsBloc, CommunicationsState>(
       builder: (ctx, state) {
         if (state is CommunicationsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _AnnouncementListShimmer();
         }
         if (state is CommunicationsError) {
           return _errorWidget(
@@ -527,4 +528,103 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
       ],
     ),
   );
+}
+
+class _AnnouncementListShimmer extends StatelessWidget {
+  const _AnnouncementListShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        itemCount: 6,
+        itemBuilder: (_, __) => Padding(
+          padding: EdgeInsets.only(bottom: 14.h),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.r),
+            ),
+            padding: EdgeInsets.all(14.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title row + tag badge
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 14.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Container(
+                      width: 50.w,
+                      height: 22.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                // Meta row: time + author
+                Row(
+                  children: [
+                    Container(
+                      width: 12.w,
+                      height: 12.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Container(
+                      width: 100.w,
+                      height: 11.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Container(
+                      width: 12.w,
+                      height: 12.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Container(
+                      width: 80.w,
+                      height: 11.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

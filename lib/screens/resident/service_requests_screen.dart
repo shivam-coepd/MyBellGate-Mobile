@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/models/ticket.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ServiceRequestsScreen extends StatefulWidget {
   const ServiceRequestsScreen({super.key});
@@ -132,7 +133,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       builder: (sheetCtx) => StatefulBuilder(
-        builder: (sCtx, sSet) => Padding(
+        builder: (sCtx, sSet) => SingleChildScrollView(
           padding: EdgeInsets.only(
             left: 16.w,
             right: 16.w,
@@ -306,6 +307,38 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
             ),
           );
           context.read<HelpdeskBloc>().add(const LoadTickets());
+        } else if (state is TicketUpdated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Ticket updated!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.read<HelpdeskBloc>().add(const LoadTickets());
+        } else if (state is TicketDeleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🗑️ Ticket deleted.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          context.read<HelpdeskBloc>().add(const LoadTickets());
+        } else if (state is TicketStatusUpdated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Status updated!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.read<HelpdeskBloc>().add(const LoadTickets());
+        } else if (state is CommentAdded) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Comment added!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.read<HelpdeskBloc>().add(const LoadTickets());
         } else if (state is HelpdeskError) {
           log("HelpdeskError: ${state.message}");
           ScaffoldMessenger.of(context).showSnackBar(
@@ -390,66 +423,26 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                   ),
                 ],
               ),
-            ),
-            SizedBox(height: 12.h),
-            // Category quick-filters
-            SizedBox(
-              height: 72.h,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                children: _serviceCategories.map((cat) {
-                  final color = cat['color'] as Color;
-                  final icon = cat['icon'] as IconData;
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(right: 16.w),
-                          padding: EdgeInsets.all(12.w),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: color.withValues(alpha: 0.15),
-                                blurRadius: 4,
-                                offset: const Offset(2, 4),
-                              ),
-                            ],
-                          ),
-                          child: Icon(icon, color: color, size: 22.sp),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          cat['name'].toString(),
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            SizedBox(height: 8.h),
+            ),SizedBox(height: 8.h),
             // Ticket list
             Expanded(
               child: BlocBuilder<HelpdeskBloc, HelpdeskState>(
                 builder: (ctx, state) {
-                  if (state is HelpdeskLoading)
-                    return const Center(child: CircularProgressIndicator());
-                  if (state is HelpdeskError)
+                  if (state is HelpdeskLoading) {
+                    return const _TicketListShimmer();
+                  }
+                  if (state is HelpdeskError) {
                     return _errorWidget(
                       state.message,
                       () => ctx.read<HelpdeskBloc>().add(const LoadTickets()),
                     );
+                  }
+
+                  // Determine the event to fire based on active tab
+                  final refreshEvent = _selectedTab == 'history'
+                      ? const LoadTickets(status: 'resolved')
+                      : const LoadTickets();
+
                   if (state is TicketsLoaded) {
                     final tickets = _selectedTab == 'active'
                         ? state.tickets
@@ -466,19 +459,34 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                                     t.status == 'closed',
                               )
                               .toList();
-                    if (tickets.isEmpty)
-                      return _emptyWidget(
-                        _selectedTab == 'active'
-                            ? 'No Active Requests'
-                            : 'No History',
-                        _selectedTab == 'active'
-                            ? 'Tap + to create a new service request'
-                            : 'Resolved requests appear here.',
+
+                    if (tickets.isEmpty) {
+                      // Wrap empty state in a scrollable so RefreshIndicator works
+                      return RefreshIndicator(
+                        onRefresh: () async =>
+                            ctx.read<HelpdeskBloc>().add(refreshEvent),
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(height: 80.h),
+                            _emptyWidget(
+                              _selectedTab == 'active'
+                                  ? 'No Active Requests'
+                                  : 'No History',
+                              _selectedTab == 'active'
+                                  ? 'Tap + to create a new service request'
+                                  : 'Resolved requests appear here.',
+                            ),
+                          ],
+                        ),
                       );
+                    }
+
                     return RefreshIndicator(
                       onRefresh: () async =>
-                          ctx.read<HelpdeskBloc>().add(const LoadTickets()),
+                          ctx.read<HelpdeskBloc>().add(refreshEvent),
                       child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: EdgeInsets.only(
                           left: 16.w,
                           right: 16.w,
@@ -489,7 +497,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                       ),
                     );
                   }
-                  return const Center(child: CircularProgressIndicator());
+                  return const _TicketListShimmer();
                 },
               ),
             ),
@@ -503,120 +511,540 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
     final sc = _statusColor(t.status);
     final cc = _categoryColor(t.category);
     final ci = _categoryIcon(t.category);
+    final isActive = t.status == 'open' || t.status == 'in_progress';
+
     return Card(
       margin: EdgeInsets.only(bottom: 14.h),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
       elevation: 3,
-      child: Padding(
-        padding: EdgeInsets.all(14.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10.w),
-                  decoration: BoxDecoration(
-                    color: cc.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(color: cc.withValues(alpha: 0.3)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14.r),
+        onTap: () => _showTicketActions(t),
+        child: Padding(
+          padding: EdgeInsets.all(14.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10.w),
+                    decoration: BoxDecoration(
+                      color: cc.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(color: cc.withValues(alpha: 0.3)),
+                    ),
+                    child: Icon(ci, color: cc, size: 22.sp),
                   ),
-                  child: Icon(ci, color: cc, size: 22.sp),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.title,
-                        style: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 3.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 7.w,
-                          vertical: 3.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: cc.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Text(
-                          t.category[0].toUpperCase() + t.category.substring(1),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.title,
                           style: TextStyle(
-                            fontSize: 11.sp,
-                            color: cc,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 3.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 7.w,
+                            vertical: 3.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cc.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Text(
+                            t.category[0].toUpperCase() +
+                                t.category.substring(1),
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: cc,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 9.w,
+                      vertical: 5.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: sc,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Text(
+                      t.statusLabel,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              Text(
+                t.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+              ),
+              SizedBox(height: 10.h),
+              Row(
+                children: [
+                  Icon(Icons.tag, size: 13.sp, color: Colors.grey),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '#${t.ticketNumber}',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                  ),
+                  SizedBox(width: 12.w),
+                  Icon(Icons.flag, size: 13.sp, color: Colors.grey),
+                  SizedBox(width: 4.w),
+                  Text(
+                    t.priorityLabel,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                  ),
+                  SizedBox(width: 12.w),
+                  Icon(Icons.access_time, size: 13.sp, color: Colors.grey),
+                  SizedBox(width: 4.w),
+                  Text(
+                    t.createdAt?.substring(0, 10) ?? '',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                  ),
+                  if (t.commentCount > 0) ...[
+                    SizedBox(width: 12.w),
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 13.sp,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      '${t.commentCount}',
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                    ),
+                  ],
+                ],
+              ),
+              if (t.assignedToName != null) ...[
+                SizedBox(height: 4.h),
+                Row(
+                  children: [
+                    Text(
+                      "Assigned to: ",
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                    ),
+                    Text(
+                      t.assignedToName!,
+                      style: TextStyle(fontSize: 12.sp, color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ],
+              // Action buttons — only shown for active (open / in_progress) tickets
+              if (isActive) ...[
+                SizedBox(height: 12.h),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.2)),
+                SizedBox(height: 8.h),
+                Row(
+                  children: [
+                    // Edit — open tickets only
+                    if (t.status == 'open') ...[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showEditTicketForm(t),
+                          icon: Icon(Icons.edit_outlined,
+                              size: 16.sp,
+                              color: Theme.of(context).primaryColor),
+                          label: Text(
+                            'Edit',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 8.h),
+                            side: BorderSide(
+                                color: Theme.of(context).primaryColor),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
                           ),
                         ),
                       ),
+                      SizedBox(width: 8.w),
                     ],
-                  ),
+                    // Resolve
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.read<HelpdeskBloc>().add(
+                              UpdateTicketStatus(t.id, 'resolved'),
+                            ),
+                        icon: Icon(Icons.check_circle_outline,
+                            size: 16.sp, color: Colors.green),
+                        label: Text(
+                          'Resolve',
+                          style:
+                              TextStyle(fontSize: 13.sp, color: Colors.green),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
+                          side: const BorderSide(color: Colors.green),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Delete — open tickets only
+                    if (t.status == 'open') ...[
+                      SizedBox(width: 8.w),
+                      OutlinedButton(
+                        onPressed: () => _confirmDelete(t),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              vertical: 8.h, horizontal: 12.w),
+                          side: const BorderSide(color: Colors.red),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                        child: Icon(Icons.delete_outline,
+                            size: 18.sp, color: Colors.red),
+                      ),
+                    ],
+                  ],
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 5.h),
-                  decoration: BoxDecoration(
-                    color: sc,
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Text(
-                    t.statusLabel,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.bold,
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTicketActions(Ticket t) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 8.h),
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // Edit — only for open tickets
+            if (t.status == 'open')
+              ListTile(
+                leading: Icon(
+                  Icons.edit_outlined,
+                  color: Theme.of(context).primaryColor,
+                ),
+                title: const Text('Edit Ticket'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showEditTicketForm(t);
+                },
+              ),
+            // Close ticket
+            if (t.status == 'open' || t.status == 'in_progress')
+              ListTile(
+                leading: const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                ),
+                title: const Text('Mark as Resolved'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.read<HelpdeskBloc>().add(
+                    UpdateTicketStatus(t.id, 'resolved'),
+                  );
+                },
+              ),
+            // Add comment
+            ListTile(
+              leading: const Icon(
+                Icons.chat_bubble_outline,
+                color: Colors.blue,
+              ),
+              title: const Text('Add Comment'),
+              onTap: () {
+                Navigator.pop(context);
+                _showAddCommentDialog(t);
+              },
+            ),
+            // Delete — only for open tickets
+            if (t.status == 'open')
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text(
+                  'Delete Ticket',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDelete(t);
+                },
+              ),
+            SizedBox(height: 8.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditTicketForm(Ticket t) {
+    final titleCtrl = TextEditingController(text: t.title);
+    final descCtrl = TextEditingController(text: t.description);
+    String category = t.category;
+    String priority = t.priority;
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (sCtx, sSet) => SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 20.h,
+            bottom: MediaQuery.of(sCtx).viewInsets.bottom + 20.h,
+          ),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2.r),
                     ),
                   ),
                 ),
-              ],
-            ),
-            SizedBox(height: 10.h),
-            Text(
-              t.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13.sp, color: Colors.grey),
-            ),
-            SizedBox(height: 10.h),
-            Row(
-              children: [
-                Icon(Icons.tag, size: 13.sp, color: Colors.grey),
-                SizedBox(width: 4.w),
+                SizedBox(height: 16.h),
                 Text(
-                  '#${t.ticketNumber}',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                ),
-                SizedBox(width: 12.w),
-                Icon(Icons.flag, size: 13.sp, color: Colors.grey),
-                SizedBox(width: 4.w),
-                Text(
-                  t.priorityLabel,
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                ),
-                SizedBox(width: 12.w),
-                Icon(Icons.access_time, size: 13.sp, color: Colors.grey),
-                SizedBox(width: 4.w),
-                Text(
-                  t.createdAt?.substring(0, 10) ?? '',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                ),
-                if (t.assignedToName != null) ...[
-                  const Spacer(),
-                  Icon(Icons.person, size: 13.sp, color: Colors.grey),
-                  SizedBox(width: 4.w),
-                  Text(
-                    t.assignedToName!,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                  'Edit Ticket',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                ),
+                SizedBox(height: 16.h),
+                TextFormField(
+                  controller: titleCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Title *',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Title is required'
+                      : null,
+                ),
+                SizedBox(height: 12.h),
+                TextFormField(
+                  controller: descCtrl,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: 'Description *',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Description is required'
+                      : null,
+                ),
+                SizedBox(height: 12.h),
+                DropdownButtonFormField<String>(
+                  value: category,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  items:
+                      [
+                            'general',
+                            'maintenance',
+                            'security',
+                            'billing',
+                            'plumbing',
+                            'electrical',
+                            'carpentry',
+                            'cleaning',
+                            'other',
+                          ]
+                          .map(
+                            (c) => DropdownMenuItem(
+                              value: c,
+                              child: Text(c[0].toUpperCase() + c.substring(1)),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (v) => sSet(() => category = v ?? category),
+                ),
+                SizedBox(height: 12.h),
+                DropdownButtonFormField<String>(
+                  value: priority,
+                  decoration: InputDecoration(
+                    labelText: 'Priority',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  items: [
+                    DropdownMenuItem(value: 'low', child: const Text('🟢 Low')),
+                    DropdownMenuItem(
+                      value: 'medium',
+                      child: const Text('🟡 Medium'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'high',
+                      child: const Text('🟠 High'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'urgent',
+                      child: const Text('🔴 Urgent'),
+                    ),
+                  ],
+                  onChanged: (v) => sSet(() => priority = v ?? priority),
+                ),
+                SizedBox(height: 20.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sCtx),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (formKey.currentState!.validate()) {
+                            Navigator.pop(sCtx);
+                            context.read<HelpdeskBloc>().add(
+                              UpdateTicket(
+                                t.id,
+                                title: titleCtrl.text.trim(),
+                                description: descCtrl.text.trim(),
+                                category: category,
+                                priority: priority,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                        ),
+                        child: Text('Save', style: TextStyle(fontSize: 14.sp)),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  void _showAddCommentDialog(Ticket t) {
+    final commentCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Comment'),
+        content: TextField(
+          controller: commentCtrl,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Write your comment...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = commentCtrl.text.trim();
+              if (text.isNotEmpty) {
+                Navigator.pop(ctx);
+                context.read<HelpdeskBloc>().add(AddTicketComment(t.id, text));
+              }
+            },
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(Ticket t) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Ticket'),
+        content: Text(
+          'Are you sure you want to delete ticket #${t.ticketNumber}? This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<HelpdeskBloc>().add(DeleteTicket(t.id));
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
@@ -675,4 +1103,134 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
       ],
     ),
   );
+}
+
+class _TicketListShimmer extends StatelessWidget {
+  const _TicketListShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor = isDark
+        ? const Color(0xFF334155)
+        : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListView.builder(
+        padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 80.h),
+        itemCount: 5,
+        itemBuilder: (_, __) => Padding(
+          padding: EdgeInsets.only(bottom: 14.h),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.r),
+            ),
+            padding: EdgeInsets.all(14.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row: icon + title + status badge
+                Row(
+                  children: [
+                    Container(
+                      width: 44.w,
+                      height: 44.w,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 14.h,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                          ),
+                          SizedBox(height: 6.h),
+                          Container(
+                            height: 12.h,
+                            width: 80.w,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 60.w,
+                      height: 24.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                // Description lines
+                Container(
+                  height: 12.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Container(
+                  height: 12.h,
+                  width: 200.w,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                // Meta row: ticket#, priority, date
+                Row(
+                  children: List.generate(
+                    3,
+                    (i) => [
+                      Container(
+                        width: 12.w,
+                        height: 12.w,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Container(
+                        width: 50.w,
+                        height: 11.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                    ],
+                  ).expand((e) => e).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

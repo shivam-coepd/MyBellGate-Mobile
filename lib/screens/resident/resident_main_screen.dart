@@ -109,7 +109,10 @@ class _ResidentMainScreenState extends State<ResidentMainScreen>
       key: _scaffoldKey,
       backgroundColor: theme.scaffoldBackgroundColor,
 
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
       bottomNavigationBar: _buildPremiumNavigationBar(theme, primaryColor),
     );
   }

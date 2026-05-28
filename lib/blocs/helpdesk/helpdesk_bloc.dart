@@ -58,6 +58,30 @@ class AddTicketComment extends HelpdeskEvent {
   List<Object?> get props => [ticketId, comment];
 }
 
+class UpdateTicket extends HelpdeskEvent {
+  final String ticketId;
+  final String? title;
+  final String? description;
+  final String? category;
+  final String? priority;
+  const UpdateTicket(
+    this.ticketId, {
+    this.title,
+    this.description,
+    this.category,
+    this.priority,
+  });
+  @override
+  List<Object?> get props => [ticketId, title, description, category, priority];
+}
+
+class DeleteTicket extends HelpdeskEvent {
+  final String ticketId;
+  const DeleteTicket(this.ticketId);
+  @override
+  List<Object?> get props => [ticketId];
+}
+
 // ── States ────────────────────────────────────────────────────────────────────
 
 abstract class HelpdeskState extends Equatable {
@@ -95,6 +119,10 @@ class TicketStatusUpdated extends HelpdeskState {}
 
 class CommentAdded extends HelpdeskState {}
 
+class TicketUpdated extends HelpdeskState {}
+
+class TicketDeleted extends HelpdeskState {}
+
 class HelpdeskError extends HelpdeskState {
   final String message;
   const HelpdeskError(this.message);
@@ -115,6 +143,8 @@ class HelpdeskBloc extends Bloc<HelpdeskEvent, HelpdeskState> {
     on<CreateTicket>(_onCreateTicket);
     on<UpdateTicketStatus>(_onUpdateTicketStatus);
     on<AddTicketComment>(_onAddTicketComment);
+    on<UpdateTicket>(_onUpdateTicket);
+    on<DeleteTicket>(_onDeleteTicket);
   }
 
   Future<void> _onLoadTickets(
@@ -176,6 +206,34 @@ class HelpdeskBloc extends Bloc<HelpdeskEvent, HelpdeskState> {
     try {
       await _repository.addComment(event.ticketId, event.comment);
       emit(CommentAdded());
+    } catch (e) {
+      emit(HelpdeskError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onUpdateTicket(
+      UpdateTicket event, Emitter<HelpdeskState> emit) async {
+    emit(HelpdeskLoading());
+    try {
+      await _repository.updateTicket(
+        event.ticketId,
+        title: event.title,
+        description: event.description,
+        category: event.category,
+        priority: event.priority,
+      );
+      emit(TicketUpdated());
+    } catch (e) {
+      emit(HelpdeskError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onDeleteTicket(
+      DeleteTicket event, Emitter<HelpdeskState> emit) async {
+    emit(HelpdeskLoading());
+    try {
+      await _repository.deleteTicket(event.ticketId);
+      emit(TicketDeleted());
     } catch (e) {
       emit(HelpdeskError(e.toString().replaceFirst('Exception: ', '')));
     }

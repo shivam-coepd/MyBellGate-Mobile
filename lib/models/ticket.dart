@@ -56,6 +56,7 @@ class Ticket extends Equatable {
   final List<TicketComment> comments;
   final String? createdAt;
   final String? updatedAt;
+  final int commentCount;
 
   const Ticket({
     required this.id,
@@ -75,6 +76,7 @@ class Ticket extends Equatable {
     this.comments = const [],
     this.createdAt,
     this.updatedAt,
+    this.commentCount = 0,
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -103,6 +105,7 @@ class Ticket extends Equatable {
       comments: parsedComments,
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
+      commentCount: int.tryParse(json['comment_count']?.toString() ?? '0') ?? 0,
     );
   }
 

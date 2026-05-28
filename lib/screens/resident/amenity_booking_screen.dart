@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/amenity/amenity_bloc.dart';
 import 'package:mygate_coepd/models/amenity.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AmenityBookingScreen extends StatefulWidget {
   const AmenityBookingScreen({super.key});
@@ -156,6 +157,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
           bottom: TabBar(
             controller: _tabController,
             // labelColor: theme.colorScheme.onSurface,
+            dividerColor: Colors.transparent,
             labelColor: Colors.white,
             indicatorColor: Colors.white,
             unselectedLabelColor: Colors.white,
@@ -182,7 +184,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
     return BlocBuilder<AmenityBloc, AmenityState>(
       builder: (ctx, state) {
         if (state is AmenityLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _AmenityBookShimmer();
         }
         if (state is AmenityError) {
           return _errorWidget(
@@ -208,9 +210,13 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
   }
 
   Widget _bookContent(AmenityState state) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: () async =>
+          context.read<AmenityBloc>().add(const LoadAmenities()),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(16.w),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -518,6 +524,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
           ],
         ],
       ),
+      ),
     );
   }
 
@@ -525,7 +532,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
     return BlocBuilder<AmenityBloc, AmenityState>(
       builder: (ctx, state) {
         if (state is AmenityLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _AmenityBookingsShimmer();
         }
         if (state is AmenityError) {
           return _errorWidget(
@@ -715,4 +722,222 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
       ],
     ),
   );
+}
+
+// Shimmer for the Book tab (amenity cards + date/time selectors)
+class _AmenityBookShimmer extends StatelessWidget {
+  const _AmenityBookShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section title
+            Container(
+              height: 18.h,
+              width: 130.w,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // Horizontal amenity cards
+            SizedBox(
+              height: 180.h,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 4,
+                itemBuilder: (_, __) => Container(
+                  width: 140.w,
+                  margin: EdgeInsets.only(right: 14.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 18.h),
+            // Date section title
+            Container(
+              height: 18.h,
+              width: 100.w,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            SizedBox(height: 10.h),
+            // Date chips
+            SizedBox(
+              height: 60.h,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 7,
+                itemBuilder: (_, __) => Container(
+                  width: 60.w,
+                  margin: EdgeInsets.only(right: 10.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 18.h),
+            // Time section title
+            Container(
+              height: 18.h,
+              width: 140.w,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            SizedBox(height: 10.h),
+            // Time slot chips
+            Wrap(
+              spacing: 10.w,
+              runSpacing: 10.h,
+              children: List.generate(
+                8,
+                (_) => Container(
+                  width: 60.w,
+                  height: 36.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Shimmer for the My Bookings tab
+class _AmenityBookingsShimmer extends StatelessWidget {
+  const _AmenityBookingsShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListView.builder(
+        padding: EdgeInsets.all(16.w),
+        itemCount: 5,
+        itemBuilder: (_, __) => Padding(
+          padding: EdgeInsets.only(bottom: 14.h),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.r),
+            ),
+            padding: EdgeInsets.all(14.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 14.h,
+                            width: 120.w,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                          ),
+                          SizedBox(height: 6.h),
+                          Container(
+                            height: 12.h,
+                            width: 80.w,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 70.w,
+                      height: 26.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                Row(
+                  children: [
+                    Container(
+                      width: 14.w,
+                      height: 14.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Container(
+                      height: 11.h,
+                      width: 100.w,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Container(
+                      width: 14.w,
+                      height: 14.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Container(
+                      height: 11.h,
+                      width: 80.w,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -92,6 +92,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   late Animation<double> _fadeAnimation;
   final ScrollController _scrollController = ScrollController();
   int _pendingVisitorsCount = 0;
+  bool _dataLoaded = false;
 
   @override
   void initState() {
@@ -105,18 +106,31 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
       curve: Curves.easeInOut,
     );
 
-    // Start animations after a small delay
+    // Load data only on first build; subsequent updates via pull-to-refresh
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
-      context.read<CommunicationsBloc>().add(
-        const LoadAnnouncements(isDraft: false),
-      );
-      context.read<AccountingBloc>().add(const LoadInvoices());
-      context.read<HelpdeskBloc>().add(const LoadTickets());
-      _fetchVisitorsCount();
+      if (!_dataLoaded) {
+        _loadDashboardData();
+        _dataLoaded = true;
+      }
     });
 
     super.initState();
+  }
+
+  void _loadDashboardData() {
+    context.read<CommunicationsBloc>().add(
+      const LoadAnnouncements(isDraft: false),
+    );
+    context.read<AccountingBloc>().add(const LoadInvoices());
+    context.read<HelpdeskBloc>().add(const LoadTickets());
+    _fetchVisitorsCount();
+  }
+
+  Future<void> _onRefresh() async {
+    _loadDashboardData();
+    // Wait briefly so the indicator is visible
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   Future<void> _fetchVisitorsCount() async {
@@ -148,16 +162,20 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           return SafeArea(
             child: Scaffold(
               key: _scaffoldKey,
-              body: SingleChildScrollView(
-                child: Column(
-                  children: <Widget>[
-                    buildInfoHeader(),
-                    statsCarouselWidget(),
-                    getAnnouncementsSection(),
-                    getQuickActionsSection(),
-                    getUpcomingEventsSection(),
-                    SizedBox(height: 80.h),
-                  ],
+              body: RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: <Widget>[
+                      buildInfoHeader(),
+                      statsCarouselWidget(),
+                      getAnnouncementsSection(),
+                      getQuickActionsSection(),
+                      getUpcomingEventsSection(),
+                      SizedBox(height: 80.h),
+                    ],
+                  ),
                 ),
               ),
               floatingActionButton: ScaleTransition(

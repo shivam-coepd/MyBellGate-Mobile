@@ -323,106 +323,119 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
             ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          HapticFeedback.mediumImpact();
-          await _fetchVisitors();
-        },
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                FloatingSearchBarWidget(
-                  searchController: _searchController,
-                  onVoiceSearch: _handleVoiceSearch,
-                  onSearchChanged: (_) => _filterVisitors(),
-                ),
-                FilterChipsWidget(
-                  selectedFilter: _selectedFilter,
-                  onFilterChanged: (filter) {
-                    setState(() {
-                      _selectedFilter = filter;
-                      _filterVisitors();
-                    });
-                  },
-                ),
-                SizedBox(height: 1.h),
-                Expanded(
-                  child: _isLoading
-                      ? const VisitorListShimmer()
-                      : _errorMessage != null
-                      ? Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 24.w),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.wifi_off_rounded,
-                                  size: 64,
-                                  color: colorScheme.error.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                ),
-                                SizedBox(height: 2.h),
-                                Text(
-                                  'Failed to load visitors',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: colorScheme.onSurface,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 1.h),
-                                Text(
-                                  _errorMessage!,
-                                  textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                SizedBox(height: 3.h),
-                                ElevatedButton.icon(
-                                  onPressed: _fetchVisitors,
-                                  icon: const Icon(Icons.refresh),
-                                  label: const Text('Retry'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : _filteredVisitors.isEmpty
-                      ? Center(
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              FloatingSearchBarWidget(
+                searchController: _searchController,
+                onVoiceSearch: _handleVoiceSearch,
+                onSearchChanged: (_) => _filterVisitors(),
+              ),
+              FilterChipsWidget(
+                selectedFilter: _selectedFilter,
+                onFilterChanged: (filter) {
+                  setState(() {
+                    _selectedFilter = filter;
+                    _filterVisitors();
+                  });
+                },
+              ),
+              SizedBox(height: 1.h),
+              Expanded(
+                child: _isLoading
+                    ? const VisitorListShimmer()
+                    : _errorMessage != null
+                    ? Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 24.w),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.person_search,
+                                Icons.wifi_off_rounded,
                                 size: 64,
-                                color: colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.3,
+                                color: colorScheme.error.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                               SizedBox(height: 2.h),
                               Text(
-                                'No visitors found',
+                                'Failed to load visitors',
                                 style: theme.textTheme.titleMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               SizedBox(height: 1.h),
                               Text(
-                                _selectedFilter == 'Today'
-                                    ? 'No visitors scheduled for today'
-                                    : 'No ${_selectedFilter.toLowerCase()} visitors',
+                                _errorMessage!,
+                                textAlign: TextAlign.center,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.7),
+                                  color: colorScheme.onSurfaceVariant,
                                 ),
+                              ),
+                              SizedBox(height: 3.h),
+                              ElevatedButton.icon(
+                                onPressed: _fetchVisitors,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry'),
                               ),
                             ],
                           ),
-                        )
-                      : ListView.builder(
+                        ),
+                      )
+                    : _filteredVisitors.isEmpty
+                    ? RefreshIndicator(
+                        onRefresh: () async {
+                          HapticFeedback.mediumImpact();
+                          await _fetchVisitors();
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(height: 80.h),
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.person_search,
+                                    size: 64,
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.3),
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    'No visitors found',
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  SizedBox(height: 1.h),
+                                  Text(
+                                    _selectedFilter == 'Today'
+                                        ? 'No visitors scheduled for today'
+                                        : 'No ${_selectedFilter.toLowerCase()} visitors',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          HapticFeedback.mediumImpact();
+                          await _fetchVisitors();
+                        },
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           padding: EdgeInsets.only(bottom: 80.h, top: 10.h),
                           itemCount: _filteredVisitors.length,
                           itemBuilder: (context, index) {
@@ -454,9 +467,10 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
                             );
                           },
                         ),
-                ),
-              ],
-            ),
+                      ),
+              ),
+            ],
+          ),
             if (_activeNotification != null &&
                 _activeNotification?['status'] == 'pending')
               Positioned(
@@ -480,7 +494,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
               ),
           ],
         ),
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           showModalBottomSheet(
