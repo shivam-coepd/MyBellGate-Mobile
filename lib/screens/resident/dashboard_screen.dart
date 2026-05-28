@@ -13,6 +13,7 @@ import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/models/announcement.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ResidentDashboardScreen extends StatefulWidget {
   const ResidentDashboardScreen({super.key});
@@ -107,7 +108,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     // Start animations after a small delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
-      context.read<CommunicationsBloc>().add(const LoadAnnouncements(isDraft: false));
+      context.read<CommunicationsBloc>().add(
+        const LoadAnnouncements(isDraft: false),
+      );
       context.read<AccountingBloc>().add(const LoadInvoices());
       context.read<HelpdeskBloc>().add(const LoadTickets());
       _fetchVisitorsCount();
@@ -186,7 +189,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           builder: (context, commState) {
             int billsDue = 0;
             if (accState is InvoicesLoaded) {
-              billsDue = accState.invoices.where((i) => i.status != 'paid').length;
+              billsDue = accState.invoices
+                  .where((i) => i.status != 'paid')
+                  .length;
             }
             int updatesCount = 0;
             if (commState is AnnouncementsLoaded) {
@@ -337,20 +342,29 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 }).toList(),
               ),
             );
-          }
+          },
         );
-      }
+      },
     );
   }
 
   Widget getAnnouncementsSection() {
     return BlocBuilder<CommunicationsBloc, CommunicationsState>(
       builder: (context, state) {
+        // Show shimmer during loading
+        if (state is CommunicationsLoading || state is CommunicationsInitial) {
+          return _buildShimmerSection();
+        }
+
         List<Announcement> items = [];
         if (state is AnnouncementsLoaded) {
           items = state.announcements.take(5).toList();
         }
-        if (items.isEmpty) return const SizedBox.shrink();
+
+        // Only hide section if data is loaded but empty
+        if (state is AnnouncementsLoaded && items.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,16 +416,23 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                       );
 
                   final announcement = items[index];
-                  
+
                   Color tagColor;
                   switch (announcement.sendVia) {
-                    case 'sms': tagColor = Colors.orange; break;
-                    case 'email': tagColor = Colors.blue; break;
-                    case 'whatsapp': tagColor = Colors.green; break;
-                    default: tagColor = const Color(0xFF006D77);
+                    case 'sms':
+                      tagColor = Colors.orange;
+                      break;
+                    case 'email':
+                      tagColor = Colors.blue;
+                      break;
+                    case 'whatsapp':
+                      tagColor = Colors.green;
+                      break;
+                    default:
+                      tagColor = const Color(0xFF006D77);
                   }
 
-                  final String fallbackImage = index % 2 == 0 
+                  final String fallbackImage = index % 2 == 0
                       ? 'https://images.unsplash.com/photo-1536566482680-fca31930a0bd?auto=format&fit=crop&q=80&w=400&h=300'
                       : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400&h=300';
 
@@ -472,7 +493,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                         ),
                                         decoration: BoxDecoration(
                                           color: tagColor,
-                                          borderRadius: BorderRadius.circular(20.r),
+                                          borderRadius: BorderRadius.circular(
+                                            20.r,
+                                          ),
                                         ),
                                         child: Text(
                                           announcement.sendVia.toUpperCase(),
@@ -529,7 +552,140 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
             ),
           ],
         );
-      }
+      },
+    );
+  }
+
+  Widget _buildShimmerSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Shimmer.fromColors(
+              //   baseColor: Colors.grey[300]!,
+              //   highlightColor: Colors.grey[100]!,
+              //   child: Container(
+              //     width: 120.w,
+              //     height: 22.h,
+              //     decoration: BoxDecoration(
+              //       color: Colors.white,
+              //       borderRadius: BorderRadius.circular(4.r),
+              //     ),
+              //   ),
+              // ),
+              // Shimmer.fromColors(
+              //   baseColor: Colors.grey[300]!,
+              //   highlightColor: Colors.grey[100]!,
+              //   child: Container(
+              //     width: 50.w,
+              //     height: 16.h,
+              //     decoration: BoxDecoration(
+              //       color: Colors.white,
+              //       borderRadius: BorderRadius.circular(4.r),
+              //     ),
+              //   ),
+              // ),
+              Text(
+                'Latest Updates',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/announcements');
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).primaryColor,
+                  padding: EdgeInsets.zero,
+                ),
+                child: Text('View All', style: TextStyle(fontSize: 14.sp)),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 181.h,
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: 18.w),
+            scrollDirection: Axis.horizontal,
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: SizedBox(
+                  width: 250.w,
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    elevation: 2,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: Container(
+                        color: Colors.white,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Container(color: Colors.grey[300]),
+                            ),
+                            Positioned(
+                              top: 15.h,
+                              left: 15.w,
+                              child: Container(
+                                width: 60.w,
+                                height: 24.h,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 15.h,
+                              left: 15.w,
+                              right: 15.w,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 180.w,
+                                    height: 16.h,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(4.r),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Container(
+                                    width: 100.w,
+                                    height: 12.h,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(4.r),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -1021,11 +1177,15 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           builder: (context, helpState) {
             double totalDue = 0;
             if (accState is InvoicesLoaded) {
-               totalDue = accState.invoices.where((i) => i.status != 'paid').fold(0.0, (sum, item) => sum + item.totalAmount);
+              totalDue = accState.invoices
+                  .where((i) => i.status != 'paid')
+                  .fold(0.0, (sum, item) => sum + item.totalAmount);
             }
             int activeTickets = 0;
             if (helpState is TicketsLoaded) {
-               activeTickets = helpState.tickets.where((t) => t.status != 'resolved' && t.status != 'closed').length;
+              activeTickets = helpState.tickets
+                  .where((t) => t.status != 'resolved' && t.status != 'closed')
+                  .length;
             }
 
             final List<Map<String, dynamic>> statsData = [
@@ -1042,7 +1202,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 "type": "visitors",
                 "title": "Visitor Requests",
                 "count": _pendingVisitorsCount,
-                "subtitle": _pendingVisitorsCount == 1 ? "Pending approval" : "Pending approvals",
+                "subtitle": _pendingVisitorsCount == 1
+                    ? "Pending approval"
+                    : "Pending approvals",
                 "icon": Icons.people,
                 "color": const Color(0xFFC9A74D),
                 "action": "Review",
@@ -1060,189 +1222,203 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
 
             int currentPage = 0;
 
-    void handleStatAction(BuildContext context, String type) {
-      switch (type) {
-        case 'maintenance':
-          Navigator.pushNamed(context, '/bills');
-          break;
-        case 'visitors':
-          Navigator.pushNamed(context, '/visitors');
-          break;
-        case 'complaints':
-          Navigator.pushNamed(context, '/services');
-          break;
-      }
-    }
+            void handleStatAction(BuildContext context, String type) {
+              switch (type) {
+                case 'maintenance':
+                  Navigator.pushNamed(context, '/bills');
+                  break;
+                case 'visitors':
+                  Navigator.pushNamed(context, '/visitors');
+                  break;
+                case 'complaints':
+                  Navigator.pushNamed(context, '/services');
+                  break;
+              }
+            }
 
-    Widget buildStatCard(BuildContext context, Map<String, dynamic> stat) {
-      final theme = Theme.of(context);
-      final cardColor = stat['color'] as Color;
-      final icon = stat['icon'] as IconData;
+            Widget buildStatCard(
+              BuildContext context,
+              Map<String, dynamic> stat,
+            ) {
+              final theme = Theme.of(context);
+              final cardColor = stat['color'] as Color;
+              final icon = stat['icon'] as IconData;
 
-      return Container(
-        width: MediaQuery.of(context).size.width * 0.85,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [cardColor, cardColor.withValues(alpha: 0.7)],
-          ),
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: cardColor.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16.r),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            handleStatAction(context, stat['type'] as String);
-          },
-          child: Padding(
-            padding: EdgeInsets.all(14.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Icon(icon, color: Colors.white, size: 28.sp),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Text(
-                        stat['action'] as String,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.85,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [cardColor, cardColor.withValues(alpha: 0.7)],
+                  ),
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: cardColor.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        stat['title'] as String,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (stat['amount'] != null)
-                        Text(
-                          stat['amount'] as String,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      else
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16.r),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    handleStatAction(context, stat['type'] as String);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(14.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${stat['count']}',
-                              style: theme.textTheme.headlineMedium?.copyWith(
+                            Container(
+                              padding: EdgeInsets.all(8.w),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Icon(
+                                icon,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                size: 28.sp,
                               ),
                             ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              stat['subtitle'] as String,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.8),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12.w,
+                                vertical: 6.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(20.r),
+                              ),
+                              child: Text(
+                                stat['action'] as String,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      if (stat['dueDate'] != null) ...[
-                        SizedBox(height: 4.h),
-                        Text(
-                          stat['dueDate'] as String,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                stat['title'] as String,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (stat['amount'] != null)
+                                Text(
+                                  stat['amount'] as String,
+                                  style: theme.textTheme.headlineMedium
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                )
+                              else
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${stat['count']}',
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      stat['subtitle'] as String,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.8,
+                                            ),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              if (stat['dueDate'] != null) ...[
+                                SizedBox(height: 4.h),
+                                Text(
+                                  stat['dueDate'] as String,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+              );
+            }
 
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return Column(
-          children: [
-            CarouselSlider.builder(
-              itemCount: statsData.length,
-              itemBuilder: (context, index, realIndex) {
-                return buildStatCard(context, statsData[index]);
-              },
-              options: CarouselOptions(
-                height: 180.h,
-                viewportFraction: 0.8,
-                enlargeCenterPage: true,
-                autoPlay: true,
-                autoPlayInterval: const Duration(seconds: 4),
-                autoPlayCurve: Curves.easeInOut,
-                onPageChanged: (index, _) {
-                  setState(() => currentPage = index);
-                  HapticFeedback.selectionClick();
-                },
-              ),
-            ),
-            SizedBox(height: 12.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(statsData.length, (index) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  width: currentPage == index ? 24.w : 8.w,
-                  height: 8.h,
-                  decoration: BoxDecoration(
-                    color: currentPage == index
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(
-                            context,
-                          ).colorScheme.outline.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  children: [
+                    CarouselSlider.builder(
+                      itemCount: statsData.length,
+                      itemBuilder: (context, index, realIndex) {
+                        return buildStatCard(context, statsData[index]);
+                      },
+                      options: CarouselOptions(
+                        height: 180.h,
+                        viewportFraction: 0.8,
+                        enlargeCenterPage: true,
+                        autoPlay: true,
+                        autoPlayInterval: const Duration(seconds: 4),
+                        autoPlayCurve: Curves.easeInOut,
+                        onPageChanged: (index, _) {
+                          setState(() => currentPage = index);
+                          HapticFeedback.selectionClick();
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(statsData.length, (index) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: EdgeInsets.symmetric(horizontal: 4.w),
+                          width: currentPage == index ? 24.w : 8.w,
+                          height: 8.h,
+                          decoration: BoxDecoration(
+                            color: currentPage == index
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.outline.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
                 );
-              }),
-            ),
-            ],
-          );
-        },
-      );
-    });
-    });
+              },
+            );
+          },
+        );
+      },
+    );
   }
 }

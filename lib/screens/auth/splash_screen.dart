@@ -191,16 +191,16 @@ class _SplashScreenState extends State<SplashScreen>
                                     color: AppTheme.onPrimary,
                                   ),
                                   child: Center(
-                                    child: Icon(
-                                      Icons.home_outlined,
-                                      size: 68.r,
-                                      color: AppTheme.primary,
+                                    child: Image.asset(
+                                      "assets/images/app_logo.png",
+                                      width: 70.w,
+                                      height: 70.w,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                            SizedBox(height: 40.h),
+                            SizedBox(height: 30.h),
 
                             // App Name
                             Text(

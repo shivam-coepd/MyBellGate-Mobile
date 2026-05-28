@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
-import 'package:mygate_coepd/blocs/auth/auth_event.dart';
 import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
 import 'package:mygate_coepd/blocs/profile/profile_event.dart';
 import 'package:mygate_coepd/blocs/profile/profile_state.dart';
@@ -11,6 +9,7 @@ import 'package:mygate_coepd/repositories/household_repository.dart';
 import 'package:mygate_coepd/screens/resident/edit_profile_screen.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ProfileDetailsScreen extends StatefulWidget {
   const ProfileDetailsScreen({super.key});
@@ -29,29 +28,6 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
   late Animation<double> _fadeAnimation;
   List<Map<String, dynamic>> _dailyHelpers = [];
   bool _isLoadingHelpers = true;
-
-  final List<Map<String, dynamic>> _settings = [
-    {
-      'title': 'Biometric Authentication',
-      'subtitle': 'Use fingerprint or face recognition to login',
-      'icon': Icons.fingerprint,
-    },
-    {
-      'title': 'Notifications',
-      'subtitle': 'Receive alerts and updates',
-      'icon': Icons.notifications,
-    },
-    {
-      'title': 'Privacy Settings',
-      'subtitle': 'Manage your privacy preferences',
-      'icon': Icons.privacy_tip,
-    },
-    {
-      'title': 'Language',
-      'subtitle': 'Change app language',
-      'icon': Icons.language,
-    },
-  ];
 
   @override
   void initState() {
@@ -148,8 +124,19 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
       },
       builder: (context, state) {
         if (state is ProfileLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+          return Scaffold(
+            body: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  _buildProfileHeaderShimmer(theme),
+                  SizedBox(height: 60.h), // Space for avatar overflow
+                  _buildBioCardShimmer(theme),
+                  _buildProfileSectionsShimmer(theme),
+                  SizedBox(height: 20.h),
+                ],
+              ),
+            ),
           );
         }
 
@@ -513,7 +500,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                         if (vehicle.isElectric == 1) ...[
                           SizedBox(width: 8.w),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 2.h,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green.shade50,
                               borderRadius: BorderRadius.circular(4),
@@ -684,10 +674,12 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () {
-                        final helperId = int.tryParse(helper['id'].toString()) ?? 0;
+                        final helperId =
+                            int.tryParse(helper['id'].toString()) ?? 0;
                         _showDeleteConfirmDialog(
                           title: 'Remove Daily Help',
-                          content: 'Are you sure you want to remove ${helper['name'] ?? "this helper"}?',
+                          content:
+                              'Are you sure you want to remove ${helper['name'] ?? "this helper"}?',
                           onDelete: () {
                             context.read<ProfileBloc>().add(
                               DeleteDailyHelper(helperId),
@@ -702,6 +694,449 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
           ),
         ),
       ],
+    );
+  }
+
+  // ============================================================================
+  // SHIMMER WIDGETS - Corrected Implementation
+  // ============================================================================
+
+  Widget _buildProfileHeaderShimmer(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final baseColor = isDarkMode ? Colors.grey.shade800 : Colors.grey.shade300;
+    final highlightColor = isDarkMode
+        ? Colors.grey.shade700
+        : Colors.grey.shade100;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        // Cover photo banner shimmer
+        Shimmer.fromColors(
+          baseColor: baseColor,
+          highlightColor: highlightColor,
+          child: Container(
+            height: 170.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: baseColor,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20.r),
+                bottomRight: Radius.circular(20.r),
+              ),
+            ),
+          ),
+        ),
+        // Avatar profile photo shimmer
+        Positioned(
+          bottom: -50.h,
+          child: Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              width: 100.r, // radius 50.r * 2
+              height: 100.r,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: baseColor,
+                border: Border.all(color: Colors.white, width: 4.w),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBioCardShimmer(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final baseColor = isDarkMode ? Colors.grey.shade800 : Colors.grey.shade300;
+    final highlightColor = isDarkMode
+        ? Colors.grey.shade700
+        : Colors.grey.shade100;
+
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title shimmer
+            Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Container(
+                width: 100.w,
+                height: 20.h,
+                decoration: BoxDecoration(
+                  color: baseColor,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // Bio text lines shimmer
+            Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: 14.h,
+                    decoration: BoxDecoration(
+                      color: baseColor,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    width: double.infinity,
+                    height: 14.h,
+                    decoration: BoxDecoration(
+                      color: baseColor,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    height: 14.h,
+                    decoration: BoxDecoration(
+                      color: baseColor,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileSectionsShimmer(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final baseColor = isDarkMode ? Colors.grey.shade800 : Colors.grey.shade300;
+    final highlightColor = isDarkMode
+        ? Colors.grey.shade700
+        : Colors.grey.shade100;
+
+    // Shimmer placeholder counts matching original structure
+    final personalItemCount = 5; // Name, Email, Phone, Unit, Society ID
+    final familyMemberCount = 2; // Show 2 placeholder members
+    final vehicleCount = 1; // Show 1 placeholder vehicle
+    final petCount = 1; // Show 1 placeholder pet
+    final helperCount = 1; // Show 1 placeholder helper
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Personal Information Section ──
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            bottom: 8.h,
+            top: 60.h, // Increased to account for avatar overflow
+          ),
+          child: Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              width: 180.w,
+              height: 22.h,
+              decoration: BoxDecoration(
+                color: baseColor,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: List.generate(personalItemCount, (index) {
+              return _buildShimmerListTile(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+              );
+            }),
+          ),
+        ),
+
+        // ── Family Members Section ──
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              width: 150.w,
+              height: 22.h,
+              decoration: BoxDecoration(
+                color: baseColor,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: List.generate(familyMemberCount, (index) {
+              return _buildShimmerListTileWithAvatar(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                showSubtitle: true,
+              );
+            }),
+          ),
+        ),
+
+        // ── Vehicles Section ──
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              width: 80.w,
+              height: 22.h,
+              decoration: BoxDecoration(
+                color: baseColor,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: List.generate(vehicleCount, (index) {
+              return _buildShimmerListTileWithIcon(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                showSubtitle: true,
+              );
+            }),
+          ),
+        ),
+
+        // ── Pets Section ──
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              width: 50.w,
+              height: 22.h,
+              decoration: BoxDecoration(
+                color: baseColor,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: List.generate(petCount, (index) {
+              return _buildShimmerListTileWithAvatar(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                showSubtitle: true,
+              );
+            }),
+          ),
+        ),
+
+        // ── Daily Helpers Section ──
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+            bottom: 8.h,
+          ),
+          child: Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              width: 220.w,
+              height: 22.h,
+              decoration: BoxDecoration(
+                color: baseColor,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: List.generate(helperCount, (index) {
+              return _buildShimmerListTileWithIcon(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                showSubtitle: true,
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================================
+  // HELPER WIDGETS FOR SHIMMERS
+  // ============================================================================
+
+  Widget _buildShimmerListTile({
+    required Color baseColor,
+    required Color highlightColor,
+  }) {
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListTile(
+        title: Container(
+          width: 100.w,
+          height: 16.h,
+          decoration: BoxDecoration(
+            color: baseColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
+        trailing: Container(
+          width: 80.w,
+          height: 14.h,
+          decoration: BoxDecoration(
+            color: baseColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerListTileWithAvatar({
+    required Color baseColor,
+    required Color highlightColor,
+    bool showSubtitle = false,
+  }) {
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListTile(
+        leading: Container(
+          width: 40.r,
+          height: 40.r,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: baseColor),
+        ),
+        title: Container(
+          width: 120.w,
+          height: 16.h,
+          decoration: BoxDecoration(
+            color: baseColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
+        subtitle: showSubtitle
+            ? Container(
+                margin: EdgeInsets.only(top: 4.h),
+                width: 80.w,
+                height: 12.h,
+                decoration: BoxDecoration(
+                  color: baseColor,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              )
+            : null,
+        trailing: Container(
+          width: 24.w,
+          height: 24.h,
+          decoration: BoxDecoration(color: baseColor, shape: BoxShape.circle),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerListTileWithIcon({
+    required Color baseColor,
+    required Color highlightColor,
+    bool showSubtitle = false,
+  }) {
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListTile(
+        leading: Container(
+          width: 40.r,
+          height: 40.r,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: baseColor),
+        ),
+        title: Container(
+          width: 140.w,
+          height: 16.h,
+          decoration: BoxDecoration(
+            color: baseColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
+        subtitle: showSubtitle
+            ? Container(
+                margin: EdgeInsets.only(top: 4.h),
+                width: 100.w,
+                height: 12.h,
+                decoration: BoxDecoration(
+                  color: baseColor,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              )
+            : null,
+        trailing: Container(
+          width: 24.w,
+          height: 24.h,
+          decoration: BoxDecoration(color: baseColor, shape: BoxShape.circle),
+        ),
+      ),
     );
   }
 
