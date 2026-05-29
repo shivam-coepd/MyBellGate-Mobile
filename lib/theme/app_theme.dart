@@ -46,8 +46,9 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: backgroundLight,
     appBarTheme: const AppBarTheme(
-      backgroundColor: primary,
-      foregroundColor: onPrimary,
+      backgroundColor: backgroundLight,
+      foregroundColor: onBackgroundLight,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -122,9 +123,15 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: backgroundDark,
     appBarTheme: const AppBarTheme(
-      backgroundColor: primary,
-      foregroundColor: onPrimary,
+      backgroundColor: backgroundDark,
+      foregroundColor: onBackgroundDark,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
+      titleTextStyle: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: primary,
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(

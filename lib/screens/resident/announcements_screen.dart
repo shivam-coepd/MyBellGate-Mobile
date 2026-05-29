@@ -79,14 +79,14 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Announcements', style: TextStyle(fontSize: 18.sp)),
+        title: const Text('Announcements'),
         bottom: TabBar(
           controller: _tabController,
           // labelColor: theme.colorScheme.onSurface,
-          dividerColor: Colors.transparent,
-          labelColor: Colors.white,
-          indicatorColor: Colors.white,
-          unselectedLabelColor: Colors.white,
+          dividerColor: theme.primaryColor,
+          labelColor: theme.primaryColor,
+          indicatorColor: theme.primaryColor,
+          unselectedLabelColor: theme.primaryColor,
           labelStyle: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
           unselectedLabelStyle: TextStyle(
             fontSize: 14.sp,
@@ -128,7 +128,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
               SizedBox(height: 12.h),
               // Category chips
               SizedBox(
-                height: 44.h,
+                height: 36.h,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -537,7 +537,9 @@ class _AnnouncementListShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
-    final highlightColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+    final highlightColor = isDark
+        ? const Color(0xFF334155)
+        : Colors.grey.shade100;
 
     return Shimmer.fromColors(
       baseColor: baseColor,

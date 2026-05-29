@@ -12,6 +12,7 @@ import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -492,9 +493,129 @@ class ProfileScreenState extends State<ProfileScreen> {
       },
       builder: (context, state) {
         if (state is ProfileLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          // return const Scaffold(
+          //   body: Center(child: CircularProgressIndicator()),
+          // );
+          CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: _buildProfileHeaderShimmer(theme)),
+                SliverToBoxAdapter(child: _buildHouseholdSection(theme)),
+                SliverToBoxAdapter(
+                  child: _buildSectionHeader('Security & Notifications', theme),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildToggleItem(
+                    icon: Icons.bolt_outlined,
+                    title: 'Flash Approvals',
+                    value: _flashApprovalsEnabled,
+                    onChanged: (value) {
+                      setState(() => _flashApprovalsEnabled = value);
+                      _showSnackBar(
+                        'Flash Approvals ${value ? "enabled" : "disabled"}',
+                      );
+                    },
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.notifications_outlined,
+                    title: 'Notification Settings',
+                    onTap: () => _navigateTo('Notification Settings'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.lock_outlined,
+                    title: 'Security & Privacy',
+                    onTap: () => _navigateTo('Security & Privacy'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildSectionHeader('Purchases', theme),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Order History',
+                    onTap: () => _navigateTo('Order History'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.credit_card_outlined,
+                    title: 'Saved Payments',
+                    onTap: () => _navigateTo('Saved Payments'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildSectionHeader('Manage Flats', theme),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.apartment_outlined,
+                    title: 'Unit 402 - Wing A',
+                    // title: '${user.unit}',
+                    subtitle: 'PRIMARY ADDRESS',
+                    // onTap: () => _navigateTo('${user.unit}'),
+                    onTap: () => _navigateTo('103'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.domain_add_outlined,
+                    title: 'Add New Property',
+                    onTap: () => _navigateTo('Add New Property'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildSectionHeader('General Settings', theme),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.language_outlined,
+                    title: 'App Language',
+                    trailing: _selectedLanguage,
+                    onTap: _showLanguagePicker,
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.dark_mode_outlined,
+                    title: 'Display Mode',
+                    onTap: _showDisplayModePicker,
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.support_agent_outlined,
+                    title: 'Support and Feedback',
+                    onTap: () => _navigateTo('Support and Feedback'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildNavItem(
+                    icon: Icons.share_outlined,
+                    title: 'Share the App',
+                    onTap: () => _navigateTo('Share the App'),
+                    theme: theme,
+                  ),
+                ),
+                SliverToBoxAdapter(child: _buildLogoutItem(theme)),
+                SliverToBoxAdapter(child: _buildFooter(theme)),
+                // const SliverToBoxAdapter(child: SizedBox(height: 80)),
+              ],
+            );
         }
 
         if (state is ProfileError) {
@@ -540,17 +661,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: theme.scaffoldBackgroundColor,
-            foregroundColor: theme.colorScheme.onSurface,
-            surfaceTintColor: Colors.transparent,
-            // leading: IconButton(
-            //   onPressed: () => Navigator.pop(context),
-            //   icon: Icon(Icons.arrow_back_ios_new_rounded),
-            // ),
-            title: Text(
-              "Profile",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            title: const Text("Profile"),
             actions: [
               IconButton(
                 onPressed: _showHelpDialog,
@@ -697,19 +808,31 @@ class ProfileScreenState extends State<ProfileScreen> {
               GestureDetector(
                 onTap: () => _showSnackBar('Edit profile photo'),
                 child: Container(
-                  width: 80,
-                  height: 80,
+                  width: 80.w,
+                  height: 80.w,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                     color: theme.colorScheme.onSurface,
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                     child: Image.network(
                       user.profileImage ?? "",
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: SizedBox(
+                            width: 80.w,
+                            height: 80.w,
+                            // color: theme.scaffoldBackgroundColor,
+                          ),
+                        );
+                      },
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: theme.colorScheme.onSurface,
+                        color: theme.scaffoldBackgroundColor,
                         child: Icon(
                           Icons.person,
                           color: theme.primaryColor,
@@ -744,6 +867,160 @@ class ProfileScreenState extends State<ProfileScreen> {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Profile Completion',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        height: 16 / 12,
+                        letterSpacing: 0.05 * 12,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      '85%',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 16 / 12,
+                        letterSpacing: 0.05 * 12,
+                        color: theme.primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: _profileCompletion,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () =>
+                    Navigator.pushNamed(context, "/profile-details"),
+                style: ButtonStyle(
+                  padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
+                ),
+                child: Text(
+                  'View Details',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildProfileHeaderShimmer(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showSnackBar('Edit profile photo'),
+                child: Container(
+                  width: 80.w,
+                  height: 80.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.r),
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.r),
+                    // child: Image.network(
+                    //   user.profileImage ?? "",
+                    //   fit: BoxFit.cover,
+                    //   loadingBuilder: (context, child, loadingProgress) {
+                    //     if (loadingProgress == null) return child;
+                    //     return Shimmer.fromColors(
+                    //       baseColor: Colors.grey[300]!,
+                    //       highlightColor: Colors.grey[100]!,
+                    //       child: Container(
+                    //         width: 80.w,
+                    //         height: 80.w,
+                    //         color: theme.scaffoldBackgroundColor,
+                    //       ),
+                    //     );
+                    //   },
+                    //   errorBuilder: (context, error, stackTrace) => Container(
+                    //     color: theme.scaffoldBackgroundColor,
+                    //     child: Icon(
+                    //       Icons.person,
+                    //       color: theme.primaryColor,
+                    //       size: 40,
+                    //     ),
+                    //   ),
+                    // ),
+                    child: Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            width: 80.w,
+                            height: 80.w,
+                            color: theme.scaffoldBackgroundColor,
+                          ),
+                        ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            width: 80.w,
+                            height: 20.w,
+                            color: theme.scaffoldBackgroundColor,
+                          ),
+                        ),
+                  const SizedBox(height: 4),
+                  Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            width: 50.w,
+                            height: 16.w,
+                            color: theme.scaffoldBackgroundColor,
+                          ),
+                        )
                 ],
               ),
             ],
@@ -3422,26 +3699,11 @@ class _SubScreenState extends State<SubScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          widget.title,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            height: 28 / 20,
-            letterSpacing: -0.01 * 20,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        // bottom: PreferredSize(
-        //   preferredSize: const Size.fromHeight(1),
-        //   child: Divider(color: theme.colorScheme.outlineVariant, height: 1),
-        // ),
+        title: Text(widget.title),
       ),
       body: Center(
         child: Column(

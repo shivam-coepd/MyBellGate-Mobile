@@ -131,6 +131,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return BlocListener<AmenityBloc, AmenityState>(
       listener: (ctx, state) {
         if (state is AmenityBookingSuccess) {
@@ -153,14 +154,14 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Amenity Booking', style: TextStyle(fontSize: 18.sp)),
+          title: const Text('Amenity Booking'),
           bottom: TabBar(
             controller: _tabController,
             // labelColor: theme.colorScheme.onSurface,
-            dividerColor: Colors.transparent,
-            labelColor: Colors.white,
-            indicatorColor: Colors.white,
-            unselectedLabelColor: Colors.white,
+            dividerColor: theme.primaryColor,
+            labelColor: theme.primaryColor,
+            indicatorColor: theme.primaryColor,
+            unselectedLabelColor: theme.primaryColor,
             labelStyle: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             unselectedLabelStyle: TextStyle(
               fontSize: 14.sp,
@@ -217,222 +218,107 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(16.w),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Select Amenity',
-            style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 12.h),
-          SizedBox(
-            height: 180.h,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _amenities.length,
-              itemBuilder: (_, i) {
-                final a = _amenities[i];
-                final sel = _selected?.id == a.id;
-                return GestureDetector(
-                  onTap: () => setState(() => _selected = a),
-                  child: Container(
-                    width: 140.w,
-                    margin: EdgeInsets.only(right: 14.w),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                        color: sel
-                            ? Theme.of(context).primaryColor
-                            : Colors.transparent,
-                        width: 2.5,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(9.r),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          a.imageUrl != null
-                              ? CachedNetworkImage(
-                                  imageUrl: a.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) =>
-                                      Container(color: Colors.grey.shade200),
-                                )
-                              : Container(
-                                  color: Theme.of(
-                                    context,
-                                  ).primaryColor.withValues(alpha: 0.2),
-                                  child: Icon(
-                                    Icons.sports,
-                                    size: 40.sp,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                ),
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.65),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 8.h,
-                            left: 8.w,
-                            right: 8.w,
-                            child: Text(
-                              a.name,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13.sp,
-                              ),
-                            ),
-                          ),
-                          if (a.bookingFee > 0)
-                            Positioned(
-                              top: 6.h,
-                              right: 6.w,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 7.w,
-                                  vertical: 3.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
-                                  borderRadius: BorderRadius.circular(10.r),
-                                ),
-                                child: Text(
-                                  '₹${a.bookingFee.toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10.sp,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          if (_selected != null) ...[
-            SizedBox(height: 14.h),
-            Container(
-              padding: EdgeInsets.all(14.w),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color,
-                borderRadius: BorderRadius.circular(14.r),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _selected!.name,
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (_selected!.description != null) ...[
-                    SizedBox(height: 6.h),
-                    Text(
-                      _selected!.description!,
-                      style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-                    ),
-                  ],
-                  SizedBox(height: 6.h),
-                  Row(
-                    children: [
-                      Icon(Icons.people, size: 15.sp, color: Colors.grey),
-                      SizedBox(width: 5.w),
-                      Text(
-                        'Capacity: ${_selected!.capacity}',
-                        style: TextStyle(fontSize: 13.sp, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 18.h),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              'Select Date',
+              'Select Amenity',
               style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 12.h),
             SizedBox(
-              height: 60.h,
+              height: 180.h,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: 7,
+                itemCount: _amenities.length,
                 itemBuilder: (_, i) {
-                  final d = DateTime.now().add(Duration(days: i));
-                  final ds =
-                      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-                  final sel = _date == ds;
-                  final day = [
-                    'Mon',
-                    'Tue',
-                    'Wed',
-                    'Thu',
-                    'Fri',
-                    'Sat',
-                    'Sun',
-                  ][d.weekday - 1];
+                  final a = _amenities[i];
+                  final sel = _selected?.id == a.id;
                   return GestureDetector(
-                    onTap: () => setState(() => _date = ds),
+                    onTap: () => setState(() => _selected = a),
                     child: Container(
-                      margin: EdgeInsets.only(right: 10.w),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 6.h,
-                      ),
+                      width: 140.w,
+                      margin: EdgeInsets.only(right: 14.w),
                       decoration: BoxDecoration(
-                        color: sel
-                            ? Theme.of(context).primaryColor
-                            : Theme.of(context).cardTheme.color,
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
                           color: sel
                               ? Theme.of(context).primaryColor
-                              : Colors.grey.withValues(alpha: 0.3),
+                              : Colors.transparent,
+                          width: 2.5,
                         ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            day,
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: sel ? Colors.white70 : Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            '${d.day}/${d.month}',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.bold,
-                              color: sel
-                                  ? Colors.white
-                                  : Theme.of(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(9.r),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            a.imageUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl: a.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (_, __, ___) =>
+                                        Container(color: Colors.grey.shade200),
+                                  )
+                                : Container(
+                                    color: Theme.of(
                                       context,
-                                    ).textTheme.bodyLarge?.color,
+                                    ).primaryColor.withValues(alpha: 0.2),
+                                    child: Icon(
+                                      Icons.sports,
+                                      size: 40.sp,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.65),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                            Positioned(
+                              bottom: 8.h,
+                              left: 8.w,
+                              right: 8.w,
+                              child: Text(
+                                a.name,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                            ),
+                            if (a.bookingFee > 0)
+                              Positioned(
+                                top: 6.h,
+                                right: 6.w,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 7.w,
+                                    vertical: 3.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor,
+                                    borderRadius: BorderRadius.circular(10.r),
+                                  ),
+                                  child: Text(
+                                    '₹${a.bookingFee.toStringAsFixed(0)}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -440,90 +326,205 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
               ),
             ),
 
-            SizedBox(height: 18.h),
-            Text(
-              'Select Start Time',
-              style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 6.h),
-            Text(
-              'Slot: $_startSlot – ${_endSlot()} (1 hour)',
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-            SizedBox(height: 10.h),
-            Wrap(
-              spacing: 10.w,
-              runSpacing: 10.h,
-              children: _slots.map((s) {
-                final sel = _startSlot == s;
-                return GestureDetector(
-                  onTap: () => setState(() => _startSlot = s),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 14.w,
-                      vertical: 9.h,
+            if (_selected != null) ...[
+              SizedBox(height: 14.h),
+              Container(
+                padding: EdgeInsets.all(14.w),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardTheme.color,
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _selected!.name,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? Theme.of(context).primaryColor
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
+                    if (_selected!.description != null) ...[
+                      SizedBox(height: 6.h),
+                      Text(
+                        _selected!.description!,
+                        style: TextStyle(color: Colors.grey, fontSize: 13.sp),
+                      ),
+                    ],
+                    SizedBox(height: 6.h),
+                    Row(
+                      children: [
+                        Icon(Icons.people, size: 15.sp, color: Colors.grey),
+                        SizedBox(width: 5.w),
+                        Text(
+                          'Capacity: ${_selected!.capacity}',
+                          style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 18.h),
+              Text(
+                'Select Date',
+                style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10.h),
+              SizedBox(
+                height: 60.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 7,
+                  itemBuilder: (_, i) {
+                    final d = DateTime.now().add(Duration(days: i));
+                    final ds =
+                        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+                    final sel = _date == ds;
+                    final day = [
+                      'Mon',
+                      'Tue',
+                      'Wed',
+                      'Thu',
+                      'Fri',
+                      'Sat',
+                      'Sun',
+                    ][d.weekday - 1];
+                    return GestureDetector(
+                      onTap: () => setState(() => _date = ds),
+                      child: Container(
+                        margin: EdgeInsets.only(right: 10.w),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? Theme.of(context).primaryColor
+                              : Theme.of(context).cardTheme.color,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: sel
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              day,
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: sel ? Colors.white70 : Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              '${d.day}/${d.month}',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.bold,
+                                color: sel
+                                    ? Colors.white
+                                    : Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              SizedBox(height: 18.h),
+              Text(
+                'Select Start Time',
+                style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                'Slot: $_startSlot – ${_endSlot()} (1 hour)',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              SizedBox(height: 10.h),
+              Wrap(
+                spacing: 10.w,
+                runSpacing: 10.h,
+                children: _slots.map((s) {
+                  final sel = _startSlot == s;
+                  return GestureDetector(
+                    onTap: () => setState(() => _startSlot = s),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 9.h,
+                      ),
+                      decoration: BoxDecoration(
                         color: sel
                             ? Theme.of(context).primaryColor
-                            : Colors.grey.withValues(alpha: 0.5),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      s,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: sel ? Colors.white : null,
-                        fontWeight: sel ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-
-            SizedBox(height: 28.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: state is AmenityLoading ? null : _book,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                ),
-                child: state is AmenityLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                          color: sel
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey.withValues(alpha: 0.5),
+                          width: 1.5,
                         ),
-                      )
-                    : Text(
-                        'Book Amenity',
+                      ),
+                      child: Text(
+                        s,
                         style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 13.sp,
+                          color: sel ? Colors.white : null,
+                          fontWeight: sel ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
+                    ),
+                  );
+                }).toList(),
               ),
-            ),
-            SizedBox(height: 30.h),
+
+              SizedBox(height: 28.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: state is AmenityLoading ? null : _book,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                  child: state is AmenityLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'Book Amenity',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              SizedBox(height: 30.h),
+            ],
           ],
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -732,7 +733,9 @@ class _AmenityBookShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
-    final highlightColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+    final highlightColor = isDark
+        ? const Color(0xFF334155)
+        : Colors.grey.shade100;
 
     return Shimmer.fromColors(
       baseColor: baseColor,
@@ -838,7 +841,9 @@ class _AmenityBookingsShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
-    final highlightColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+    final highlightColor = isDark
+        ? const Color(0xFF334155)
+        : Colors.grey.shade100;
 
     return Shimmer.fromColors(
       baseColor: baseColor,

@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
@@ -17,7 +16,6 @@ class ServiceRequestsScreen extends StatefulWidget {
 class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
     with TickerProviderStateMixin {
   late AnimationController _animCtrl;
-  late Animation<double> _fade;
   String _selectedTab = 'active';
 
   // Form controllers for new ticket
@@ -73,7 +71,6 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _fade = CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animCtrl.forward();
       context.read<HelpdeskBloc>().add(const LoadTickets());
@@ -352,13 +349,8 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text(
+          title: const Text(
             'Service Requests',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
-            ),
           ),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           surfaceTintColor: Colors.transparent,

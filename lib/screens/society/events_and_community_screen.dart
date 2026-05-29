@@ -71,13 +71,8 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
       backgroundColor: theme.scaffoldBackgroundColor,
       // backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Community Management',
-          style: TextStyle(
-            fontSize: 24.sp,
-            fontWeight: FontWeight.bold,
-            color: theme.primaryColor,
-          ),
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
         // foregroundColor: Colors.transparent,

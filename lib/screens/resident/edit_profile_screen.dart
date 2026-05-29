@@ -122,7 +122,7 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: Text('Edit Profile', style: TextStyle(fontSize: 18.sp)),
+            title: const Text('Edit Profile'),
             elevation: 0,
             backgroundColor: primaryColor,
             foregroundColor: Colors.white,

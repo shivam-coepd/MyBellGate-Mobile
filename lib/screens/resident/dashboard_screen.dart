@@ -10,7 +10,6 @@ import 'package:mygate_coepd/repositories/visitor_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
-import 'package:mygate_coepd/models/announcement.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:shimmer/shimmer.dart';
@@ -369,18 +368,20 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   Widget getAnnouncementsSection() {
     return BlocBuilder<CommunicationsBloc, CommunicationsState>(
       builder: (context, state) {
-        // Show shimmer during loading
+        // Show shimmer while loading or on initial state
         if (state is CommunicationsLoading || state is CommunicationsInitial) {
           return _buildShimmerSection();
         }
 
-        List<Announcement> items = [];
-        if (state is AnnouncementsLoaded) {
-          items = state.announcements.take(5).toList();
+        // Only render when announcements are actually loaded
+        if (state is! AnnouncementsLoaded) {
+          return const SizedBox.shrink();
         }
 
-        // Only hide section if data is loaded but empty
-        if (state is AnnouncementsLoaded && items.isEmpty) {
+        final items = state.announcements.take(5).toList();
+
+        // Nothing to show
+        if (items.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -1125,11 +1126,33 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                   children: [
                     InkWell(
                       onTap: () => Navigator.pushNamed(context, '/profile'),
-                      child: CircleAvatar(
-                        radius: 24.r,
-                        backgroundImage: NetworkImage(
+                      child: ClipOval(
+                        child: Image.network(
                           user?.profileImage ??
-                              'https://i.pravatar.cc/150?img=5',
+                              '',
+                          width: 50.w, // Double the radius you want
+                          height: 50.w,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: 50.w, // Double the radius you want
+                                height: 50.w,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 50.w, // Double the radius you want
+                              height: 50.w,
+                              color: Colors.grey[200],
+                              child: Icon(Icons.person, color: Colors.grey),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -1163,7 +1186,8 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           ),
           // Notification Icon (Optional, usually present in such UIs)
           InkWell(
-            onTap: () => Navigator.pushNamed(context, '/profile'),
+            onTap: () =>
+                Navigator.pushNamed(context, '/resident-notifications'),
             child: Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(

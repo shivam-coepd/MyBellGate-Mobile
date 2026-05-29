@@ -290,19 +290,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       // backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(
-          'Visitor Management',
-          style: TextStyle(
-            fontSize: 24.sp,
-            fontWeight: FontWeight.bold,
-            color: theme.primaryColor,
-          ),
-        ),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        // foregroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-
+        title: const Text('Visitor Management'),
         actions: [
           IconButton(
             icon: Icon(
@@ -355,9 +343,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
                               Icon(
                                 Icons.wifi_off_rounded,
                                 size: 64,
-                                color: colorScheme.error.withValues(
-                                  alpha: 0.6,
-                                ),
+                                color: colorScheme.error.withValues(alpha: 0.6),
                               ),
                               SizedBox(height: 2.h),
                               Text(
@@ -408,10 +394,10 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
                                   SizedBox(height: 2.h),
                                   Text(
                                     'No visitors found',
-                                    style:
-                                        theme.textTheme.titleMedium?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
                                   ),
                                   SizedBox(height: 1.h),
                                   Text(
@@ -471,29 +457,29 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
               ),
             ],
           ),
-            if (_activeNotification != null &&
-                _activeNotification?['status'] == 'pending')
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: NotificationBannerWidget(
-                  visitor: _activeNotification!,
-                  onApprove: () {
-                    _approveVisitor(_activeNotification!['id'] as int);
-                    setState(() => _activeNotification = null);
-                  },
-                  onDeny: () {
-                    _rejectVisitor(_activeNotification!['id'] as int);
-                    setState(() => _activeNotification = null);
-                  },
-                  onDismiss: () {
-                    setState(() => _activeNotification = null);
-                  },
-                ),
+          if (_activeNotification != null &&
+              _activeNotification?['status'] == 'pending')
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: NotificationBannerWidget(
+                visitor: _activeNotification!,
+                onApprove: () {
+                  _approveVisitor(_activeNotification!['id'] as int);
+                  setState(() => _activeNotification = null);
+                },
+                onDeny: () {
+                  _rejectVisitor(_activeNotification!['id'] as int);
+                  setState(() => _activeNotification = null);
+                },
+                onDismiss: () {
+                  setState(() => _activeNotification = null);
+                },
               ),
-          ],
-        ),
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           showModalBottomSheet(
@@ -889,13 +875,16 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                   ),
                 ),
               ),
-              SizedBox(height: 6.h),
-              Text(
-                'Add New Visitor',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              SizedBox(height: 10.h),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Add New Visitor',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
               SizedBox(height: 6.h),
               // Camera/Photo Section

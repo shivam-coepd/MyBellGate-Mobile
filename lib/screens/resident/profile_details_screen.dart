@@ -125,6 +125,12 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
       builder: (context, state) {
         if (state is ProfileLoading) {
           return Scaffold(
+            appBar: AppBar(
+              title: const Text("Profile Details"),
+              actions: [
+                TextButton(child: const Text('Edit'), onPressed: () {}),
+              ],
+            ),
             body: SingleChildScrollView(
               physics: const NeverScrollableScrollPhysics(),
               child: Column(
@@ -182,17 +188,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
 
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: theme.scaffoldBackgroundColor,
-            foregroundColor: theme.colorScheme.onSurface,
-            surfaceTintColor: Colors.transparent,
-            // leading: IconButton(
-            //   onPressed: () => Navigator.pop(context),
-            //   icon: Icon(Icons.arrow_back_ios_new_rounded),
-            // ),
-            title: Text(
-              "Profile Details",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            title: const Text("Profile Details"),
             actions: [
               TextButton(
                 child: const Text('Edit'),

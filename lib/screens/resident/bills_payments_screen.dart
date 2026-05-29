@@ -224,14 +224,7 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text(
-            'Bills & Payments',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
-            ),
-          ),
+          title: const Text('Bills & Payments'),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
@@ -649,7 +642,9 @@ class _BillsShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
-    final highlightColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+    final highlightColor = isDark
+        ? const Color(0xFF334155)
+        : Colors.grey.shade100;
 
     return Shimmer.fromColors(
       baseColor: baseColor,
@@ -711,88 +706,91 @@ class _BillsShimmer extends StatelessWidget {
             ),
             SizedBox(height: 10.h),
             // Invoice card shimmers
-            ...List.generate(4, (_) => Padding(
-              padding: EdgeInsets.only(bottom: 14.h),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                padding: EdgeInsets.all(14.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                height: 14.h,
-                                width: 120.w,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4.r),
+            ...List.generate(
+              4,
+              (_) => Padding(
+                padding: EdgeInsets.only(bottom: 14.h),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  padding: EdgeInsets.all(14.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  height: 14.h,
+                                  width: 120.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 6.h),
-                              Container(
-                                height: 12.h,
-                                width: 80.w,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4.r),
+                                SizedBox(height: 6.h),
+                                Container(
+                                  height: 12.h,
+                                  width: 80.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        Container(
-                          width: 60.w,
-                          height: 24.h,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10.r),
+                          Container(
+                            width: 60.w,
+                            height: 24.h,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Container(
-                      height: 12.h,
-                      width: 140.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4.r),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 12.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          height: 20.h,
-                          width: 80.w,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
+                      SizedBox(height: 10.h),
+                      Container(
+                        height: 12.h,
+                        width: 140.w,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4.r),
                         ),
-                        Container(
-                          height: 36.h,
-                          width: 80.w,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      SizedBox(height: 12.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            height: 20.h,
+                            width: 80.w,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          Container(
+                            height: 36.h,
+                            width: 80.w,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            )),
+            ),
           ],
         ),
       ),

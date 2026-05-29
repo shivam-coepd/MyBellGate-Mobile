@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/screens/auth/address/LocationSelectionScreen.dart';
+import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_screen.dart';
 import 'package:mygate_coepd/screens/resident/visitor_management_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
@@ -52,22 +53,25 @@ void main() async {
         hasShownError = false;
       });
 
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'An error has occurred',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(details.exceptionAsString(), style: TextStyle(fontSize: 16)),
-            SizedBox(height: 16),
-            Text(
-              'Please restart the app and try again.',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
+      return Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'An error has occurred',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              Text(details.exceptionAsString(), style: TextStyle(fontSize: 16)),
+              SizedBox(height: 16),
+              Text(
+                'Please restart the app and try again.',
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -228,6 +232,7 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
       '/community': (context) => const CommunityScreen(),
       '/profile': (context) => const ProfileScreen(),
       '/profile-details': (context) => const ProfileDetailsScreen(),
+      '/resident-notifications': (context) => const NotificationsScreen(),
       '/location-selection': (context) => const LocationSelectionScreen(),
       '/otp-verification': (context) => throw UnimplementedError(
         'OTP Verification Screen requires parameters',
