@@ -244,7 +244,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
           width: double.infinity,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [primaryColor, primaryColor.withOpacity(0.7)],
+              colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -272,7 +272,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                   border: Border.all(color: Colors.white, width: 4.w),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),

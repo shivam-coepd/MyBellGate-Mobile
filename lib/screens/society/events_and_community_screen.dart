@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mygate_coepd/services/s3_upload_service.dart';
 
 class EventsAndCommunityScreen extends StatefulWidget {
   const EventsAndCommunityScreen({super.key});
@@ -316,7 +318,6 @@ class _CommunityFeedSectionWidgetState
 
   void _handleComment(int postId) {
     HapticFeedback.mediumImpact();
-    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -327,6 +328,7 @@ class _CommunityFeedSectionWidgetState
 
   void _handleShare(Map<String, dynamic> post) {
     HapticFeedback.mediumImpact();
+    // ignore: deprecated_member_use
     Share.share(
       '${post["author"]}: ${post["content"]}',
       subject: 'Community Post',
@@ -870,6 +872,8 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final TextEditingController _contentController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   final List<XFile> _selectedImages = [];
+  final List<String> _uploadedImageUrls = [];
+  bool _isUploadingImages = false;
   String _postType = 'post'; // post, poll, announcement
   String _privacySetting = 'public'; // public, residents_only
   bool _isCreatingPoll = false;
@@ -877,6 +881,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     TextEditingController(),
     TextEditingController(),
   ];
+  final _s3 = S3UploadService();
 
   @override
   void dispose() {
@@ -889,15 +894,41 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
   Future<void> _pickImages() async {
     try {
-      final List<XFile> images = await _imagePicker.pickMultiImage();
-      if (images.isNotEmpty) {
-        HapticFeedback.lightImpact();
-        setState(() {
-          _selectedImages.addAll(images);
-          if (_selectedImages.length > 4) {
-            _selectedImages.removeRange(4, _selectedImages.length);
-          }
-        });
+      final List<XFile> images = await _imagePicker.pickMultiImage(
+        imageQuality: 85,
+      );
+      if (images.isEmpty) return;
+
+      HapticFeedback.lightImpact();
+
+      // Cap at 4 images total
+      final toAdd = images.take(4 - _selectedImages.length).toList();
+      if (toAdd.isEmpty) return;
+
+      setState(() {
+        _selectedImages.addAll(toAdd);
+        _isUploadingImages = true;
+      });
+
+      try {
+        for (final img in toAdd) {
+          final url = await _s3.uploadImage(
+            File(img.path),
+            folder: S3UploadService.folderCommunity,
+          );
+          _uploadedImageUrls.add(url);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Image upload failed: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isUploadingImages = false);
       }
     } catch (e) {
       // Handle error silently
@@ -908,6 +939,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     HapticFeedback.lightImpact();
     setState(() {
       _selectedImages.removeAt(index);
+      if (index < _uploadedImageUrls.length) {
+        _uploadedImageUrls.removeAt(index);
+      }
     });
   }
 
@@ -961,7 +995,18 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       return;
     }
 
+    if (_isUploadingImages) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please wait, images are still uploading...'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     HapticFeedback.mediumImpact();
+    // _uploadedImageUrls now contains the S3 public URLs ready to send to backend
     Navigator.pop(context);
 
     final theme = Theme.of(context);
@@ -1509,6 +1554,7 @@ class _EventsSectionWidgetState extends State<EventsSectionWidget> {
 
   void _handleShare(Map<String, dynamic> event) {
     HapticFeedback.mediumImpact();
+    // ignore: deprecated_member_use
     Share.share(
       'Join me at ${event["title"]} on ${event["date"]} at ${event["time"]}. Location: ${event["location"]}',
       subject: event["title"],
@@ -2029,6 +2075,7 @@ class _EventDetailScreen extends StatelessWidget {
             OutlinedButton(
               onPressed: () {
                 HapticFeedback.lightImpact();
+                // ignore: deprecated_member_use
                 Share.share(
                   'Join me at ${event["title"]} on ${event["date"]}!',
                   subject: event["title"],

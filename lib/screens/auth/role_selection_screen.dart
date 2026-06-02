@@ -129,8 +129,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Color(0xFF6C63FF).withOpacity(0.15),
-                        Color(0xFF6C63FF).withOpacity(0.0),
+                        Color(0xFF6C63FF).withValues(alpha: 0.15),
+                        Color(0xFF6C63FF).withValues(alpha: 0.0),
                       ],
                     ),
                   ),
@@ -156,8 +156,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Color(0xFF00BFA6).withOpacity(0.12),
-                        Color(0xFF00BFA6).withOpacity(0.0),
+                        Color(0xFF00BFA6).withValues(alpha: 0.12),
+                        Color(0xFF00BFA6).withValues(alpha: 0.0),
                       ],
                     ),
                   ),
@@ -179,8 +179,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isDarkMode
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.grey.shade300.withOpacity(0.5),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey.shade300.withValues(alpha: 0.5),
               ),
             ),
           );
@@ -221,7 +221,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: isDarkMode
-                      ? Colors.white.withOpacity(0.5)
+                      ? Colors.white.withValues(alpha: 0.5)
                       : Colors.grey.shade500,
                   height: 1.5,
                 ),
@@ -301,19 +301,19 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
             borderRadius: BorderRadius.circular(24.r),
             border: Border.all(
               color: isHovered
-                  ? gradient[0].withOpacity(0.5)
+                  ? gradient[0].withValues(alpha: 0.5)
                   : isDarkMode
-                  ? Colors.white.withOpacity(0.08)
+                  ? Colors.white.withValues(alpha: 0.08)
                   : Colors.grey.shade200,
               width: isHovered ? 2 : 1,
             ),
             boxShadow: [
               BoxShadow(
                 color: isHovered
-                    ? gradient[0].withOpacity(0.2)
+                    ? gradient[0].withValues(alpha: 0.2)
                     : isDarkMode
-                    ? Colors.black.withOpacity(0.3)
-                    : Colors.grey.shade200.withOpacity(0.8),
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.grey.shade200.withValues(alpha: 0.8),
                 blurRadius: isHovered ? 25 : 15,
                 offset: Offset(0, isHovered ? 12 : 6),
                 spreadRadius: isHovered ? 2 : 0,
@@ -345,7 +345,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                               borderRadius: BorderRadius.circular(18.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: gradient[0].withOpacity(0.3),
+                                  color: gradient[0].withValues(alpha: 0.3),
                                   blurRadius: 5,
                                   offset: Offset(0, 3),
                                 ),
@@ -408,9 +408,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                               height: 36.h,
                               decoration: BoxDecoration(
                                 color: isHovered
-                                    ? gradient[0].withOpacity(0.1)
+                                    ? gradient[0].withValues(alpha: 0.1)
                                     : isDarkMode
-                                    ? Colors.white.withOpacity(0.05)
+                                    ? Colors.white.withValues(alpha: 0.05)
                                     : Colors.grey.shade100,
                                 shape: BoxShape.circle,
                               ),
@@ -419,7 +419,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                                 color: isHovered
                                     ? gradient[0]
                                     : isDarkMode
-                                    ? Colors.white.withOpacity(0.4)
+                                    ? Colors.white.withValues(alpha: 0.4)
                                     : Colors.grey.shade400,
                                 size: 18.sp,
                               ),
@@ -436,7 +436,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: isDarkMode
-                              ? Colors.white.withOpacity(0.5)
+                              ? Colors.white.withValues(alpha: 0.5)
                               : Colors.grey.shade500,
                           height: 1.5,
                         ),
@@ -456,13 +456,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                             ),
                             decoration: BoxDecoration(
                               color: isDarkMode
-                                  ? Colors.white.withOpacity(0.05)
-                                  : gradient[0].withOpacity(0.08),
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : gradient[0].withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(20.r),
                               border: Border.all(
                                 color: isDarkMode
-                                    ? Colors.white.withOpacity(0.1)
-                                    : gradient[0].withOpacity(0.15),
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : gradient[0].withValues(alpha: 0.15),
                               ),
                             ),
                             child: Row(
@@ -483,7 +483,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                                     fontSize: 12.sp,
                                     fontWeight: FontWeight.w500,
                                     color: isDarkMode
-                                        ? Colors.white.withOpacity(0.7)
+                                        ? Colors.white.withValues(alpha: 0.7)
                                         : gradient[0].withOpacity(0.8),
                                   ),
                                 ),

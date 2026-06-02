@@ -192,7 +192,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                 ),
                 SizedBox(height: 12.h),
                 DropdownButtonFormField<String>(
-                  value: _category,
+                  initialValue: _category,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(
@@ -221,7 +221,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                 ),
                 SizedBox(height: 12.h),
                 DropdownButtonFormField<String>(
-                  value: _priority,
+                  initialValue: _priority,
                   decoration: InputDecoration(
                     labelText: 'Priority',
                     border: OutlineInputBorder(
@@ -357,6 +357,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
           elevation: 0,
         ),
         floatingActionButton: FloatingActionButton(
+          heroTag: 'service_requests_fab',
           onPressed: _showNewTicketForm,
           backgroundColor: Theme.of(context).primaryColor,
           child: Icon(Icons.add, size: 24.sp),
@@ -880,7 +881,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                 ),
                 SizedBox(height: 12.h),
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(
@@ -910,7 +911,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                 ),
                 SizedBox(height: 12.h),
                 DropdownButtonFormField<String>(
-                  value: priority,
+                  initialValue: priority,
                   decoration: InputDecoration(
                     labelText: 'Priority',
                     border: OutlineInputBorder(

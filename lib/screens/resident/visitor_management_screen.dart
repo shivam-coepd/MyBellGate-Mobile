@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:camera/camera.dart';
 import 'package:mygate_coepd/repositories/visitor_repository.dart';
+import 'package:mygate_coepd/services/s3_upload_service.dart';
 
 enum FieldType { name, phone, purpose }
 
@@ -481,8 +483,9 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
+        heroTag: 'visitor_management_fab',
+        onPressed: () async {
+          final visitor = await showModalBottomSheet<Map<String, dynamic>>(
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
@@ -491,28 +494,29 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               child: AddVisitorBottomSheet(
-                onVisitorAdded: (visitor) {
-                  // Adapt the newly created visitor to our display format
-                  final rawId = visitor['id'];
-                  final adapted = Map<String, dynamic>.from(visitor);
-                  adapted['id'] = rawId is int
-                      ? rawId
-                      : int.tryParse(rawId?.toString() ?? '') ?? 0;
-                  adapted['photo'] =
-                      visitor['image_url'] ??
-                      'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png';
-                  adapted['expectedTime'] = visitor['visit_date'] != null
-                      ? '${visitor['visit_date']} ${visitor['visit_time'] ?? ''}'
-                      : 'Not specified';
-                  setState(() {
-                    _allVisitors.insert(0, adapted);
-                    _filterVisitors();
-                  });
-                  _showSuccessMessage('Visitor pre-approved successfully');
-                },
+                onVisitorAdded: (_) {}, // unused — result comes via pop
               ),
             ),
           );
+
+          if (visitor != null && mounted) {
+            final rawId = visitor['id'];
+            final adapted = Map<String, dynamic>.from(visitor);
+            adapted['id'] = rawId is int
+                ? rawId
+                : int.tryParse(rawId?.toString() ?? '') ?? 0;
+            adapted['photo'] =
+                visitor['image_url'] ??
+                'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png';
+            adapted['expectedTime'] = visitor['visit_date'] != null
+                ? '${visitor['visit_date']} ${visitor['visit_time'] ?? ''}'
+                : 'Not specified';
+            setState(() {
+              _allVisitors.insert(0, adapted);
+              _filterVisitors();
+            });
+            _showSuccessMessage('Visitor pre-approved successfully');
+          }
         },
         icon: Icon(Icons.person_add, color: colorScheme.onPrimary, size: 24),
         label: const Text('Add Visitor'),
@@ -649,8 +653,12 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
   TimeOfDay? _selectedTime;
   String _selectedVisitorType = 'guest';
   bool _isSubmitting = false;
+  bool _isUploadingPhoto = false;
+  String? _uploadedPhotoUrl;
+  bool _uploadFailed = false;  // track if upload failed so UI can show retry
 
   final VisitorRepository _visitorRepository = VisitorRepository();
+  final _s3 = S3UploadService();
 
   static const List<Map<String, String>> _visitorTypes = [
     {'value': 'guest', 'label': 'Guest', 'icon': '👤'},
@@ -734,7 +742,7 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
 
     try {
       final XFile photo = await _cameraController!.takePicture();
-      setState(() => _capturedImage = photo);
+      await _uploadFile(photo);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -747,16 +755,58 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
   Future<void> _pickFromGallery() async {
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() => _capturedImage = image);
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (image == null) return;
+      await _uploadFile(image);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to pick image')),
+        );
+      }
+    }
+  }
+
+  /// Shared upload logic for both camera and gallery.
+  Future<void> _uploadFile(XFile image) async {
+    setState(() {
+      _capturedImage = image;
+      _uploadedPhotoUrl = null;
+      _uploadFailed = false;
+      _isUploadingPhoto = true;
+    });
+
+    try {
+      final url = await _s3.uploadImage(
+        File(image.path),
+        folder: S3UploadService.folderVisitors,
+      );
+      if (mounted) {
+        setState(() {
+          _uploadedPhotoUrl = url;
+          _uploadFailed = false;
+        });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to pick image')));
+        setState(() => _uploadFailed = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Photo upload failed: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _uploadFile(image),
+            ),
+          ),
+        );
       }
+    } finally {
+      if (mounted) setState(() => _isUploadingPhoto = false);
     }
   }
 
@@ -785,6 +835,14 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_isSubmitting) return;
+    if (_isUploadingPhoto) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please wait, photo is still uploading...'),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
@@ -808,6 +866,7 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
         visitDate: visitDate,
         visitTime: visitTime,
         visitorType: _selectedVisitorType,
+        imageUrl: _uploadedPhotoUrl,
       );
 
       // result contains { visitor_id: X } from backend
@@ -820,12 +879,14 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
         'visit_date': visitDate,
         'visit_time': visitTime,
         'status': 'pending',
-        'image_url': null,
+        'image_url': _uploadedPhotoUrl,
       };
 
       if (mounted) {
-        widget.onVisitorAdded(createdVisitor);
-        Navigator.pop(context);
+        // Pop the bottom sheet and pass the new visitor back as the result.
+        // This avoids calling setState on the parent while the navigator is
+        // still processing the pop (which causes the !_debugLocked assertion).
+        Navigator.of(context).pop(createdVisitor);
       }
     } catch (e) {
       if (mounted) {
@@ -875,7 +936,6 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                   ),
                 ),
               ),
-              SizedBox(height: 10.h),
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
@@ -886,7 +946,6 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              SizedBox(height: 6.h),
               // Camera/Photo Section
               Container(
                 height: 240.h,
@@ -903,33 +962,113 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16.r),
-                            child: Image.network(
-                              _capturedImage!.path,
+                            child: Image.file(
+                              File(_capturedImage!.path),
                               width: double.infinity,
                               height: double.infinity,
                               fit: BoxFit.cover,
                             ),
                           ),
-                          Positioned(
-                            top: 2.w,
-                            right: 2.w,
-                            child: IconButton(
-                              icon: Container(
-                                padding: EdgeInsets.all(2.w),
+                          // Uploading overlay
+                          if (_isUploadingPhoto)
+                            Positioned.fill(
+                              child: Container(
                                 decoration: BoxDecoration(
-                                  color: colorScheme.error,
-                                  shape: BoxShape.circle,
+                                  color: Colors.black.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(16.r),
                                 ),
-                                child: Icon(
-                                  Icons.close,
-                                  color: colorScheme.onError,
-                                  size: 20.sp,
+                                child: const Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircularProgressIndicator(color: Colors.white),
+                                      SizedBox(height: 8),
+                                      Text('Uploading...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              onPressed: () =>
-                                  setState(() => _capturedImage = null),
                             ),
-                          ),
+                          // Upload failed overlay
+                          if (_uploadFailed && !_isUploadingPhoto)
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.cloud_off, color: Colors.white, size: 32),
+                                      const SizedBox(height: 6),
+                                      const Text('Upload failed', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 8),
+                                      ElevatedButton.icon(
+                                        onPressed: () => _uploadFile(_capturedImage!),
+                                        icon: const Icon(Icons.refresh, size: 16),
+                                        label: const Text('Retry'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.red,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Close button (only when not uploading)
+                          if (!_isUploadingPhoto)
+                            Positioned(
+                              top: 2.w,
+                              right: 2.w,
+                              child: IconButton(
+                                icon: Container(
+                                  padding: EdgeInsets.all(3.w),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.error,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    color: colorScheme.onError,
+                                    size: 18.sp,
+                                  ),
+                                ),
+                                onPressed: () => setState(() {
+                                  _capturedImage = null;
+                                  _uploadedPhotoUrl = null;
+                                  _uploadFailed = false;
+                                }),
+                              ),
+                            ),
+                          // Uploaded badge
+                          if (_uploadedPhotoUrl != null && !_isUploadingPhoto && !_uploadFailed)
+                            Positioned(
+                              bottom: 8.h,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.9),
+                                    borderRadius: BorderRadius.circular(20.r),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.cloud_done, color: Colors.white, size: 14.sp),
+                                      SizedBox(width: 4.w),
+                                      Text('Uploaded ✓', style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       )
                     : _isCameraInitialized && _cameraController != null

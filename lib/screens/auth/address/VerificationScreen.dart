@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 
 class VerificationScreen extends StatefulWidget {
@@ -18,117 +19,97 @@ class _VerificationScreenState extends State<VerificationScreen> {
   final picker = ImagePicker();
   bool _isLoading = false;
   String? _fileType;
+  String? _uploadedUrl;
+  final _s3 = S3UploadService();
 
   Future<void> _pickImage(ImageSource source) async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      final pickedFile = await picker.pickImage(source: source);
-
-      if (pickedFile != null) {
-        setState(() {
-          _selectedFile = File(pickedFile.path);
-          _fileType = 'image';
-        });
-
-        // Simulate upload process
-        await Future.delayed(const Duration(seconds: 2));
-
+      final pickedFile = await picker.pickImage(source: source, imageQuality: 85);
+      if (pickedFile == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Document uploaded successfully!'),
-              backgroundColor: AppTheme.success,
-            ),
+            const SnackBar(content: Text('No image selected'), backgroundColor: AppTheme.secondary),
           );
+        }
+        return;
+      }
 
-          // Navigate to next screen or show success message
-          _showSuccessDialog();
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No image selected'),
-              backgroundColor: AppTheme.secondary,
-            ),
-          );
-        }
+      setState(() {
+        _selectedFile = File(pickedFile.path);
+        _fileType = 'image';
+      });
+
+      final url = await _s3.uploadImage(
+        File(pickedFile.path),
+        folder: 'verifications',
+      );
+      setState(() => _uploadedUrl = url);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document uploaded successfully!'), backgroundColor: AppTheme.success),
+        );
+        _showSuccessDialog();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppTheme.error),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _pickDocument() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
       );
 
-      if (result != null) {
-        PlatformFile file = result.files.first;
-
-        setState(() {
-          _selectedFile = File(file.path!);
-          String extension = file.extension?.toLowerCase() ?? '';
-          _fileType = (extension == 'pdf') ? 'pdf' : 'image';
-        });
-
-        // Simulate upload process
-        await Future.delayed(const Duration(seconds: 2));
-
+      if (result == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Document uploaded successfully!'),
-              backgroundColor: AppTheme.success,
-            ),
+            const SnackBar(content: Text('No file selected'), backgroundColor: AppTheme.secondary),
           );
+        }
+        return;
+      }
 
-          // Navigate to next screen or show success message
-          _showSuccessDialog();
-        }
-      } else {
-        // User canceled the picker
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No file selected'),
-              backgroundColor: AppTheme.secondary,
-            ),
-          );
-        }
+      final file = result.files.first;
+      final ext = file.extension?.toLowerCase() ?? '';
+      setState(() {
+        _selectedFile = File(file.path!);
+        _fileType = (ext == 'pdf') ? 'pdf' : 'image';
+      });
+
+      // Only upload images to S3 (PDFs need a different content-type — skip for now)
+      if (_fileType == 'image') {
+        final url = await _s3.uploadImage(
+          File(file.path!),
+          folder: 'verifications',
+        );
+        setState(() => _uploadedUrl = url);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document uploaded successfully!'), backgroundColor: AppTheme.success),
+        );
+        _showSuccessDialog();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppTheme.error),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

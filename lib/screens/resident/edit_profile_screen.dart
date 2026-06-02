@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
 import 'package:mygate_coepd/blocs/profile/profile_event.dart';
 import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/models/user.dart';
+import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 
 class EditProfileDetailsScreen extends StatefulWidget {
@@ -29,6 +32,11 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
   late TextEditingController _coverImageController;
 
   String? _selectedResidentType;
+  bool _isUploadingProfile = false;
+  bool _isUploadingCover   = false;
+
+  final _s3 = S3UploadService();
+  final _picker = ImagePicker();
 
   final List<String> _residentTypes = [
     'owner',
@@ -147,7 +155,7 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                               gradient: LinearGradient(
                                 colors: [
                                   primaryColor,
-                                  primaryColor.withOpacity(0.7),
+                                  primaryColor.withValues(alpha: 0.7),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -176,7 +184,7 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.15),
+                                        color: Colors.black.withValues(alpha: 0.15),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -199,10 +207,12 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                                   bottom: 0,
                                   right: 0,
                                   child: InkWell(
-                                    onTap: () => _showUrlEditDialog(
-                                      'Profile Image URL',
-                                      _profileImageController,
-                                    ),
+                                    onTap: _isUploadingProfile
+                                        ? null
+                                        : () => _pickAndUpload(
+                                              _profileImageController,
+                                              isProfile: true,
+                                            ),
                                     child: Container(
                                       padding: EdgeInsets.all(6.w),
                                       decoration: BoxDecoration(
@@ -213,11 +223,21 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                                           width: 2.w,
                                         ),
                                       ),
-                                      child: Icon(
-                                        Icons.camera_alt,
-                                        size: 16.sp,
-                                        color: Colors.white,
-                                      ),
+                                      child: _isUploadingProfile
+                                          ? SizedBox(
+                                              width: 16.sp,
+                                              height: 16.sp,
+                                              child:
+                                                  const CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.camera_alt,
+                                              size: 16.sp,
+                                              color: Colors.white,
+                                            ),
                                     ),
                                   ),
                                 ),
@@ -230,20 +250,32 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                             right: 10.w,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.4),
+                                color: Colors.black.withValues(alpha: 0.4),
                                 borderRadius: BorderRadius.circular(20.r),
                               ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                ),
-                                tooltip: 'Edit Cover Photo URL',
-                                onPressed: () => _showUrlEditDialog(
-                                  'Cover Image URL',
-                                  _coverImageController,
-                                ),
-                              ),
+                              child: _isUploadingCover
+                                  ? Padding(
+                                      padding: EdgeInsets.all(12.w),
+                                      child: SizedBox(
+                                        width: 20.sp,
+                                        height: 20.sp,
+                                        child: const CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.white,
+                                      ),
+                                      tooltip: 'Change Cover Photo',
+                                      onPressed: () => _pickAndUpload(
+                                        _coverImageController,
+                                        isProfile: false,
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
@@ -444,7 +476,7 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
               color: surfaceColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -477,38 +509,49 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
     );
   }
 
-  void _showUrlEditDialog(String title, TextEditingController controller) {
-    final tempController = TextEditingController(text: controller.text);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: tempController,
-            decoration: const InputDecoration(
-              hintText: 'Enter URL (e.g., http://...)',
-              border: OutlineInputBorder(),
-            ),
-            maxLines: 2,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  controller.text = tempController.text.trim();
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
+  /// Pick an image from gallery and upload it to S3.
+  /// [controller] is updated with the returned public URL.
+  /// [isProfile] distinguishes profile vs cover photo for the loading flag.
+  Future<void> _pickAndUpload(
+    TextEditingController controller, {
+    required bool isProfile,
+  }) async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
     );
+    if (picked == null) return;
+
+    setState(() {
+      if (isProfile) {
+        _isUploadingProfile = true;
+      } else {
+        _isUploadingCover = true;
+      }
+    });
+
+    try {
+      final url = await _s3.uploadImage(
+        File(picked.path),
+        folder: S3UploadService.folderProfiles,
+      );
+      setState(() => controller.text = url);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingProfile = false;
+          _isUploadingCover   = false;
+        });
+      }
+    }
   }
 }

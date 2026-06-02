@@ -36,7 +36,6 @@ import 'package:mygate_coepd/blocs/amenity/amenity_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
-import 'package:sizer/sizer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -128,83 +127,79 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     log("Log Screen size: $screenWidth x $screenHeight");
-    return Sizer(
-      builder: (context, orientation, screenType) {
-        return ScreenUtilInit(
-          designSize: const Size(
-            375,
-            812,
-          ), // Standard/common mobile device size
-          // designSize: Size(screenWidth, screenHeight), // According to current device size
-          minTextAdapt: true,
-          splitScreenMode: true,
-          child: MultiRepositoryProvider(
-            providers: [
-              RepositoryProvider<UserRepository>(
-                create: (context) => UserRepository(),
-              ),
-              RepositoryProvider<HouseholdRepository>(
-                create: (context) => HouseholdRepository(),
-              ),
-              RepositoryProvider<AmenityRepository>(
-                create: (context) => AmenityRepository(),
-              ),
-              RepositoryProvider<HelpdeskRepository>(
-                create: (context) => HelpdeskRepository(),
-              ),
-              RepositoryProvider<CommunicationsRepository>(
-                create: (context) => CommunicationsRepository(),
-              ),
-              RepositoryProvider<AccountingRepository>(
-                create: (context) => AccountingRepository(),
-              ),
-            ],
-            child: MultiBlocProvider(
-              providers: [
-                BlocProvider<AuthBloc>(
-                  create: (context) =>
-                      AuthBloc(userRepository: context.read<UserRepository>()),
-                ),
-                BlocProvider<ProfileBloc>(
-                  create: (context) => ProfileBloc(
-                    userRepository: context.read<UserRepository>(),
-                    householdRepository: context.read<HouseholdRepository>(),
-                  ),
-                ),
-                BlocProvider<AmenityBloc>(
-                  create: (context) => AmenityBloc(
-                    repository: context.read<AmenityRepository>(),
-                  ),
-                ),
-                BlocProvider<HelpdeskBloc>(
-                  create: (context) => HelpdeskBloc(
-                    repository: context.read<HelpdeskRepository>(),
-                  ),
-                ),
-                BlocProvider<CommunicationsBloc>(
-                  create: (context) => CommunicationsBloc(
-                    repository: context.read<CommunicationsRepository>(),
-                  ),
-                ),
-                BlocProvider<AccountingBloc>(
-                  create: (context) => AccountingBloc(
-                    repository: context.read<AccountingRepository>(),
-                  ),
-                ),
-              ],
-              child: MaterialApp(
-                title: 'MyGateBell',
-                theme: AppTheme.lightTheme,
-                darkTheme: AppTheme.darkTheme,
-                themeMode: ThemeMode.system,
-                initialRoute: '/',
-                routes: {..._getMainRoutes()},
-                debugShowCheckedModeBanner: false,
+    return ScreenUtilInit(
+      designSize: const Size(
+        375,
+        812,
+      ), // Standard/common mobile device size
+      // designSize: Size(screenWidth, screenHeight), // According to current device size
+      minTextAdapt: true,
+      splitScreenMode: true,
+      child: MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<UserRepository>(
+            create: (context) => UserRepository(),
+          ),
+          RepositoryProvider<HouseholdRepository>(
+            create: (context) => HouseholdRepository(),
+          ),
+          RepositoryProvider<AmenityRepository>(
+            create: (context) => AmenityRepository(),
+          ),
+          RepositoryProvider<HelpdeskRepository>(
+            create: (context) => HelpdeskRepository(),
+          ),
+          RepositoryProvider<CommunicationsRepository>(
+            create: (context) => CommunicationsRepository(),
+          ),
+          RepositoryProvider<AccountingRepository>(
+            create: (context) => AccountingRepository(),
+          ),
+        ],
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthBloc>(
+              create: (context) =>
+                  AuthBloc(userRepository: context.read<UserRepository>()),
+            ),
+            BlocProvider<ProfileBloc>(
+              create: (context) => ProfileBloc(
+                userRepository: context.read<UserRepository>(),
+                householdRepository: context.read<HouseholdRepository>(),
               ),
             ),
+            BlocProvider<AmenityBloc>(
+              create: (context) => AmenityBloc(
+                repository: context.read<AmenityRepository>(),
+              ),
+            ),
+            BlocProvider<HelpdeskBloc>(
+              create: (context) => HelpdeskBloc(
+                repository: context.read<HelpdeskRepository>(),
+              ),
+            ),
+            BlocProvider<CommunicationsBloc>(
+              create: (context) => CommunicationsBloc(
+                repository: context.read<CommunicationsRepository>(),
+              ),
+            ),
+            BlocProvider<AccountingBloc>(
+              create: (context) => AccountingBloc(
+                repository: context.read<AccountingRepository>(),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            title: 'MyGateBell',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.system,
+            initialRoute: '/',
+            routes: {..._getMainRoutes()},
+            debugShowCheckedModeBanner: false,
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

@@ -1,4 +1,4 @@
-package com.example.mygate_coepd
+package com.mygatebell.app
 
 import io.flutter.embedding.android.FlutterActivity
 

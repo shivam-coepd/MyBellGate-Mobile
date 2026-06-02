@@ -210,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               onPressed: _isLastPage ? null : _finishOnboarding,
               style: TextButton.styleFrom(
                 foregroundColor: isDarkMode
-                    ? Colors.white.withOpacity(0.6)
+                    ? Colors.white.withValues(alpha: 0.6)
                     : Colors.grey.shade600,
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 shape: RoundedRectangleBorder(
@@ -289,7 +289,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               style: TextStyle(
                 fontSize: 16.sp,
                 color: isDarkMode
-                    ? Colors.white.withOpacity(0.6)
+                    ? Colors.white.withValues(alpha: 0.6)
                     : Colors.grey.shade600,
                 height: 1.6,
               ),
@@ -324,8 +324,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              gradient[0].withOpacity(0.15),
-              gradient[1].withOpacity(0.05),
+              gradient[0].withValues(alpha: 0.15),
+              gradient[1].withValues(alpha: 0.05),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -361,7 +361,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   height: (20 + index * 15).h,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: gradient[0].withOpacity(0.1 - (index * 0.02)),
+                    color: gradient[0].withValues(alpha: 0.1 - (index * 0.02)),
                   ),
                 ),
               );
@@ -380,12 +380,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 borderRadius: BorderRadius.circular(26.r),
                 boxShadow: [
                   BoxShadow(
-                    color: gradient[0].withOpacity(0.4),
+                    color: gradient[0].withValues(alpha: 0.4),
                     blurRadius: 30,
                     offset: Offset(0, 15),
                   ),
                   BoxShadow(
-                    color: gradient[1].withOpacity(0.2),
+                    color: gradient[1].withValues(alpha: 0.2),
                     blurRadius: 60,
                     offset: Offset(0, 30),
                   ),
@@ -413,7 +413,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: Offset(0, 4),
                     ),
@@ -481,7 +481,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             color: isActive
                 ? null
                 : (isDarkMode
-                      ? Colors.white.withOpacity(0.2)
+                      ? Colors.white.withValues(alpha: 0.2)
                       : Colors.grey.shade300),
             borderRadius: BorderRadius.circular(8.r),
           ),
@@ -513,7 +513,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       );
                     },
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : Colors.grey.shade100,
                     elevation: 0,
                     shape: CircleBorder(),
@@ -545,7 +545,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               borderRadius: BorderRadius.circular(20.r),
               boxShadow: [
                 BoxShadow(
-                  color: gradient[0].withOpacity(0.4),
+                  color: gradient[0].withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: Offset(0, 10),
                 ),

@@ -180,6 +180,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
               floatingActionButton: ScaleTransition(
                 scale: _fadeAnimation,
                 child: FloatingActionButton(
+                  heroTag: 'dashboard_fab',
                   onPressed: () {
                     Navigator.pushNamed(context, '/services');
                   },
