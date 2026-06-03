@@ -33,7 +33,9 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
 
   String? _selectedResidentType;
   bool _isUploadingProfile = false;
-  bool _isUploadingCover   = false;
+  bool _isUploadingCover = false;
+  File? _pickedProfileImage;
+  File? _pickedCoverImage;
 
   final _s3 = S3UploadService();
   final _picker = ImagePicker();
@@ -79,8 +81,34 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
     super.dispose();
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isUploadingProfile = _pickedProfileImage != null;
+      _isUploadingCover = _pickedCoverImage != null;
+    });
+
+    try {
+      String? uploadedProfileUrl;
+      String? uploadedCoverUrl;
+
+      if (_pickedProfileImage != null) {
+        uploadedProfileUrl = await _s3.uploadImage(
+          _pickedProfileImage!,
+          folder: S3UploadService.folderProfiles,
+        );
+      }
+
+      if (_pickedCoverImage != null) {
+        uploadedCoverUrl = await _s3.uploadImage(
+          _pickedCoverImage!,
+          folder: S3UploadService.folderProfiles,
+        );
+      }
+
+      if (!mounted) return;
+
       context.read<ProfileBloc>().add(
         UpdateProfileInfo(
           name: _nameController.text.trim(),
@@ -89,14 +117,31 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
           profession: _professionController.text.trim(),
           hometown: _hometownController.text.trim(),
           residentType: _selectedResidentType,
-          profileImage: _profileImageController.text.trim().isEmpty
-              ? null
-              : _profileImageController.text.trim(),
-          coverImageUrl: _coverImageController.text.trim().isEmpty
-              ? null
-              : _coverImageController.text.trim(),
+          profileImage:
+              uploadedProfileUrl ??
+              (_profileImageController.text.trim().isEmpty
+                  ? null
+                  : _profileImageController.text.trim()),
+          coverImageUrl:
+              uploadedCoverUrl ??
+              (_coverImageController.text.trim().isEmpty
+                  ? null
+                  : _coverImageController.text.trim()),
         ),
       );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Image upload failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isUploadingProfile = false;
+          _isUploadingCover = false;
+        });
+      }
     }
   }
 
@@ -129,12 +174,7 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
       },
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Edit Profile'),
-            elevation: 0,
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.white,
-          ),
+          appBar: AppBar(title: const Text('Edit Profile')),
           body: Stack(
             children: [
               SingleChildScrollView(
@@ -143,149 +183,168 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                   child: Column(
                     children: [
                       // Header Cover & Profile picture layout
-                      Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.center,
-                        children: [
-                          // Cover photo banner
-                          Container(
-                            height: 170.h,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  primaryColor,
-                                  primaryColor.withValues(alpha: 0.7),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              image: _coverImageController.text.isNotEmpty
-                                  ? DecorationImage(
-                                      image: NetworkImage(
-                                        _coverImageController.text,
-                                      ),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
-                            ),
-                          ),
-                          // Avatar profile photo
-                          Positioned(
-                            bottom: -50.h,
-                            child: Stack(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 4.w,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.15),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
+                      SizedBox(
+                        height: 220.h,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Cover photo banner
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: 170.h,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      primaryColor,
+                                      primaryColor.withValues(alpha: 0.7),
                                     ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  child: CircleAvatar(
-                                    radius: 50.r,
-                                    backgroundColor: surfaceColor,
-                                    backgroundImage:
-                                        _profileImageController.text.isNotEmpty
-                                        ? NetworkImage(
-                                            _profileImageController.text,
-                                          )
-                                        : const NetworkImage(
-                                            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
-                                          ),
+                                  image: _pickedCoverImage != null
+                                      ? DecorationImage(
+                                          image: FileImage(_pickedCoverImage!),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : (_coverImageController.text.isNotEmpty
+                                            ? DecorationImage(
+                                                image: NetworkImage(
+                                                  _coverImageController.text,
+                                                ),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null),
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(20.r),
+                                    bottomRight: Radius.circular(20.r),
                                   ),
                                 ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: InkWell(
-                                    onTap: _isUploadingProfile
-                                        ? null
-                                        : () => _pickAndUpload(
-                                              _profileImageController,
-                                              isProfile: true,
-                                            ),
-                                    child: Container(
-                                      padding: EdgeInsets.all(6.w),
-                                      decoration: BoxDecoration(
-                                        color: primaryColor,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2.w,
-                                        ),
+                              ),
+                            ),
+                            // Avatar profile photo
+                            Positioned(
+                              bottom: 0,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 4.w,
                                       ),
-                                      child: _isUploadingProfile
-                                          ? SizedBox(
-                                              width: 16.sp,
-                                              height: 16.sp,
-                                              child:
-                                                  const CircularProgressIndicator(
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          // blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 50.r,
+                                      backgroundColor: surfaceColor,
+                                      backgroundImage:
+                                          _pickedProfileImage != null
+                                          ? FileImage(_pickedProfileImage!)
+                                                as ImageProvider
+                                          : (_profileImageController
+                                                    .text
+                                                    .isNotEmpty
+                                                ? NetworkImage(
+                                                    _profileImageController
+                                                        .text,
+                                                  )
+                                                : const NetworkImage(
+                                                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
+                                                  )),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: InkWell(
+                                      onTap: _isUploadingProfile
+                                          ? null
+                                          : () => _pickImage(isProfile: true),
+                                      child: Container(
+                                        padding: EdgeInsets.all(6.w),
+                                        decoration: BoxDecoration(
+                                          color: primaryColor,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2.w,
+                                          ),
+                                        ),
+                                        child: _isUploadingProfile
+                                            ? SizedBox(
+                                                width: 16.sp,
+                                                height: 16.sp,
+                                                child:
+                                                    const CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Colors.white,
+                                                    ),
+                                              )
+                                            : Icon(
+                                                Icons.camera_alt,
+                                                size: 16.sp,
+                                                color: Colors.white,
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Edit cover icon
+                            Positioned(
+                              top: 10.h,
+                              right: 10.w,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: _isUploadingCover
+                                    ? Padding(
+                                        padding: EdgeInsets.all(12.w),
+                                        child: SizedBox(
+                                          width: 20.sp,
+                                          height: 20.sp,
+                                          child:
+                                              const CircularProgressIndicator(
                                                 strokeWidth: 2,
                                                 color: Colors.white,
                                               ),
-                                            )
-                                          : Icon(
-                                              Icons.camera_alt,
-                                              size: 16.sp,
-                                              color: Colors.white,
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Edit cover icon
-                          Positioned(
-                            top: 10.h,
-                            right: 10.w,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
-                              child: _isUploadingCover
-                                  ? Padding(
-                                      padding: EdgeInsets.all(12.w),
-                                      child: SizedBox(
-                                        width: 20.sp,
-                                        height: 20.sp,
-                                        child: const CircularProgressIndicator(
-                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : IconButton(
+                                        icon: const Icon(
+                                          Icons.edit,
                                           color: Colors.white,
                                         ),
+                                        tooltip: 'Change Cover Photo',
+                                        onPressed: () =>
+                                            _pickImage(isProfile: false),
                                       ),
-                                    )
-                                  : IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color: Colors.white,
-                                      ),
-                                      tooltip: 'Change Cover Photo',
-                                      onPressed: () => _pickAndUpload(
-                                        _coverImageController,
-                                        isProfile: false,
-                                      ),
-                                    ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      SizedBox(height: 60.h),
+                      SizedBox(height: 16.h),
                       // Fields list inside card
                       Card(
                         margin: EdgeInsets.symmetric(
                           horizontal: 16.w,
-                          vertical: 8.h,
+                          // vertical: 12.h,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.r),
@@ -382,7 +441,7 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                       Card(
                         margin: EdgeInsets.symmetric(
                           horizontal: 16.w,
-                          vertical: 8.h,
+                          // vertical: 12.h,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.r),
@@ -509,13 +568,8 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
     );
   }
 
-  /// Pick an image from gallery and upload it to S3.
-  /// [controller] is updated with the returned public URL.
-  /// [isProfile] distinguishes profile vs cover photo for the loading flag.
-  Future<void> _pickAndUpload(
-    TextEditingController controller, {
-    required bool isProfile,
-  }) async {
+  /// Pick an image from gallery to be uploaded on save.
+  Future<void> _pickImage({required bool isProfile}) async {
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 85,
@@ -524,34 +578,10 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
 
     setState(() {
       if (isProfile) {
-        _isUploadingProfile = true;
+        _pickedProfileImage = File(picked.path);
       } else {
-        _isUploadingCover = true;
+        _pickedCoverImage = File(picked.path);
       }
     });
-
-    try {
-      final url = await _s3.uploadImage(
-        File(picked.path),
-        folder: S3UploadService.folderProfiles,
-      );
-      setState(() => controller.text = url);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Upload failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploadingProfile = false;
-          _isUploadingCover   = false;
-        });
-      }
-    }
   }
 }

@@ -212,7 +212,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                 children: [
                   // Profile Header
                   _buildProfileHeader(user),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 30.h),
                   // About Me/Bio Card if present
                   if (user.bio != null && user.bio!.isNotEmpty)
                     _buildBioCard(user),
@@ -292,29 +292,24 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
   }
 
   Widget _buildBioCard(User user) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'About Me',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
-              ),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16.r)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'About Me',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor,
             ),
-            SizedBox(height: 8.h),
-            Text(
-              user.bio ?? '',
-              style: TextStyle(fontSize: 14.sp, height: 1.4),
-            ),
-          ],
-        ),
+          ),
+          SizedBox(height: 8.h),
+          Text(user.bio ?? '', style: TextStyle(fontSize: 14.sp, height: 1.4)),
+        ],
       ),
     );
   }
@@ -345,7 +340,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
             left: 16.w,
             right: 16.w,
             bottom: 8.h,
-            top: 40.h,
+            // top: 40.h,
           ),
           child: Text(
             'Personal Information',

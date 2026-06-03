@@ -655,7 +655,7 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
   bool _isSubmitting = false;
   bool _isUploadingPhoto = false;
   String? _uploadedPhotoUrl;
-  bool _uploadFailed = false;  // track if upload failed so UI can show retry
+  bool _uploadFailed = false; // track if upload failed so UI can show retry
 
   final VisitorRepository _visitorRepository = VisitorRepository();
   final _s3 = S3UploadService();
@@ -763,9 +763,9 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
       await _uploadFile(image);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to pick image')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to pick image')));
       }
     }
   }
@@ -795,7 +795,9 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
         setState(() => _uploadFailed = true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Photo upload failed: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              'Photo upload failed: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
             action: SnackBarAction(
               label: 'Retry',
@@ -981,9 +983,17 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      CircularProgressIndicator(color: Colors.white),
+                                      CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
                                       SizedBox(height: 8),
-                                      Text('Uploading...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                      Text(
+                                        'Uploading...',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -1001,18 +1011,35 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.cloud_off, color: Colors.white, size: 32),
+                                      const Icon(
+                                        Icons.cloud_off,
+                                        color: Colors.white,
+                                        size: 32,
+                                      ),
                                       const SizedBox(height: 6),
-                                      const Text('Upload failed', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                      const Text(
+                                        'Upload failed',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                       const SizedBox(height: 8),
                                       ElevatedButton.icon(
-                                        onPressed: () => _uploadFile(_capturedImage!),
-                                        icon: const Icon(Icons.refresh, size: 16),
+                                        onPressed: () =>
+                                            _uploadFile(_capturedImage!),
+                                        icon: const Icon(
+                                          Icons.refresh,
+                                          size: 16,
+                                        ),
                                         label: const Text('Retry'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.white,
                                           foregroundColor: Colors.red,
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1046,14 +1073,19 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                               ),
                             ),
                           // Uploaded badge
-                          if (_uploadedPhotoUrl != null && !_isUploadingPhoto && !_uploadFailed)
+                          if (_uploadedPhotoUrl != null &&
+                              !_isUploadingPhoto &&
+                              !_uploadFailed)
                             Positioned(
                               bottom: 8.h,
                               left: 0,
                               right: 0,
                               child: Center(
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10.w,
+                                    vertical: 4.h,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.green.withValues(alpha: 0.9),
                                     borderRadius: BorderRadius.circular(20.r),
@@ -1061,9 +1093,20 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.cloud_done, color: Colors.white, size: 14.sp),
+                                      Icon(
+                                        Icons.cloud_done,
+                                        color: Colors.white,
+                                        size: 14.sp,
+                                      ),
                                       SizedBox(width: 4.w),
-                                      Text('Uploaded ✓', style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w600)),
+                                      Text(
+                                        'Uploaded ✓',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -1757,7 +1800,7 @@ class VisitorCardWidget extends StatelessWidget {
           ],
         ),
         child: GestureDetector(
-          onLongPress: () {
+          onTap: () {
             showModalBottomSheet(
               context: context,
               backgroundColor: Colors.transparent,
@@ -1769,7 +1812,7 @@ class VisitorCardWidget extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
                 color: isSelected
                     ? colorScheme.primary
@@ -2034,6 +2077,7 @@ class VisitorCardWidget extends StatelessWidget {
       backgroundColor: color.withValues(alpha: 0.12),
       foregroundColor: color,
       padding: EdgeInsets.zero,
+      borderRadius: BorderRadius.circular(16.r),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -2369,7 +2413,7 @@ class _AppTextFieldState extends State<AppTextField> {
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade100,
+        color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           if (_isFocused)
@@ -2385,7 +2429,7 @@ class _AppTextFieldState extends State<AppTextField> {
         focusNode: _focusNode,
         keyboardType: widget.keyboardType,
         style: TextStyle(
-          fontSize: 14.5,
+          fontSize: 14.5.sp,
           fontWeight: FontWeight.w500,
           color: isDark ? Colors.white : Colors.black87,
         ),
