@@ -266,7 +266,7 @@ class _GuardMainScreenState extends State<GuardMainScreen>
           topRight: Radius.circular(20.r),
         ),
         child: Container(
-          height: (80 + MediaQuery.of(context).padding.bottom).h,
+          height: 80.h + MediaQuery.of(context).padding.bottom,
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).padding.bottom,
           ),
@@ -436,8 +436,8 @@ class _BuildAnimatedNavItem extends StatelessWidget {
                   ScaleTransition(
                     scale: animation,
                     child: Container(
-                      width: 40.w,
-                      height: 40.h,
+                      width: 44.w,
+                      height: 44.w,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
@@ -455,22 +455,22 @@ class _BuildAnimatedNavItem extends StatelessWidget {
                 // Icon
                 Icon(
                   isSelected ? item.activeIcon : item.icon,
-                  size: isSelected ? 26.r : 24.r,
+                  size: isSelected ? 28.sp : 26.sp,
                   color: isSelected ? primaryColor : Colors.grey.shade600,
                 ),
 
                 // Active indicator dot
                 if (isSelected)
                   Positioned(
-                    top: -1.h,
+                    top: -2.h,
                     child: ScaleTransition(
                       scale: animation,
                       child: Container(
-                        width: 20.w,
-                        height: 4.h,
+                        width: 24.w,
+                        height: 5.h,
                         decoration: BoxDecoration(
                           color: primaryColor,
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(2.r),
                         ),
                       ),
                     ),
@@ -478,9 +478,7 @@ class _BuildAnimatedNavItem extends StatelessWidget {
               ],
             ),
 
-            SizedBox(height: 2.h),
-
-            // Label with animation
+            SizedBox(height: 4.h),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               transform: Matrix4.identity()..scale(isSelected ? 1.0 : 0.9),

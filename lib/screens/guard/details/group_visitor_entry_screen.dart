@@ -1,311 +1,360 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
-import 'package:mygate_coepd/blocs/auth/auth_state.dart';
+import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class GroupVisitorEntryScreen extends StatefulWidget {
   const GroupVisitorEntryScreen({super.key});
 
   @override
-  State<GroupVisitorEntryScreen> createState() => _GroupVisitorEntryScreenState();
+  State<GroupVisitorEntryScreen> createState() =>
+      _GroupVisitorEntryScreenState();
 }
 
 class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
-  final List<Map<String, dynamic>> _groupVisitors = [
-    {
-      'id': 1,
-      'name': 'Rahul Kumar',
-      'type': 'Contractor',
-      'flat': 'A-101',
-      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
-    },
-    {
-      'id': 2,
-      'name': 'Priya Sharma',
-      'type': 'Laborer',
-      'flat': 'A-101',
-      'image': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
-    },
-  ];
+  final _purposeCtrl = TextEditingController();
+  final _residentIdCtrl = TextEditingController();
+  final _purposeFormKey = GlobalKey<FormState>();
+  String _visitorType = 'other';
 
-  final _nameController = TextEditingController();
-  final _flatController = TextEditingController();
-  final _purposeController = TextEditingController();
-  String _selectedType = 'Contractor';
-
-  final List<String> _visitorTypes = [
-    'Contractor',
-    'Laborer',
-    'Delivery',
-    'Service',
-    'Other',
-  ];
-
-  void _addVisitor() {
-    if (_nameController.text.isNotEmpty && _flatController.text.isNotEmpty) {
-      setState(() {
-        _groupVisitors.add({
-          'id': _groupVisitors.length + 1,
-          'name': _nameController.text,
-          'type': _selectedType,
-          'flat': _flatController.text,
-          'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
-        });
-      });
-      _nameController.clear();
-      _flatController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Visitor added successfully!'),
-          backgroundColor: AppTheme.success,
-        ),
-      );
-    }
-  }
-
-  void _removeVisitor(int id) {
-    setState(() {
-      _groupVisitors.removeWhere((visitor) => visitor['id'] == id);
-    });
-  }
-
-  void _submitGroupEntry() {
-    if (_groupVisitors.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Group entry submitted successfully!'),
-          backgroundColor: AppTheme.primary,
-        ),
-      );
-      Navigator.pop(context);
-    }
-  }
+  // Each entry: {name, phone}
+  final List<Map<String, dynamic>> _members = [];
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _flatController.dispose();
-    _purposeController.dispose();
+    _purposeCtrl.dispose();
+    _residentIdCtrl.dispose();
     super.dispose();
+  }
+
+  void _showAddMemberSheet() {
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    final key = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20.w,
+          right: 20.w,
+          top: 20.h,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20.h,
+        ),
+        child: Form(
+          key: key,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Add Group Member',
+                  style:
+                      TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+              SizedBox(height: 16.h),
+              TextFormField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Name *', border: OutlineInputBorder()),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+              ),
+              SizedBox(height: 12.h),
+              TextFormField(
+                controller: phoneCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Phone *', border: OutlineInputBorder()),
+                keyboardType: TextInputType.phone,
+                validator: (v) =>
+                    (v == null || v.trim().length < 10) ? 'Enter valid phone' : null,
+              ),
+              SizedBox(height: 20.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (key.currentState!.validate()) {
+                      setState(() {
+                        _members.add({
+                          'name': nameCtrl.text.trim(),
+                          'phone': phoneCtrl.text.trim(),
+                        });
+                      });
+                      Navigator.pop(ctx);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    minimumSize: Size(double.infinity, 48.h),
+                  ),
+                  child:
+                      const Text('Add', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitGroup() async {
+    if (!_purposeFormKey.currentState!.validate()) return;
+    if (_members.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Add at least one group member'),
+            backgroundColor: AppTheme.warning),
+      );
+      return;
+    }
+
+    final residentId = int.tryParse(_residentIdCtrl.text.trim());
+    if (residentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Enter a valid Resident ID'),
+            backgroundColor: AppTheme.error),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    int successCount = 0;
+    int failCount = 0;
+
+    for (final member in _members) {
+      try {
+        await context.read<GuardBloc>().stream
+            .firstWhere((s) => s is! GuardLoading)
+            .timeout(const Duration(seconds: 15));
+
+        if (!mounted) break;
+        context.read<GuardBloc>().add(AddVisitor(
+              name: member['name'],
+              phone: member['phone'],
+              purpose: _purposeCtrl.text.trim(),
+              visitorType: _visitorType,
+              residentId: residentId,
+            ));
+
+        final result = await context.read<GuardBloc>().stream
+            .firstWhere((s) => s is VisitorAdded || s is GuardError)
+            .timeout(const Duration(seconds: 15));
+
+        if (result is VisitorAdded) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (_) {
+        failCount++;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(failCount == 0
+          ? '$successCount member(s) added successfully'
+          : '$successCount added, $failCount failed'),
+      backgroundColor: failCount == 0 ? AppTheme.success : AppTheme.warning,
+    ));
+
+    if (successCount > 0) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is Authenticated) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Group Visitor Entry'),
-              actions: [
-                IconButton(
-                  onPressed: _submitGroupEntry,
-                  icon: const Icon(Icons.check),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Group Visitor Entry'),
+        actions: [
+          TextButton.icon(
+            onPressed: _isSubmitting ? null : _submitGroup,
+            icon: _isSubmitting
+                ? SizedBox(
+                    width: 16.w,
+                    height: 16.h,
+                    child: const CircularProgressIndicator(
+                        strokeWidth: 2, color: AppTheme.primary))
+                : const Icon(Icons.check, color: AppTheme.primary),
+            label: Text('Submit',
+                style: TextStyle(color: AppTheme.primary, fontSize: 14.sp)),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Entry details form
+            Form(
+              key: _purposeFormKey,
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Entry Details',
+                          style: TextStyle(
+                              fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 16.h),
+                      TextFormField(
+                        controller: _purposeCtrl,
+                        decoration: const InputDecoration(
+                            labelText: 'Purpose of Visit *',
+                            border: OutlineInputBorder()),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Required'
+                            : null,
+                      ),
+                      SizedBox(height: 12.h),
+                      TextFormField(
+                        controller: _residentIdCtrl,
+                        decoration: const InputDecoration(
+                            labelText: 'Resident ID *',
+                            border: OutlineInputBorder()),
+                        keyboardType: TextInputType.number,
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      ),
+                      SizedBox(height: 12.h),
+                      DropdownButtonFormField<String>(
+                        value: _visitorType,
+                        decoration: const InputDecoration(
+                            labelText: 'Visitor Type',
+                            border: OutlineInputBorder()),
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'other', child: Text('Group / Other')),
+                          DropdownMenuItem(
+                              value: 'service', child: Text('Service Workers')),
+                          DropdownMenuItem(
+                              value: 'guest', child: Text('Guests')),
+                        ],
+                        onChanged: (v) =>
+                            setState(() => _visitorType = v ?? 'other'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(height: 16.h),
+
+            // Members section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Group Members (${_members.length})',
+                    style: TextStyle(
+                        fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                ElevatedButton.icon(
+                  onPressed: _showAddMemberSheet,
+                  icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                  label: const Text('Add',
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12.w, vertical: 8.h)),
                 ),
               ],
             ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Entry Details Card
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Entry Details',
+            SizedBox(height: 12.h),
+
+            if (_members.isEmpty)
+              Card(
+                child: Padding(
+                  padding: EdgeInsets.all(24.w),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.group_add_outlined,
+                            size: 48.sp, color: Colors.grey),
+                        SizedBox(height: 8.h),
+                        Text('No members added yet',
                             style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          TextField(
-                            controller: _flatController,
-                            decoration: const InputDecoration(
-                              labelText: 'Flat Number',
-                              hintText: 'Enter flat number',
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          TextField(
-                            controller: _purposeController,
-                            decoration: const InputDecoration(
-                              labelText: 'Purpose of Visit',
-                              hintText: 'Enter purpose of visit',
-                            ),
-                            maxLines: 2,
-                          ),
-                          const SizedBox(height: 15),
-                          const Text(
-                            'Visitor Type',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 10,
-                            children: _visitorTypes
-                                .map(
-                                  (type) => ChoiceChip(
-                                    label: Text(type),
-                                    selected: _selectedType == type,
-                                    selectedColor: AppTheme.primary,
-                                    onSelected: (bool selected) {
-                                      setState(() {
-                                        _selectedType = selected ? type : _selectedType;
-                                      });
-                                    },
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        ],
-                      ),
+                                color: Colors.grey, fontSize: 14.sp)),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // Add Visitor Form
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Add Visitor',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          TextField(
-                            controller: _nameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Visitor Name',
-                              hintText: 'Enter visitor name',
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          ElevatedButton(
-                            onPressed: _addVisitor,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              minimumSize: Size(double.infinity, 50.h),
-                            ),
-                            child: const Text(
-                              'Add Visitor',
-                              style: TextStyle(color: AppTheme.onPrimary),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Visitors List
-                  const Text(
-                    'Group Visitors',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  if (_groupVisitors.isEmpty)
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(20),
+                ),
+              )
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _members.length,
+                itemBuilder: (_, i) {
+                  final m = _members[i];
+                  return Card(
+                    margin: EdgeInsets.only(bottom: 8.h),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                         child: Text(
-                          'No visitors added yet. Add visitors to the group.',
-                          textAlign: TextAlign.center,
+                          '${i + 1}',
                           style: TextStyle(
-                            color: AppTheme.onBackgroundLight,
-                          ),
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14.sp),
                         ),
                       ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _groupVisitors.length,
-                      itemBuilder: (context, index) {
-                        final visitor = _groupVisitors[index];
-                        return Card(
-                          margin: EdgeInsets.only(bottom: 15.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(15.w),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(visitor['image']),
-                                ),
-                                SizedBox(width: 15.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        visitor['name'],
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(height: 5.h),
-                                      Text(
-                                        '${visitor['type']} • ${visitor['flat']}',
-                                        style: const TextStyle(
-                                          color: AppTheme.onBackgroundLight,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () => _removeVisitor(visitor['id']),
-                                  icon: const Icon(Icons.delete, color: AppTheme.error),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                      title: Text(m['name'],
+                          style:
+                              TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp)),
+                      subtitle: Text(m['phone'],
+                          style: TextStyle(
+                              fontSize: 12.sp,
+                              color: AppTheme.onBackgroundLight)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.remove_circle_outline,
+                            color: AppTheme.error),
+                        onPressed: () =>
+                            setState(() => _members.removeAt(i)),
+                      ),
                     ),
-                ],
+                  );
+                },
               ),
-            ),
-          );
-        }
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
+
+            SizedBox(height: 80.h),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 24.h),
+        child: ElevatedButton.icon(
+          onPressed: _isSubmitting ? null : _submitGroup,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primary,
+            minimumSize: Size(double.infinity, 52.h),
           ),
-        );
-      },
+          icon: _isSubmitting
+              ? SizedBox(
+                  width: 18.w,
+                  height: 18.h,
+                  child: const CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.how_to_reg, color: Colors.white),
+          label: Text(
+            _isSubmitting ? 'Submitting...' : 'Submit Group Entry',
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        ),
+      ),
     );
   }
 }

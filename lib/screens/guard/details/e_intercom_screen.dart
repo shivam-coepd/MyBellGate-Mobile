@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
-import 'package:mygate_coepd/blocs/auth/auth_state.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EIntercomScreen extends StatefulWidget {
   const EIntercomScreen({super.key});
@@ -13,312 +14,224 @@ class EIntercomScreen extends StatefulWidget {
 }
 
 class _EIntercomScreenState extends State<EIntercomScreen> {
-  final List<Map<String, dynamic>> _residents = [
-    {
-      'id': 1,
-      'name': 'Rajesh Kumar',
-      'flat': 'A-101',
-      'phone': '9876543210',
-      'status': 'online',
-      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
-    },
-    {
-      'id': 2,
-      'name': 'Priya Sharma',
-      'flat': 'B-203',
-      'phone': '9876543211',
-      'status': 'busy',
-      'image': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
-    },
-    {
-      'id': 3,
-      'name': 'Amit Patel',
-      'flat': 'C-105',
-      'phone': '9876543212',
-      'status': 'offline',
-      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
-    },
-  ];
+  final _searchCtrl = TextEditingController();
 
-  final List<Map<String, dynamic>> _recentCalls = [
-    {
-      'id': 1,
-      'residentName': 'Rajesh Kumar',
-      'flat': 'A-101',
-      'time': '10:30 AM',
-      'duration': '2 min',
-      'status': 'connected',
-      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
-    },
-    {
-      'id': 2,
-      'residentName': 'Priya Sharma',
-      'flat': 'B-203',
-      'time': '09:45 AM',
-      'duration': '1 min',
-      'status': 'missed',
-      'image': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
-    },
-  ];
-
-  void _callResident(int id) {
-    final resident = _residents.firstWhere((r) => r['id'] == id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Calling ${resident['name']}...'),
-        backgroundColor: AppTheme.primary,
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    context.read<GuardBloc>().add(const LoadResidents(limit: 100));
   }
 
-  void _sendIVR(int id) {
-    final resident = _residents.firstWhere((r) => r['id'] == id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sending IVR call to ${resident['name']}...'),
-        backgroundColor: AppTheme.primary,
-      ),
-    );
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _callResident(String phone, String name) async {
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Cannot call $name'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
+  }
+
+  void _search(String query) {
+    context.read<GuardBloc>().add(LoadResidents(
+          search: query.trim().isEmpty ? null : query.trim(),
+          limit: 100,
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is Authenticated) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('E-Intercom'),
-              actions: [
-                IconButton(
-                  onPressed: () {
-                    // Refresh action
-                  },
-                  icon: const Icon(Icons.refresh),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('E-Intercom'),
+        actions: [
+          IconButton(
+            onPressed: () =>
+                context.read<GuardBloc>().add(const LoadResidents(limit: 100)),
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      body: BlocConsumer<GuardBloc, GuardState>(
+        listener: (context, state) {
+          if (state is GuardError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppTheme.error),
+            );
+          }
+        },
+        builder: (context, state) {
+          final residents =
+              state is ResidentsLoaded ? state.residents : <Map<String, dynamic>>[];
+          final isLoading = state is GuardLoading;
+
+          return Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: TextField(
+                  controller: _searchCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'Search resident by name or phone...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchCtrl.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              _search('');
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: _search,
                 ),
-                IconButton(
-                  onPressed: () {
-                    // Search action
-                  },
-                  icon: const Icon(Icons.search),
+              ),
+
+              // Info card
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Card(
+                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  child: Padding(
+                    padding: EdgeInsets.all(12.w),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline,
+                            color: AppTheme.primary, size: 18.sp),
+                        SizedBox(width: 8.w),
+                        Flexible(
+                          child: Text(
+                            'Tap the call icon to ring a resident for visitor approval.',
+                            style: TextStyle(
+                                fontSize: 12.sp, color: AppTheme.primary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
+              ),
+              SizedBox(height: 8.h),
+
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : residents.isEmpty
+                        ? RefreshIndicator(
+                            onRefresh: () async => context
+                                .read<GuardBloc>()
+                                .add(const LoadResidents(limit: 100)),
+                            child: ListView(
+                              children: [
+                                SizedBox(height: 120.h),
+                                Center(
+                                  child: Column(
+                                    children: [
+                                      Icon(Icons.people_outline,
+                                          size: 64.sp, color: Colors.grey),
+                                      SizedBox(height: 16.h),
+                                      Text(
+                                        'No residents found',
+                                        style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 16.sp),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: () async => context
+                                .read<GuardBloc>()
+                                .add(const LoadResidents(limit: 100)),
+                            child: ListView.builder(
+                              padding: EdgeInsets.all(16.w),
+                              itemCount: residents.length,
+                              itemBuilder: (_, i) =>
+                                  _buildResidentCard(residents[i]),
+                            ),
+                          ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildResidentCard(Map<String, dynamic> resident) {
+    final name = resident['name'] ?? 'Unknown';
+    final phone = resident['phone'] ?? '';
+    final flatNumber = resident['flat_number'] ?? '-';
+    final imageUrl = resident['profile_image'];
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: Padding(
+        padding: EdgeInsets.all(12.w),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24.r,
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+              backgroundImage:
+                  imageUrl != null ? CachedNetworkImageProvider(imageUrl) : null,
+              child: imageUrl == null
+                  ? Icon(Icons.person, color: AppTheme.primary, size: 24.sp)
+                  : null,
             ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+            SizedBox(width: 12.w),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Residents List
-                  const Text(
-                    'Residents',
+                  Text(
+                    name,
+                    style:
+                        TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    'Flat: $flatNumber',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                        fontSize: 12.sp, color: AppTheme.onBackgroundLight),
+                  ),
+                  if (phone.isNotEmpty)
+                    Text(
+                      phone,
+                      style: TextStyle(
+                          fontSize: 12.sp, color: AppTheme.onBackgroundLight),
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _residents.length,
-                    itemBuilder: (context, index) {
-                      final resident = _residents[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: Row(
-                            children: [
-                              Stack(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundImage: CachedNetworkImageProvider(resident['image']),
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: resident['status'] == 'online'
-                                            ? AppTheme.success
-                                            : resident['status'] == 'busy'
-                                                ? AppTheme.secondary
-                                                : AppTheme.onBackgroundLight,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: AppTheme.onPrimary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 15),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      resident['name'],
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      'Flat: ${resident['flat']}',
-                                      style: const TextStyle(
-                                        color: AppTheme.onBackgroundLight,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => _callResident(resident['id']),
-                                    icon: const Icon(Icons.call, color: AppTheme.primary),
-                                  ),
-                                  IconButton(
-                                    onPressed: () => _sendIVR(resident['id']),
-                                    icon: const Icon(Icons.voicemail, color: AppTheme.primary),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  // Recent Calls
-                  const Text(
-                    'Recent Calls',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _recentCalls.length,
-                    itemBuilder: (context, index) {
-                      final call = _recentCalls[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: CachedNetworkImageProvider(call['image']),
-                          ),
-                          title: Text(
-                            call['residentName'],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text('Flat: ${call['flat']} • ${call['duration']}'),
-                          trailing: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(call['time']),
-                              const SizedBox(height: 5),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: call['status'] == 'connected'
-                                      ? AppTheme.success.withValues(alpha: 0.2)
-                                      : AppTheme.error.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  call['status'],
-                                  style: TextStyle(
-                                    color: call['status'] == 'connected'
-                                        ? AppTheme.success
-                                        : AppTheme.error,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  // Offline Mode Info
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Offline Mode',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          const Text(
-                            'In offline scenarios, IVR calls are automatically triggered to residents for approvals.',
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
-                          ),
-                          const SizedBox(height: 15),
-                          Row(
-                            children: [
-                              const Icon(Icons.info, color: AppTheme.primary),
-                              const SizedBox(width: 10),
-                              Flexible(
-                                child: Text(
-                                  'IVR calls will be sent to primary and secondary numbers.',
-                                  style: TextStyle(
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
-          );
-        }
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
-      },
+            if (phone.isNotEmpty)
+              IconButton(
+                onPressed: () => _callResident(phone, name),
+                icon: Icon(Icons.call, color: AppTheme.primary, size: 24.sp),
+                tooltip: 'Call $name',
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

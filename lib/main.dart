@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/screens/auth/address/LocationSelectionScreen.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
@@ -36,6 +37,8 @@ import 'package:mygate_coepd/blocs/amenity/amenity_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
+import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
+import 'package:mygate_coepd/repositories/guard_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -155,6 +158,9 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
           RepositoryProvider<AccountingRepository>(
             create: (context) => AccountingRepository(),
           ),
+          RepositoryProvider<GuardRepository>(
+            create: (context) => GuardRepository(),
+          ),
         ],
         child: MultiBlocProvider(
           providers: [
@@ -186,6 +192,11 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
             BlocProvider<AccountingBloc>(
               create: (context) => AccountingBloc(
                 repository: context.read<AccountingRepository>(),
+              ),
+            ),
+            BlocProvider<GuardBloc>(
+              create: (context) => GuardBloc(
+                repository: context.read<GuardRepository>(),
               ),
             ),
           ],

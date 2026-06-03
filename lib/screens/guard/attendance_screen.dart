@@ -1,10 +1,7 @@
-// ignore_for_file: unused_field
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
-import 'package:mygate_coepd/blocs/auth/auth_state.dart';
+import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/screens/guard/details/guard_patrolling_screen.dart';
 
@@ -16,614 +13,414 @@ class AttendanceScreen extends StatefulWidget {
 }
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
-  bool _isOffline = false;
-  final int _selectedMonth = DateTime.now().month;
-  final int _selectedYear = DateTime.now().year;
-
-  final List<Map<String, dynamic>> _patrolRoutes = [
-    {
-      'id': 1,
-      'name': 'Main Gate Route',
-      'checkpoints': 5,
-      'completed': 4,
-      'status': 'In Progress',
-    },
-    {
-      'id': 2,
-      'name': 'Tower A Route',
-      'checkpoints': 8,
-      'completed': 8,
-      'status': 'Completed',
-    },
-    {
-      'id': 3,
-      'name': 'Clubhouse Route',
-      'checkpoints': 4,
-      'completed': 0,
-      'status': 'Pending',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _attendanceRecords = [
-    {
-      'date': '2023-06-01',
-      'shift': 'Morning',
-      'inTime': '08:00 AM',
-      'outTime': '04:00 PM',
-      'status': 'Present',
-    },
-    {
-      'date': '2023-06-02',
-      'shift': 'Morning',
-      'inTime': '08:05 AM',
-      'outTime': '04:05 PM',
-      'status': 'Present',
-    },
-    {
-      'date': '2023-06-03',
-      'shift': 'Morning',
-      'inTime': '08:00 AM',
-      'outTime': '04:00 PM',
-      'status': 'Present',
-    },
-    {
-      'date': '2023-06-04',
-      'shift': 'Off',
-      'inTime': '-',
-      'outTime': '-',
-      'status': 'Off',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _shifts = [
-    {'id': 1, 'name': 'Morning', 'time': '08:00 AM - 04:00 PM'},
-    {'id': 2, 'name': 'Evening', 'time': '04:00 PM - 12:00 AM'},
-    {'id': 3, 'name': 'Night', 'time': '12:00 AM - 08:00 AM'},
-  ];
-
-  final List<Map<String, dynamic>> _quickActions = [
-    {
-      'icon': Icons.directions_walk,
-      'label': 'Patrolling',
-      'color': AppTheme.primary,
-    },
-    {'icon': Icons.qr_code_scanner, 'label': 'Scan QR', 'color': AppTheme.success},
-  ];
-
-  void _markAttendance() {
-    // Logic to mark attendance
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Attendance marked successfully!'),
-        backgroundColor: AppTheme.success,
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    context.read<GuardBloc>().add(const LoadGuardAttendance());
   }
 
-  void _scanQRCode() {
-    // Logic to scan QR code for patrol
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Scanning QR code...'),
-        backgroundColor: AppTheme.primary,
-      ),
-    );
+  void _markIn() {
+    context.read<GuardBloc>().add(const MarkAttendance('in'));
+  }
+
+  void _markOut() {
+    context.read<GuardBloc>().add(const MarkAttendance('out'));
+  }
+
+  String _formatTime(dynamic ts) {
+    if (ts == null) return '-';
+    try {
+      final dt = DateTime.parse(ts.toString());
+      final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+      final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+      return '$h:${dt.minute.toString().padLeft(2, '0')} $ampm';
+    } catch (_) {
+      return ts.toString();
+    }
+  }
+
+  String _formatDate(dynamic ts) {
+    if (ts == null) return '-';
+    try {
+      final dt = DateTime.parse(ts.toString());
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    } catch (_) {
+      return ts.toString();
+    }
+  }
+
+  double _shiftProgress(Map<String, dynamic>? today) {
+    if (today == null || today['in_time'] == null) return 0.0;
+    try {
+      final inTime = DateTime.parse(today['in_time'].toString());
+      final now = DateTime.now();
+      final elapsed = now.difference(inTime).inMinutes.clamp(0, 480);
+      return elapsed / 480; // 8-hour shift = 480 min
+    } catch (_) {
+      return 0.0;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<GuardBloc, GuardState>(
+      listener: (context, state) {
+        if (state is AttendanceMarked) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(state.type == 'in'
+                ? 'Check-in marked successfully'
+                : 'Check-out marked successfully'),
+            backgroundColor: AppTheme.success,
+          ));
+          context.read<GuardBloc>().add(const LoadGuardAttendance());
+        } else if (state is GuardError) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(state.message),
+            backgroundColor: AppTheme.error,
+          ));
+          // Reload even on error to keep UI consistent
+          context.read<GuardBloc>().add(const LoadGuardAttendance());
+        }
+      },
       builder: (context, state) {
-        if (state is Authenticated) {
-          return Scaffold(
-            body: Padding(
-              padding: EdgeInsets.only(left: 16.w, right: 16.w, top: 16.h),
-              child: SingleChildScrollView(
-                child: Column(
-                  spacing: 20.0,
-                  children: [
-                    // Offline Banner
-                    if (_isOffline)
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warning,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(Icons.wifi_off, color: AppTheme.onPrimary),
-                                SizedBox(width: 10),
-                                Text(
-                                  'Offline Mode',
-                                  style: TextStyle(
-                                    color: AppTheme.onPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isOffline = false;
-                                });
-                              },
-                              icon: const Icon(
-                                Icons.close,
-                                color: AppTheme.onPrimary,
-                              ),
-                            ),
-                          ],
+        Map<String, dynamic>? today;
+        List<Map<String, dynamic>> history = [];
+        final isLoading = state is GuardLoading;
+
+        if (state is AttendanceLoaded) {
+          today = state.todayRecord;
+          history = state.history;
+        }
+
+        final hasCheckedIn = today != null && today['in_time'] != null;
+        final hasCheckedOut = today != null && today['out_time'] != null;
+        final progress = _shiftProgress(today);
+
+        return Scaffold(
+          body: RefreshIndicator(
+            onRefresh: () async =>
+                context.read<GuardBloc>().add(const LoadGuardAttendance()),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Quick Actions
+                  Text('Quick Actions',
+                      style: TextStyle(
+                          fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      _quickAction(
+                        icon: Icons.directions_walk,
+                        label: 'Patrolling',
+                        color: AppTheme.primary,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  const GuardPatrollingScreen()),
                         ),
                       ),
-                    // Quick Actions
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Quick Actions',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            for (
-                              int index = 0;
-                              index < _quickActions.length;
-                              index++
-                            )
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w,
-                                ),
-                                child: Column(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        if (index == 0) {
-                                          // _navigateToPatrolling();
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const GuardPatrollingScreen(),
-                                            ),
-                                          );
-                                        } else {
-                                          _scanQRCode();
-                                        }
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(20),
-                                        decoration: BoxDecoration(
-                                          color: _quickActions[index]['color'],
-                                          borderRadius: BorderRadius.circular(
-                                            16.r,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  _quickActions[index]['color']
-                                                      .withValues(alpha: 0.3),
-                                              blurRadius: 10.w,
-                                              offset: Offset(0, 5.h),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Icon(
-                                          _quickActions[index]['icon'],
-                                          color: AppTheme.onPrimary,
-                                          size: 30.sp,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    Text(
-                                      _quickActions[index]['label'],
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    // Attendance Summary Card
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Today\'s Attendance',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
+                      SizedBox(width: 16.w),
+                      _quickAction(
+                        icon: Icons.qr_code_scanner,
+                        label: 'Scan QR',
+                        color: AppTheme.success,
+                        onTap: () => ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
+                                content: Text(
+                                    'Use Visitor Management > QR Scanner'))),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 20.h),
+
+                  // Today's Attendance
+                  Text("Today's Attendance",
+                      style: TextStyle(
+                          fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 12.h),
+                  Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.w),
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : Column(
                               children: [
-                                const Text(
-                                  'Today\'s Attendance',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    _buildAttendanceStat('In Time', '08:00 AM'),
-                                    _buildAttendanceStat('Out Time', '-'),
-                                    _buildAttendanceStat('Status', 'Present'),
+                                    _statItem('In Time',
+                                        _formatTime(today?['in_time'])),
+                                    _statItem('Out Time',
+                                        _formatTime(today?['out_time'])),
+                                    _statItem(
+                                        'Status',
+                                        hasCheckedIn
+                                            ? (hasCheckedOut
+                                                ? 'Done'
+                                                : 'Active')
+                                            : 'Pending'),
                                   ],
                                 ),
-                                const SizedBox(height: 15),
-                                ElevatedButton(
-                                  onPressed: _markAttendance,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primary,
-                                    minimumSize: Size(
-                                      double.infinity,
-                                      50.h,
+                                SizedBox(height: 16.h),
+                                if (!hasCheckedIn)
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _markIn,
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.success,
+                                          minimumSize:
+                                              Size(double.infinity, 48.h)),
+                                      icon: const Icon(Icons.login,
+                                          color: Colors.white),
+                                      label: const Text('Mark Check-In',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ),
+                                  )
+                                else if (!hasCheckedOut)
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _markOut,
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.error,
+                                          minimumSize:
+                                              Size(double.infinity, 48.h)),
+                                      icon: const Icon(Icons.logout,
+                                          color: Colors.white),
+                                      label: const Text('Mark Check-Out',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ),
+                                  )
+                                else
+                                  Container(
+                                    padding: EdgeInsets.all(12.w),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.success
+                                          .withValues(alpha: 0.1),
+                                      borderRadius:
+                                          BorderRadius.circular(12.r),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.check_circle,
+                                            color: AppTheme.success),
+                                        SizedBox(width: 8.w),
+                                        const Text(
+                                            'Shift completed for today',
+                                            style: TextStyle(
+                                                color: AppTheme.success,
+                                                fontWeight: FontWeight.w600)),
+                                      ],
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Mark Attendance',
-                                    style: TextStyle(
-                                      color: AppTheme.onPrimary,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
                               ],
                             ),
-                          ),
-                        ),
-                      ],
                     ),
-                    // Shift Information
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Current Shift',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(15),
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'Morning Shift',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                const Text('08:00 AM - 04:00 PM'),
-                                const SizedBox(height: 10),
-                                LinearProgressIndicator(
-                                  value: 0.5,
-                                  backgroundColor: AppTheme.onBackgroundLight.withValues(alpha: 0.3),
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                        AppTheme.primary,
-                                      ),
-                                ),
-                                const SizedBox(height: 5),
-                                const Text('50% of shift completed'),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Patrol Routes
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+
+                  SizedBox(height: 20.h),
+
+                  // Shift Progress
+                  if (hasCheckedIn && !hasCheckedOut) ...[
+                    Text('Shift Progress',
+                        style: TextStyle(
+                            fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 12.h),
+                    Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.w),
+                        child: Column(
                           children: [
-                            const Text(
-                              'Patrol Routes',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor:
+                                  AppTheme.onBackgroundLight.withValues(alpha: 0.2),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppTheme.primary),
+                              minHeight: 8,
                             ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const GuardPatrollingScreen(),
-                                  ),
-                                );
-                              },
-                              child: const Text('View All'),
+                            SizedBox(height: 8.h),
+                            Text(
+                              '${(progress * 100).toStringAsFixed(0)}% of shift completed',
+                              style: TextStyle(
+                                  fontSize: 13.sp,
+                                  color: AppTheme.onBackgroundLight),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _patrolRoutes.length,
-                          itemBuilder: (context, index) {
-                            final route = _patrolRoutes[index];
-                            return Card(
-                              margin: EdgeInsets.only(bottom: 15.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(15),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          route['name'],
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10.w,
-                                            vertical: 5.h,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                route['status'] == 'Completed'
-                                                ? AppTheme.success.withValues(alpha: 0.2)
-                                                : route['status'] ==
-                                                      'In Progress'
-                                                ? AppTheme.secondary.withValues(alpha: 0.2)
-                                                : AppTheme.onBackgroundLight.withValues(alpha: 0.2),
-                                            borderRadius: BorderRadius.circular(
-                                              12.r,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            route['status'],
-                                            style: TextStyle(
-                                              color:
-                                                  route['status'] == 'Completed'
-                                                  ? AppTheme.success
-                                                  : route['status'] ==
-                                                        'In Progress'
-                                                  ? AppTheme.secondary
-                                                  : AppTheme.onBackgroundLight,
-                                              fontSize: 12.sp,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      '${route['completed']}/${route['checkpoints']} checkpoints completed',
-                                    ),
-                                    const SizedBox(height: 10),
-                                    LinearProgressIndicator(
-                                      value:
-                                          route['completed'] /
-                                          route['checkpoints'],
-                                      backgroundColor: AppTheme.onBackgroundLight.withValues(alpha: 0.3),
-                                      valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                            AppTheme.primary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 15),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: OutlinedButton(
-                                            onPressed: () {
-                                              // View details
-                                            },
-                                            child: const Text('Details'),
-                                          ),
-                                        ),
-                                        SizedBox(width: 10.w),
-                                        Expanded(
-                                          child: ElevatedButton(
-                                            onPressed: _scanQRCode,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppTheme.primary,
-                                            ),
-                                            child: const Text(
-                                              'Scan QR',
-                                              style: TextStyle(
-                                                color: AppTheme.onPrimary,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                      ),
                     ),
-                    // Attendance History
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Attendance History',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    SizedBox(height: 20.h),
+                  ],
+
+                  // Attendance History
+                  Text('Attendance History',
+                      style: TextStyle(
+                          fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 12.h),
+
+                  if (isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (history.isEmpty)
+                    Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.w),
+                        child: Center(
+                          child: Text('No history available',
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: 14.sp)),
                         ),
-                        const SizedBox(height: 10),
-                        Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
+                      ),
+                    )
+                  else
+                    Card(
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(2),
+                          2: FlexColumnWidth(2),
+                          3: FlexColumnWidth(1.5),
+                        },
+                        border: TableBorder.all(
+                          color:
+                              AppTheme.onBackgroundLight.withValues(alpha: 0.15),
+                          width: 0.5,
+                        ),
+                        children: [
+                          const TableRow(
+                            decoration:
+                                BoxDecoration(color: AppTheme.primary),
                             children: [
-                              Table(
-                                columnWidths: const {
-                                  0: FlexColumnWidth(2),
-                                  1: FlexColumnWidth(1),
-                                  2: FlexColumnWidth(1),
-                                  3: FlexColumnWidth(1),
-                                },
-                                border: TableBorder.all(
-                                  color: AppTheme.onBackgroundLight.withValues(alpha: 0.2),
-                                  width: 1,
-                                ),
-                                children: [
-                                  const TableRow(
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.primary,
-                                    ),
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(10),
-                                        child: Text(
-                                          'Date',
-                                          style: TextStyle(
-                                            color: AppTheme.onPrimary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(10),
-                                        child: Text(
-                                          'In',
-                                          style: TextStyle(
-                                            color: AppTheme.onPrimary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(10),
-                                        child: Text(
-                                          'Out',
-                                          style: TextStyle(
-                                            color: AppTheme.onPrimary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(10),
-                                        child: Text(
-                                          'Status',
-                                          style: TextStyle(
-                                            color: AppTheme.onPrimary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  ..._attendanceRecords.map(
-                                    (record) => TableRow(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Text(record['date']),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Text(record['inTime']),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Text(record['outTime']),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Text(
-                                            record['status'],
-                                            style: TextStyle(
-                                              color:
-                                                  record['status'] == 'Present'
-                                                  ? AppTheme.success
-                                                  : record['status'] == 'Off'
-                                                  ? AppTheme.onBackgroundLight
-                                                  : AppTheme.error,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              _TableHeader('Date'),
+                              _TableHeader('In'),
+                              _TableHeader('Out'),
+                              _TableHeader('Status'),
                             ],
                           ),
-                        ),
-                      ],
+                          ...history.map((r) => TableRow(
+                                children: [
+                                  _tableCell(_formatDate(r['date'])),
+                                  _tableCell(_formatTime(r['in_time'])),
+                                  _tableCell(_formatTime(r['out_time'])),
+                                  _tableCellStatus(r['status'] ?? 'present'),
+                                ],
+                              )),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
-          );
-        }
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          ),
+        );
       },
     );
   }
 
-  Widget _buildAttendanceStat(String label, String value) {
+  Widget _quickAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(18.w),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4))
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 28.sp),
+          ),
+          SizedBox(height: 6.h),
+          Text(label, style: TextStyle(fontSize: 12.sp)),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(String label, String value) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: AppTheme.onBackgroundLight, fontSize: 14)),
-        const SizedBox(height: 5),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12.sp, color: AppTheme.onBackgroundLight)),
+        SizedBox(height: 4.h),
+        Text(value,
+            style:
+                TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)),
       ],
     );
   }
 }
+
+class _TableHeader extends StatelessWidget {
+  final String text;
+  const _TableHeader(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Text(text,
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+    );
+  }
+}
+
+Widget _tableCell(String text) {
+  return Padding(
+    padding: const EdgeInsets.all(8),
+    child: Text(text, style: const TextStyle(fontSize: 12)),
+  );
+}
+
+Widget _tableCellStatus(String status) {
+  Color color;
+  switch (status) {
+    case 'present':
+      color = AppTheme.success;
+      break;
+    case 'absent':
+      color = AppTheme.error;
+      break;
+    case 'half_day':
+      color = AppTheme.warning;
+      break;
+    default:
+      color = AppTheme.onBackgroundLight;
+  }
+  return Padding(
+    padding: const EdgeInsets.all(8),
+    child: Text(
+      status == 'half_day' ? 'Half' : _cap(status),
+      style: TextStyle(
+          fontSize: 11, color: color, fontWeight: FontWeight.bold),
+    ),
+  );
+}
+
+String _cap(String s) =>
+    s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
