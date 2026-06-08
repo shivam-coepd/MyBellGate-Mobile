@@ -127,7 +127,7 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
               ),
               SizedBox(height: 16.h),
               DropdownButtonFormField<String>(
-                value: method,
+                initialValue: method,
                 decoration: InputDecoration(
                   labelText: 'Payment Method',
                   border: OutlineInputBorder(

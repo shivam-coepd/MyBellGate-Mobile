@@ -59,7 +59,26 @@ class AddFamilyMember extends ProfileEvent {
   });
 
   @override
-  List<Object?> get props => [name, relation, phone];
+  List<Object?> get props => [name, relation, phone, imageUrl];
+}
+
+class UpdateFamilyMember extends ProfileEvent {
+  final String id;
+  final String? name;
+  final String? relation;
+  final String? phone;
+  final String? imageUrl;
+
+  const UpdateFamilyMember({
+    required this.id,
+    this.name,
+    this.relation,
+    this.phone,
+    this.imageUrl,
+  });
+
+  @override
+  List<Object?> get props => [id, name, relation, phone, imageUrl];
 }
 
 class DeleteFamilyMember extends ProfileEvent {
@@ -93,7 +112,32 @@ class AddVehicle extends ProfileEvent {
   });
 
   @override
-  List<Object?> get props => [registrationNumber, vehicleTypeId, isElectric, isParked];
+  List<Object?> get props => [registrationNumber, vehicleTypeId, make, model, color, parkingSpot, isElectric, isParked];
+}
+
+class UpdateVehicle extends ProfileEvent {
+  final String id;
+  final int? vehicleTypeId;
+  final String? make;
+  final String? model;
+  final String? color;
+  final String? parkingSpot;
+  final int? isElectric;
+  final int? isParked;
+
+  const UpdateVehicle({
+    required this.id,
+    this.vehicleTypeId,
+    this.make,
+    this.model,
+    this.color,
+    this.parkingSpot,
+    this.isElectric,
+    this.isParked,
+  });
+
+  @override
+  List<Object?> get props => [id, vehicleTypeId, make, model, color, parkingSpot, isElectric, isParked];
 }
 
 class DeleteVehicle extends ProfileEvent {
@@ -127,7 +171,34 @@ class AddPet extends ProfileEvent {
   });
 
   @override
-  List<Object?> get props => [name, petTypeId];
+  List<Object?> get props => [name, petTypeId, breed, age, weight, vaccinationStatus, notes, imageUrl];
+}
+
+class UpdatePet extends ProfileEvent {
+  final String id;
+  final int? petTypeId;
+  final String? name;
+  final String? breed;
+  final int? age;
+  final double? weight;
+  final String? vaccinationStatus;
+  final String? notes;
+  final String? imageUrl;
+
+  const UpdatePet({
+    required this.id,
+    this.petTypeId,
+    this.name,
+    this.breed,
+    this.age,
+    this.weight,
+    this.vaccinationStatus,
+    this.notes,
+    this.imageUrl,
+  });
+
+  @override
+  List<Object?> get props => [id, petTypeId, name, breed, age, weight, vaccinationStatus, notes, imageUrl];
 }
 
 class DeletePet extends ProfileEvent {
@@ -153,7 +224,26 @@ class AddDailyHelper extends ProfileEvent {
   });
 
   @override
-  List<Object?> get props => [name, phone, serviceType];
+  List<Object?> get props => [name, phone, serviceType, visitTime];
+}
+
+class UpdateDailyHelper extends ProfileEvent {
+  final int id;
+  final String? name;
+  final String? phone;
+  final String? serviceType;
+  final String? visitTime;
+
+  const UpdateDailyHelper({
+    required this.id,
+    this.name,
+    this.phone,
+    this.serviceType,
+    this.visitTime,
+  });
+
+  @override
+  List<Object?> get props => [id, name, phone, serviceType, visitTime];
 }
 
 class DeleteDailyHelper extends ProfileEvent {

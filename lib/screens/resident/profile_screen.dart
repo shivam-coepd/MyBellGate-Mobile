@@ -12,6 +12,14 @@ import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
+import 'package:mygate_coepd/screens/common/security_privacy_screen.dart';
+import 'package:mygate_coepd/screens/common/share_app_screen.dart';
+import 'package:mygate_coepd/screens/common/support_feedback_screen.dart';
+import 'package:mygate_coepd/screens/resident/add_new_property_screen.dart';
+import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
+import 'package:mygate_coepd/screens/resident/order_history_screen.dart';
+import 'package:mygate_coepd/screens/resident/property_details_screen.dart';
+import 'package:mygate_coepd/screens/resident/saved_payments_screen.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -444,10 +452,60 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _navigateTo(String title) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SubScreen(title: title)),
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => SubScreen(title: title)),
+    // );
+    switch (title) {
+      case 'Notification Settings':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+        );
+        break;
+      case 'Security & Privacy':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SecurityPrivacyScreen()),
+        );
+        break;
+      case 'Order History':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
+        );
+        break;
+      case 'Saved Payments':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SavedPaymentsScreen()),
+        );
+        break;
+      case 'Unit':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PropertyDetailsScreen()),
+        );
+        break;
+      case 'Add New Property':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddNewPropertyScreen()),
+        );
+        break;
+      case 'Support and Feedback':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SupportFeedbackScreen()),
+        );
+        break;
+      case 'Share the App':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ShareAppScreen()),
+        );
+        break;
+    }
   }
 
   void _filterFamilyMembers() {
@@ -615,7 +673,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.apartment_outlined,
                     title: user?.unit ?? 'Unit',
                     subtitle: 'PRIMARY ADDRESS',
-                    onTap: () => _navigateTo(user?.unit ?? 'Unit'),
+                    onTap: () => _navigateTo('Unit'),
                     theme: theme,
                   ),
                 ),

@@ -28,7 +28,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               margin: EdgeInsets.only(bottom: 16.h),
               padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(

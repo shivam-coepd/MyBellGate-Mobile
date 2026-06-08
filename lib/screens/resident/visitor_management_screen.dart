@@ -251,10 +251,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     _showSuccessMessage('Time extended successfully');
   }
 
-  void _addNote(int visitorId) {
-    _showSuccessMessage('Note added successfully');
-  }
-
   void _toggleBulkMode() {
     setState(() {
       _isBulkMode = !_isBulkMode;
@@ -440,7 +436,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
                               onDelete: () => _deleteVisitor(visitorId),
                               onEdit: () => _editVisitor(visitorId),
                               onExtendTime: () => _extendTime(visitorId),
-                              onAddNote: () => _addNote(visitorId),
                               isSelected: _selectedVisitors.contains(visitorId),
                               onSelectionChanged: () {
                                 setState(() {
@@ -535,10 +530,10 @@ class VisitorListShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final baseColor = theme.cardColor;
     final highlightColor = isDark
         ? const Color(0xFF334155)
-        : Colors.grey.shade100;
+        : Colors.grey.shade300;
 
     return Shimmer.fromColors(
       baseColor: baseColor,
@@ -552,7 +547,7 @@ class VisitorListShimmer extends StatelessWidget {
             child: Container(
               height: 90.h,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
                   color: isDark
@@ -952,11 +947,8 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
               Container(
                 height: 240.h,
                 width: double.infinity,
-                // margin: EdgeInsets.only(top: 4.h),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFF8FAFC),
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(16.r),
                 ),
                 child: _capturedImage != null
@@ -1488,10 +1480,6 @@ class FloatingSearchBarWidget extends StatelessWidget {
                     onSearchChanged('');
                   },
                 ),
-              IconButton(
-                icon: Icon(Icons.mic, color: colorScheme.primary, size: 24),
-                onPressed: onVoiceSearch,
-              ),
             ],
           ),
           border: InputBorder.none,
@@ -1649,7 +1637,6 @@ class VisitorCardWidget extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onEdit;
   final VoidCallback onExtendTime;
-  final VoidCallback onAddNote;
   final bool isSelected;
   final VoidCallback? onSelectionChanged;
   final bool isBulkMode;
@@ -1664,7 +1651,6 @@ class VisitorCardWidget extends StatelessWidget {
     required this.onDelete,
     required this.onEdit,
     required this.onExtendTime,
-    required this.onAddNote,
     this.isSelected = false,
     this.onSelectionChanged,
     this.isBulkMode = false,
@@ -1811,7 +1797,7 @@ class VisitorCardWidget extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
                 color: isSelected
@@ -1911,9 +1897,7 @@ class VisitorCardWidget extends StatelessWidget {
                             color: statusColor,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isDark
-                                  ? const Color(0xFF1E293B)
-                                  : Colors.white,
+                              color: theme.cardColor,
                               width: 2,
                             ),
                             boxShadow: [
@@ -2111,7 +2095,7 @@ class VisitorCardWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
@@ -2238,18 +2222,6 @@ class VisitorCardWidget extends StatelessWidget {
                 onTap: () {
                   Navigator.pop(context);
                   onExtendTime();
-                },
-              ),
-              _buildMenuTile(
-                context: context,
-                theme: theme,
-                icon: Icons.note_add_rounded,
-                title: 'Add Note',
-                subtitle: 'Attach a note to this visit',
-                color: const Color(0xFF8B5CF6),
-                onTap: () {
-                  Navigator.pop(context);
-                  onAddNote();
                 },
                 isLast: true,
               ),

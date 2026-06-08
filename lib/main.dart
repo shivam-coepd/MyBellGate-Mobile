@@ -11,6 +11,7 @@ import 'package:mygate_coepd/screens/auth/address/LocationSelectionScreen.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_screen.dart';
 import 'package:mygate_coepd/screens/resident/visitor_management_screen.dart';
+import 'package:mygate_coepd/services/api_service.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
@@ -201,6 +202,7 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
             ),
           ],
           child: MaterialApp(
+            navigatorKey: apiNavigatorKey,
             title: 'MyGateBell',
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,

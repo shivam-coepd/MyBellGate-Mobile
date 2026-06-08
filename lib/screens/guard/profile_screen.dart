@@ -8,6 +8,9 @@ import 'package:mygate_coepd/blocs/auth/auth_event.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/screens/guard/details/multilingual_support_screen.dart';
+import 'package:mygate_coepd/screens/common/security_privacy_screen.dart';
+import 'package:mygate_coepd/screens/common/support_feedback_screen.dart';
+import 'package:mygate_coepd/screens/common/about_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class GuardProfileScreen extends StatefulWidget {
@@ -376,7 +379,12 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
                                 title: const Text('Change Password'),
                                 trailing: const Icon(Icons.arrow_forward_ios),
                                 onTap: () {
-                                  // Change password action
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SecurityPrivacyScreen(),
+                                    ),
+                                  );
                                 },
                               ),
                             ],
@@ -456,7 +464,12 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
                                 title: const Text('Help Center'),
                                 trailing: const Icon(Icons.arrow_forward_ios),
                                 onTap: () {
-                                  // Help center action
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SupportFeedbackScreen(),
+                                    ),
+                                  );
                                 },
                               ),
                               const Divider(height: 0),
@@ -465,7 +478,12 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
                                 title: const Text('Send Feedback'),
                                 trailing: const Icon(Icons.arrow_forward_ios),
                                 onTap: () {
-                                  // Feedback action
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SupportFeedbackScreen(),
+                                    ),
+                                  );
                                 },
                               ),
                               const Divider(height: 0),
@@ -474,7 +492,12 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
                                 title: const Text('About'),
                                 trailing: const Icon(Icons.arrow_forward_ios),
                                 onTap: () {
-                                  // About action
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const AboutScreen(),
+                                    ),
+                                  );
                                 },
                               ),
                             ],

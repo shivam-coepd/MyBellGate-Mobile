@@ -371,7 +371,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               ],
                       ),
                       child: DropdownButtonFormField<Map<String, dynamic>>(
-                        value: selectedCountry,
+                        initialValue: selectedCountry,
                         hint: Text(
                           'Select Country',
                           style: TextStyle(color: secondaryTextColor),
@@ -423,7 +423,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         ),
                         child: DropdownButtonFormField<Map<String, dynamic>>(
                           focusNode: _cityFocus,
-                          value: selectedCity,
+                          initialValue: selectedCity,
                           hint: Text(
                             'Select City',
                             style: TextStyle(color: secondaryTextColor),

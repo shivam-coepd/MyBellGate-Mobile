@@ -9,213 +9,248 @@ class CommunityScreen extends StatefulWidget {
   State<CommunityScreen> createState() => _CommunityScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen> with TickerProviderStateMixin {
+class _CommunityScreenState extends State<CommunityScreen>
+    with TickerProviderStateMixin {
   int _currentIndex = 0;
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _filteredPosts = [];
   List<Map<String, dynamic>> _filteredMarketplaceItems = [];
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
 
-final List<Map<String, dynamic>> _posts = [
-  {
-    'id': 1,
-    'user': {
-      'name': 'John Doe',
-      'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
+  final List<Map<String, dynamic>> _posts = [
+    {
+      'id': 1,
+      'user': {
+        'name': 'John Doe',
+        'avatar':
+            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'A-101',
+      },
+      'content':
+          'Just moved to our new apartment! The community here is amazing. Looking forward to meeting everyone.',
+      'image':
+          'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800&h=600',
+      'time': '2 hours ago',
+      'likes': 24,
+      'comments': 8,
+    },
+    {
+      'id': 2,
+      'user': {
+        'name': 'Sarah Johnson',
+        'avatar':
+            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'B-203',
+      },
+      'content':
+          'Lost my cat yesterday near the community garden. He\'s orange with white paws. Name: Ginger. Please help!',
+      // 'image': 'https://images.unsplash.com/photo-1596854407944-bf87f6130000?auto=format&fit=crop&q=80&w=800&h=600',
+      'time': '5 hours ago',
+      'likes': 38,
+      'comments': 15,
+    },
+    {
+      'id': 3,
+      'user': {
+        'name': 'Mike Williams',
+        'avatar':
+            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'C-405',
+      },
+      'content':
+          'Community garage sale this weekend! Saturday & Sunday 9AM–4PM at the clubhouse parking.',
+      'image':
+          'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800&h=600',
+      'time': '1 day ago',
+      'likes': 56,
+      'comments': 22,
+    },
+    {
+      'id': 4,
+      'user': {
+        'name': 'Anita Desai',
+        'avatar':
+            'https://images.unsplash.com/photo-1580489940927-6c2e4d0c4e7b?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'D-602',
+      },
+      'content':
+          'Yoga session every morning at 6:30 AM near the pool area. Everyone is welcome! Bring your mat.',
+      'image':
+          'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800&h=600',
+      'time': '2 days ago',
+      'likes': 45,
+      'comments': 19,
+    },
+    {
+      'id': 5,
+      'user': {
+        'name': 'Rahul Mehta',
+        'avatar':
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'E-801',
+      },
+      'content':
+          'Found a set of keys near Tower B lift. Has a blue keychain with car logo. Owner please collect from security.',
+      'image':
+          'https://images.unsplash.com/photo-1761991432834-5446634d194f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDZ8TThqVmJMYlRSd3N8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=60&w=600',
+      'time': '3 hours ago',
+      'likes': 12,
+      'comments': 5,
+    },
+    {
+      'id': 6,
+      'user': {
+        'name': 'Priya Sharma',
+        'avatar':
+            'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'A-305',
+      },
+      'content':
+          'Diwali potluck party this Friday at the clubhouse! Bring one dish. Theme: Traditional sweets & snacks.',
+      'image':
+          'https://images.unsplash.com/photo-1738225734433-9fb17ed770a4?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8VHJhZGl0aW9uYWwlMjBzd2VldHMlMjAlMjYlMjBzbmFja3N8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
+      'time': '4 days ago',
+      'likes': 78,
+      'comments': 34,
+    },
+    {
+      'id': 7,
+      'user': {
+        'name': 'Vikram Singh',
+        'avatar':
+            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'F-110',
+      },
+      'content':
+          'Anyone up for weekend cricket? We need 3 more players. Ground booked Sunday 7 AM.',
+      'image':
+          'https://images.unsplash.com/photo-1685541001104-91fe7ae1d8e1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8QW55b25lJTIwdXAlMjBmb3IlMjB3ZWVrZW5kJTIwY3JpY2tldCUzRiUyMFdlJTIwbmVlZCUyMDMlMjBtb3JlJTIwcGxheWVycy4lMjBHcm91bmQlMjBib29rZWQlMjBTdW5kYXklMjA3JTIwQU0uJyUyQ3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600',
+      'time': '12 hours ago',
+      'likes': 29,
+      'comments': 11,
+    },
+    {
+      'id': 8,
+      'user': {
+        'name': 'Neha Kapoor',
+        'avatar':
+            'https://images.unsplash.com/photo-1581404914446-6d8f7b4e0e9b?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'B-507',
+      },
+      'content':
+          'Kids art exhibition tomorrow at the community hall. Proud parent moment! All residents invited.',
+      // 'image': 'https://images.unsplash.com/photo-1513366884929-cf02d33ebba3?auto=format&fit=crop&q=80&w=800&h=600',
+      'time': '1 day ago',
+      'likes': 67,
+      'comments': 28,
+    },
+    {
+      'id': 9,
+      'user': {
+        'name': 'Amit Verma',
+        'avatar':
+            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'G-204',
+      },
+      'content':
+          'Water supply will be off tomorrow from 10 AM to 2 PM for maintenance. Please store water.',
+      'image':
+          'https://images.unsplash.com/photo-1557074310-7116e1117372?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8V2F0ZXIlMjBzdXBwbHklMjB3aWxsJTIwYmUlMjBvZmYlMjB0b21vcnJvdyUyMGZyb20lMjAxMCUyMEFNJTIwdG8lMjAyJTIwUE0lMjBmb3IlMjBtYWludGVuYW5jZS4lMjBQbGVhc2UlMjBzdG9yZSUyMHdhdGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
+      'time': '6 hours ago',
+      'likes': 5,
+      'comments': 3,
+    },
+    {
+      'id': 10,
+      'user': {
+        'name': 'Sonia Reddy',
+        'avatar':
+            'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?auto=format&fit=crop&q=80&w=100&h=100',
+        'unit': 'C-709',
+      },
+      'content':
+          'Selling homemade pickles & papads! DM for flavors and prices. Fresh batch ready!',
+      // 'image': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800&h=600',
+      'time': '8 hours ago',
+      'likes': 41,
+      'comments': 20,
+    },
+  ];
+
+  final List<Map<String, dynamic>> _marketplaceItems = [
+    {
+      'id': 1,
+      'title': '3-Seater Leather Sofa',
+      'price': '₹18,000',
+      'image':
+          'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600&h=600',
+      'user': 'John Smith',
       'unit': 'A-101',
     },
-    'content': 'Just moved to our new apartment! The community here is amazing. Looking forward to meeting everyone.',
-    'image': 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800&h=600',
-    'time': '2 hours ago',
-    'likes': 24,
-    'comments': 8,
-  },
-  {
-    'id': 2,
-    'user': {
-      'name': 'Sarah Johnson',
-      'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
+    {
+      'id': 2,
+      'title': 'Mountain Bicycle (Hero)',
+      'price': '₹7,500',
+      'image':
+          'https://images.unsplash.com/photo-1560557336-7f28872591de?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8TW91bnRhaW4lMjBCaWN5Y2xlJTIwKEhlcm8pJTVDfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
+      'user': 'Priya Sharma',
       'unit': 'B-203',
     },
-    'content': 'Lost my cat yesterday near the community garden. He\'s orange with white paws. Name: Ginger. Please help!',
-    // 'image': 'https://images.unsplash.com/photo-1596854407944-bf87f6130000?auto=format&fit=crop&q=80&w=800&h=600',
-    'time': '5 hours ago',
-    'likes': 38,
-    'comments': 15,
-  },
-  {
-    'id': 3,
-    'user': {
-      'name': 'Mike Williams',
-      'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100&h=100',
+    {
+      'id': 3,
+      'title': 'Microwave + OTG Combo',
+      'price': '₹9,500',
+      'image':
+          'https://images.unsplash.com/photo-1649264191712-15b7b6ab2345?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8TWljcm93YXZlJTIwJTJCJTIwT1RHJTIwQ29tYm98ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
+      'user': 'Raj Patel',
       'unit': 'C-405',
     },
-    'content': 'Community garage sale this weekend! Saturday & Sunday 9AM–4PM at the clubhouse parking.',
-    'image': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800&h=600',
-    'time': '1 day ago',
-    'likes': 56,
-    'comments': 22,
-  },
-  {
-    'id': 4,
-    'user': {
-      'name': 'Anita Desai',
-      'avatar': 'https://images.unsplash.com/photo-1580489940927-6c2e4d0c4e7b?auto=format&fit=crop&q=80&w=100&h=100',
+    {
+      'id': 4,
+      'title': 'Dining Table 6 Chairs',
+      'price': '₹22,000',
+      'image':
+          'https://plus.unsplash.com/premium_photo-1726812198035-82a66af2f26a?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8RGluaW5nJTIwVGFibGUlMjA2JTIwQ2hhaXJzfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
+      'user': 'Kavita Rao',
       'unit': 'D-602',
     },
-    'content': 'Yoga session every morning at 6:30 AM near the pool area. Everyone is welcome! Bring your mat.',
-    'image': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800&h=600',
-    'time': '2 days ago',
-    'likes': 45,
-    'comments': 19,
-  },
-  {
-    'id': 5,
-    'user': {
-      'name': 'Rahul Mehta',
-      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
-      'unit': 'E-801',
+    {
+      'id': 5,
+      'title': 'iPhone 13 128GB (Midnight)',
+      'price': '₹42,000',
+      'image':
+          'https://images.unsplash.com/photo-1674345498787-4aee9709fe6c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGlQaG9uZSUyMDEzJTIwMTI4R0IlMjAoTWlkbmlnaHQpfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
+      'user': 'Arjun Malhotra',
+      'unit': 'E-901',
     },
-    'content': 'Found a set of keys near Tower B lift. Has a blue keychain with car logo. Owner please collect from security.',
-    'image': 'https://images.unsplash.com/photo-1761991432834-5446634d194f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDZ8TThqVmJMYlRSd3N8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=60&w=600',
-    'time': '3 hours ago',
-    'likes': 12,
-    'comments': 5,
-  },
-  {
-    'id': 6,
-    'user': {
-      'name': 'Priya Sharma',
-      'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=100&h=100',
-      'unit': 'A-305',
+    {
+      'id': 6,
+      'title': 'Wooden Study Table + Chair',
+      'price': '₹6,800',
+      'image':
+          'https://images.unsplash.com/photo-1646775814663-95874b77fd4f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8V29vZGVuJTIwU3R1ZHklMjBUYWJsZSUyMCUyQiUyMENoYWlyfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
+      'user': 'Meera Nair',
+      'unit': 'F-305',
     },
-    'content': 'Diwali potluck party this Friday at the clubhouse! Bring one dish. Theme: Traditional sweets & snacks.',
-    'image': 'https://images.unsplash.com/photo-1738225734433-9fb17ed770a4?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8VHJhZGl0aW9uYWwlMjBzd2VldHMlMjAlMjYlMjBzbmFja3N8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
-    'time': '4 days ago',
-    'likes': 78,
-    'comments': 34,
-  },
-  {
-    'id': 7,
-    'user': {
-      'name': 'Vikram Singh',
-      'avatar': 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100&h=100',
-      'unit': 'F-110',
-    },
-    'content': 'Anyone up for weekend cricket? We need 3 more players. Ground booked Sunday 7 AM.',
-    'image': 'https://images.unsplash.com/photo-1685541001104-91fe7ae1d8e1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8QW55b25lJTIwdXAlMjBmb3IlMjB3ZWVrZW5kJTIwY3JpY2tldCUzRiUyMFdlJTIwbmVlZCUyMDMlMjBtb3JlJTIwcGxheWVycy4lMjBHcm91bmQlMjBib29rZWQlMjBTdW5kYXklMjA3JTIwQU0uJyUyQ3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600',
-    'time': '12 hours ago',
-    'likes': 29,
-    'comments': 11,
-  },
-  {
-    'id': 8,
-    'user': {
-      'name': 'Neha Kapoor',
-      'avatar': 'https://images.unsplash.com/photo-1581404914446-6d8f7b4e0e9b?auto=format&fit=crop&q=80&w=100&h=100',
+    {
+      'id': 7,
+      'title': '32-inch LED Smart TV (Sony)',
+      'price': '₹14,999',
+      'image':
+          'https://images.unsplash.com/photo-1615210230840-69c07c13b4d1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8MzItaW5jaCUyMExFRCUyMFNtYXJ0JTIwVFZ8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
+      'user': 'Vikram Singh',
       'unit': 'B-507',
     },
-    'content': 'Kids art exhibition tomorrow at the community hall. Proud parent moment! All residents invited.',
-    // 'image': 'https://images.unsplash.com/photo-1513366884929-cf02d33ebba3?auto=format&fit=crop&q=80&w=800&h=600',
-    'time': '1 day ago',
-    'likes': 67,
-    'comments': 28,
-  },
-  {
-    'id': 9,
-    'user': {
-      'name': 'Amit Verma',
-      'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
-      'unit': 'G-204',
+    {
+      'id': 8,
+      'title': 'Kids Play Tent House',
+      'price': '₹2,200',
+      'image':
+          'https://images.unsplash.com/photo-1721687335590-2e845e641770?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8S2lkcyUyMFBsYXklMjBUZW50JTIwSG91c2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
+      'user': 'Neha Kapoor',
+      'unit': 'G-110',
     },
-    'content': 'Water supply will be off tomorrow from 10 AM to 2 PM for maintenance. Please store water.',
-    'image': 'https://images.unsplash.com/photo-1557074310-7116e1117372?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8V2F0ZXIlMjBzdXBwbHklMjB3aWxsJTIwYmUlMjBvZmYlMjB0b21vcnJvdyUyMGZyb20lMjAxMCUyMEFNJTIwdG8lMjAyJTIwUE0lMjBmb3IlMjBtYWludGVuYW5jZS4lMjBQbGVhc2UlMjBzdG9yZSUyMHdhdGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
-    'time': '6 hours ago',
-    'likes': 5,
-    'comments': 3,
-  },
-  {
-    'id': 10,
-    'user': {
-      'name': 'Sonia Reddy',
-      'avatar': 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?auto=format&fit=crop&q=80&w=100&h=100',
-      'unit': 'C-709',
-    },
-    'content': 'Selling homemade pickles & papads! DM for flavors and prices. Fresh batch ready!',
-    // 'image': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800&h=600',
-    'time': '8 hours ago',
-    'likes': 41,
-    'comments': 20,
-  },
-];
-
-final List<Map<String, dynamic>> _marketplaceItems = [
-  {
-    'id': 1,
-    'title': '3-Seater Leather Sofa',
-    'price': '₹18,000',
-    'image': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600&h=600',
-    'user': 'John Smith',
-    'unit': 'A-101',
-  },
-  {
-    'id': 2,
-    'title': 'Mountain Bicycle (Hero)',
-    'price': '₹7,500',
-    'image': 'https://images.unsplash.com/photo-1560557336-7f28872591de?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8TW91bnRhaW4lMjBCaWN5Y2xlJTIwKEhlcm8pJTVDfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
-    'user': 'Priya Sharma',
-    'unit': 'B-203',
-  },
-  {
-    'id': 3,
-    'title': 'Microwave + OTG Combo',
-    'price': '₹9,500',
-    'image': 'https://images.unsplash.com/photo-1649264191712-15b7b6ab2345?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8TWljcm93YXZlJTIwJTJCJTIwT1RHJTIwQ29tYm98ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
-    'user': 'Raj Patel',
-    'unit': 'C-405',
-  },
-  {
-    'id': 4,
-    'title': 'Dining Table 6 Chairs',
-    'price': '₹22,000',
-    'image': 'https://plus.unsplash.com/premium_photo-1726812198035-82a66af2f26a?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8RGluaW5nJTIwVGFibGUlMjA2JTIwQ2hhaXJzfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
-    'user': 'Kavita Rao',
-    'unit': 'D-602',
-  },
-  {
-    'id': 5,
-    'title': 'iPhone 13 128GB (Midnight)',
-    'price': '₹42,000',
-    'image': 'https://images.unsplash.com/photo-1674345498787-4aee9709fe6c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGlQaG9uZSUyMDEzJTIwMTI4R0IlMjAoTWlkbmlnaHQpfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
-    'user': 'Arjun Malhotra',
-    'unit': 'E-901',
-  },
-  {
-    'id': 6,
-    'title': 'Wooden Study Table + Chair',
-    'price': '₹6,800',
-    'image': 'https://images.unsplash.com/photo-1646775814663-95874b77fd4f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8V29vZGVuJTIwU3R1ZHklMjBUYWJsZSUyMCUyQiUyMENoYWlyfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
-    'user': 'Meera Nair',
-    'unit': 'F-305',
-  },
-  {
-    'id': 7,
-    'title': '32-inch LED Smart TV (Sony)',
-    'price': '₹14,999',
-    'image': 'https://images.unsplash.com/photo-1615210230840-69c07c13b4d1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8MzItaW5jaCUyMExFRCUyMFNtYXJ0JTIwVFZ8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
-    'user': 'Vikram Singh',
-    'unit': 'B-507',
-  },
-  {
-    'id': 8,
-    'title': 'Kids Play Tent House',
-    'price': '₹2,200',
-    'image': 'https://images.unsplash.com/photo-1721687335590-2e845e641770?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8S2lkcyUyMFBsYXklMjBUZW50JTIwSG91c2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600',
-    'user': 'Neha Kapoor',
-    'unit': 'G-110',
-  },
-];
+  ];
 
   @override
   void initState() {
@@ -223,17 +258,12 @@ final List<Map<String, dynamic>> _marketplaceItems = [
     _filteredPosts = _posts;
     _filteredMarketplaceItems = _marketplaceItems;
     _searchController.addListener(_filterContent);
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-    
+
     // Start animations after a small delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
@@ -243,11 +273,11 @@ final List<Map<String, dynamic>> _marketplaceItems = [
   void _filterContent() {
     setState(() {
       String searchTerm = _searchController.text.toLowerCase();
-      
+
       if (_currentIndex == 0) {
         // Filter posts
         _filteredPosts = _posts.where((post) {
-          return searchTerm.isEmpty || 
+          return searchTerm.isEmpty ||
               post['content'].toLowerCase().contains(searchTerm) ||
               post['user']['name'].toLowerCase().contains(searchTerm) ||
               post['user']['unit'].toLowerCase().contains(searchTerm);
@@ -255,7 +285,7 @@ final List<Map<String, dynamic>> _marketplaceItems = [
       } else {
         // Filter marketplace items
         _filteredMarketplaceItems = _marketplaceItems.where((item) {
-          return searchTerm.isEmpty || 
+          return searchTerm.isEmpty ||
               item['title'].toLowerCase().contains(searchTerm) ||
               item['user'].toLowerCase().contains(searchTerm) ||
               item['unit'].toLowerCase().contains(searchTerm);
@@ -316,7 +346,10 @@ final List<Map<String, dynamic>> _marketplaceItems = [
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                     ),
-                    child: Text('Marketplace', style: TextStyle(fontSize: 16.sp)),
+                    child: Text(
+                      'Marketplace',
+                      style: TextStyle(fontSize: 16.sp),
+                    ),
                   ),
                 ),
               ],
@@ -363,7 +396,9 @@ final List<Map<String, dynamic>> _marketplaceItems = [
                         end: Alignment.bottomRight,
                         colors: [
                           Theme.of(context).cardTheme.color!,
-                          Theme.of(context).cardTheme.color!.withValues(alpha: 0.95),
+                          Theme.of(
+                            context,
+                          ).cardTheme.color!.withValues(alpha: 0.95),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(16.r),
@@ -379,8 +414,12 @@ final List<Map<String, dynamic>> _marketplaceItems = [
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                                Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                                Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.1),
+                                Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.05),
                               ],
                             ),
                             borderRadius: BorderRadius.vertical(
@@ -399,8 +438,9 @@ final List<Map<String, dynamic>> _marketplaceItems = [
                                 ),
                                 child: CircleAvatar(
                                   radius: 20.r,
-                                  backgroundImage:
-                                      CachedNetworkImageProvider(post['user']['avatar']),
+                                  backgroundImage: CachedNetworkImageProvider(
+                                    post['user']['avatar'],
+                                  ),
                                 ),
                               ),
                               SizedBox(width: 12.w),
@@ -450,9 +490,7 @@ final List<Map<String, dynamic>> _marketplaceItems = [
                           padding: EdgeInsets.all(16.w),
                           child: Text(
                             post['content'],
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                            ),
+                            style: TextStyle(fontSize: 14.sp),
                           ),
                         ),
                         // Post image
@@ -464,7 +502,9 @@ final List<Map<String, dynamic>> _marketplaceItems = [
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12.r),
                               image: DecorationImage(
-                                image: CachedNetworkImageProvider(post['image']),
+                                image: CachedNetworkImageProvider(
+                                  post['image'],
+                                ),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -643,7 +683,7 @@ final List<Map<String, dynamic>> _marketplaceItems = [
         String hintText = _currentIndex == 0
             ? 'Search community posts...'
             : 'Search marketplace items...';
-            
+
         return Container(
           padding: EdgeInsets.only(
             left: 16,
@@ -686,7 +726,7 @@ final List<Map<String, dynamic>> _marketplaceItems = [
   void _showCreatePostDialog() {
     final TextEditingController postController = TextEditingController();
     final TextEditingController titleController = TextEditingController();
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -734,7 +774,8 @@ final List<Map<String, dynamic>> _marketplaceItems = [
                     controller: postController,
                     maxLines: 3,
                     decoration: const InputDecoration(
-                      hintText: 'What would you like to share with the community?',
+                      hintText:
+                          'What would you like to share with the community?',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
@@ -799,11 +840,9 @@ final List<Map<String, dynamic>> _marketplaceItems = [
     });
 
     // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Post created successfully'),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Post created successfully')));
   }
 
   void _showPostOptions(Map<String, dynamic> post) {
@@ -888,24 +927,22 @@ final List<Map<String, dynamic>> _marketplaceItems = [
       }
       _filterContent(); // Refresh filtered list
     });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Liked post'),
-      ),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Liked post')));
   }
 
   void _showCommentDialog(Map<String, dynamic> post) {
-    final TextEditingController _commentController = TextEditingController();
-    
+    final TextEditingController commentController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Comment'),
           content: TextField(
-            controller: _commentController,
+            controller: commentController,
             maxLines: 2,
             decoration: const InputDecoration(
               hintText: 'Write your comment...',
@@ -918,9 +955,9 @@ final List<Map<String, dynamic>> _marketplaceItems = [
             ),
             ElevatedButton(
               onPressed: () {
-                if (_commentController.text.trim().isNotEmpty) {
+                if (commentController.text.trim().isNotEmpty) {
                   Navigator.of(context).pop();
-                  _addComment(post, _commentController.text.trim());
+                  _addComment(post, commentController.text.trim());
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -946,20 +983,16 @@ final List<Map<String, dynamic>> _marketplaceItems = [
       }
       _filterContent(); // Refresh filtered list
     });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Comment added'),
-      ),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Comment added')));
   }
 
   void _sharePost(Map<String, dynamic> post) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Post shared'),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Post shared')));
   }
 
   void _reportPost(Map<String, dynamic> post) {
@@ -977,15 +1010,11 @@ final List<Map<String, dynamic>> _marketplaceItems = [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Post reported'),
-                  ),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Post reported')));
               },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Report'),
             ),
           ],
@@ -1005,11 +1034,7 @@ final List<Map<String, dynamic>> _marketplaceItems = [
               color: Theme.of(context).cardTheme.color,
               borderRadius: BorderRadius.circular(50),
             ),
-            child: const Icon(
-              Icons.groups,
-              size: 50,
-              color: Color(0xFF006D77),
-            ),
+            child: const Icon(Icons.groups, size: 50, color: Color(0xFF006D77)),
           ),
           const SizedBox(height: 20),
           const Text(

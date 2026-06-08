@@ -577,6 +577,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   }
 
   Widget _buildShimmerSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -638,8 +639,10 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
             itemCount: 3,
             itemBuilder: (context, index) {
               return Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
+                baseColor: Theme.of(context).cardColor,
+                highlightColor: isDark
+                    ? const Color(0xFF334155)
+                    : Colors.grey.shade100,
                 child: SizedBox(
                   width: 250.w,
                   child: Card(
@@ -1129,8 +1132,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                       onTap: () => Navigator.pushNamed(context, '/profile'),
                       child: ClipOval(
                         child: Image.network(
-                          user?.profileImage ??
-                              '',
+                          user?.profileImage ?? '',
                           width: 50.w, // Double the radius you want
                           height: 50.w,
                           fit: BoxFit.cover,

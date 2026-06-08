@@ -341,6 +341,9 @@ class ResidentVehicle extends Equatable {
   @HiveField(8)
   final int? isElectric;
 
+  @HiveField(8)
+  final int? isParked;
+
   const ResidentVehicle({
     required this.id,
     required this.registrationNumber,
@@ -351,6 +354,7 @@ class ResidentVehicle extends Equatable {
     this.parkingSpot,
     this.vehicleTypeId = 0,
     this.isElectric,
+    this.isParked,
   });
 
   factory ResidentVehicle.fromJson(Map<String, dynamic> json) {
@@ -364,6 +368,7 @@ class ResidentVehicle extends Equatable {
       parkingSpot: json['parking_spot'],
       vehicleTypeId: int.tryParse(json['vehicle_type_id']?.toString() ?? '0') ?? 0,
       isElectric: json['is_electric'] != null ? int.tryParse(json['is_electric'].toString()) : null,
+      isParked: json['is_parked'] != null ? int.tryParse(json['is_parked'].toString()) : null,
     );
   }
 

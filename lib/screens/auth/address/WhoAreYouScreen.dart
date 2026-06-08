@@ -22,9 +22,6 @@ class WhoAreYouScreen extends StatelessWidget {
     final textColor = isDarkMode
         ? AppTheme.onPrimary
         : AppTheme.onBackgroundLight;
-    final secondaryTextColor = isDarkMode
-        ? AppTheme.onPrimary.withValues(alpha: 0.7)
-        : AppTheme.onBackgroundLight;
     final iconColor = AppTheme.primary;
 
     final options = [

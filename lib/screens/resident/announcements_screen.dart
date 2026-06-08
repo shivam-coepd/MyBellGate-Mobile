@@ -15,7 +15,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animCtrl;
-  late Animation<double> _fade;
 
   String _selectedCategory = 'All';
   int _expandedId = -1;
@@ -36,7 +35,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _fade = CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animCtrl.forward();
       context.read<CommunicationsBloc>().add(

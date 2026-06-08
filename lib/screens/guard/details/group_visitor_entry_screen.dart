@@ -230,7 +230,7 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                       ),
                       SizedBox(height: 12.h),
                       DropdownButtonFormField<String>(
-                        value: _visitorType,
+                        initialValue: _visitorType,
                         decoration: const InputDecoration(
                             labelText: 'Visitor Type',
                             border: OutlineInputBorder()),

@@ -409,7 +409,7 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                               SizedBox(height: 16.h),
                               // Resident Type Dropdown
                               DropdownButtonFormField<String>(
-                                value: _selectedResidentType,
+                                initialValue: _selectedResidentType,
                                 decoration: const InputDecoration(
                                   labelText: 'Resident Type',
                                   prefixIcon: Icon(Icons.home_work),

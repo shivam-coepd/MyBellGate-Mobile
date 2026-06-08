@@ -308,7 +308,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     bool isDarkMode,
   ) {
     final List<Color> gradient = List<Color>.from(pageData['gradient'] as List);
-    final IconData icon = pageData['icon'] as IconData;
 
     return AnimatedBuilder(
       animation: _fadeAnimationController,
@@ -468,7 +467,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_onboardingPages.length, (index) {
         final isActive = index == _currentPage;
-        final pageColor = _onboardingPages[index]['color'] as Color;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 400),

@@ -349,9 +349,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text(
-            'Service Requests',
-          ),
+          title: const Text('Service Requests'),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
@@ -416,7 +414,8 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                   ),
                 ],
               ),
-            ),SizedBox(height: 8.h),
+            ),
+            SizedBox(height: 8.h),
             // Ticket list
             Expanded(
               child: BlocBuilder<HelpdeskBloc, HelpdeskState>(
@@ -656,9 +655,11 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => _showEditTicketForm(t),
-                          icon: Icon(Icons.edit_outlined,
-                              size: 16.sp,
-                              color: Theme.of(context).primaryColor),
+                          icon: Icon(
+                            Icons.edit_outlined,
+                            size: 16.sp,
+                            color: Theme.of(context).primaryColor,
+                          ),
                           label: Text(
                             'Edit',
                             style: TextStyle(
@@ -669,7 +670,8 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 8.h),
                             side: BorderSide(
-                                color: Theme.of(context).primaryColor),
+                              color: Theme.of(context).primaryColor,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8.r),
                             ),
@@ -682,14 +684,19 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => context.read<HelpdeskBloc>().add(
-                              UpdateTicketStatus(t.id, 'resolved'),
-                            ),
-                        icon: Icon(Icons.check_circle_outline,
-                            size: 16.sp, color: Colors.green),
+                          UpdateTicketStatus(t.id, 'resolved'),
+                        ),
+                        icon: Icon(
+                          Icons.check_circle_outline,
+                          size: 16.sp,
+                          color: Colors.green,
+                        ),
                         label: Text(
                           'Resolve',
-                          style:
-                              TextStyle(fontSize: 13.sp, color: Colors.green),
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.green,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -707,14 +714,19 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                         onPressed: () => _confirmDelete(t),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
-                              vertical: 8.h, horizontal: 12.w),
+                            vertical: 8.h,
+                            horizontal: 12.w,
+                          ),
                           side: const BorderSide(color: Colors.red),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                         ),
-                        child: Icon(Icons.delete_outline,
-                            size: 18.sp, color: Colors.red),
+                        child: Icon(
+                          Icons.delete_outline,
+                          size: 18.sp,
+                          color: Colors.red,
+                        ),
                       ),
                     ],
                   ],
@@ -1103,8 +1115,9 @@ class _TicketListShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final baseColor = theme.cardColor;
     final highlightColor = isDark
         ? const Color(0xFF334155)
         : Colors.grey.shade100;

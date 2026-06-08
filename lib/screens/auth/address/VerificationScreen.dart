@@ -150,14 +150,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
     final backgroundColor = isDarkMode
         ? AppTheme.backgroundDark
         : AppTheme.backgroundLight;
-    final surfaceColor = isDarkMode
-        ? AppTheme.surfaceDark
-        : AppTheme.surfaceLight;
     final textColor = isDarkMode
         ? AppTheme.onPrimary
-        : AppTheme.onBackgroundLight;
-    final secondaryTextColor = isDarkMode
-        ? AppTheme.onPrimary.withValues(alpha: 0.7)
         : AppTheme.onBackgroundLight;
     final iconColor = AppTheme.primary;
 

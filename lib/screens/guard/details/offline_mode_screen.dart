@@ -14,7 +14,7 @@ class OfflineModeScreen extends StatefulWidget {
 class _OfflineModeScreenState extends State<OfflineModeScreen> {
   bool _isOfflineMode = true;
   int _pendingSync = 5;
-  int _totalEntries = 12;
+  final int _totalEntries = 12;
 
   final List<Map<String, dynamic>> _offlineEntries = [
     {

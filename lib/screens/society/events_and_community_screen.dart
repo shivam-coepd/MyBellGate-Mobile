@@ -66,16 +66,12 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       // backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text(
-          'Community Management',
-        ),
+        title: const Text('Community Management'),
         backgroundColor: theme.scaffoldBackgroundColor,
         // foregroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -874,7 +870,6 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final List<XFile> _selectedImages = [];
   final List<String> _uploadedImageUrls = [];
   bool _isUploadingImages = false;
-  String _postType = 'post'; // post, poll, announcement
   String _privacySetting = 'public'; // public, residents_only
   bool _isCreatingPoll = false;
   final List<TextEditingController> _pollOptions = [
@@ -950,11 +945,8 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     setState(() {
       _isCreatingPoll = !_isCreatingPoll;
       if (_isCreatingPoll) {
-        _postType = 'poll';
         _selectedImages.clear();
-      } else {
-        _postType = 'post';
-      }
+      } else {}
     });
   }
 
@@ -1518,40 +1510,6 @@ class _EventsSectionWidgetState extends State<EventsSectionWidget> {
     },
   ];
 
-  void _handleRSVP(int eventId, String status) {
-    HapticFeedback.lightImpact();
-    setState(() {
-      final event = _events.firstWhere((e) => e["id"] == eventId);
-      if (event["rsvpStatus"] == status) {
-        event["rsvpStatus"] = null;
-        event["attendees"] = (event["attendees"] as int) - 1;
-      } else {
-        if (event["rsvpStatus"] != null) {
-          event["attendees"] = (event["attendees"] as int) - 1;
-        }
-        event["rsvpStatus"] = status;
-        event["attendees"] = (event["attendees"] as int) + 1;
-      }
-    });
-
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          status == 'going'
-              ? 'You\'re going to this event!'
-              : 'Marked as interested',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onInverseSurface,
-          ),
-        ),
-        backgroundColor: theme.colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
   void _handleShare(Map<String, dynamic> event) {
     HapticFeedback.mediumImpact();
     // ignore: deprecated_member_use
@@ -1601,7 +1559,7 @@ class _EventsSectionWidgetState extends State<EventsSectionWidget> {
     HapticFeedback.mediumImpact();
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => _EventDetailScreen(event: event)),
+      MaterialPageRoute(builder: (context) => EventDetailScreen(event: event)),
     );
   }
 
@@ -1835,167 +1793,612 @@ class _EventsSectionWidgetState extends State<EventsSectionWidget> {
   }
 }
 
-/// Event detail screen with full information
-class _EventDetailScreen extends StatelessWidget {
+// /// Event detail screen with full information
+// class _EventDetailScreen extends StatelessWidget {
+//   final Map<String, dynamic> event;
+
+//   const _EventDetailScreen({required this.event});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final theme = Theme.of(context);
+
+//     return Scaffold(
+//       backgroundColor: theme.scaffoldBackgroundColor,
+//       body: CustomScrollView(
+//         slivers: [
+//           SliverAppBar(
+//             expandedHeight: 30.h,
+//             pinned: true,
+//             backgroundColor: theme.colorScheme.surface,
+//             leading: IconButton(
+//               icon: Container(
+//                 padding: EdgeInsets.all(2.w),
+//                 decoration: BoxDecoration(
+//                   color: theme.colorScheme.surface.withValues(alpha: 0.9),
+//                   shape: BoxShape.circle,
+//                 ),
+//                 child: Icon(
+//                   Icons.arrow_back,
+//                   color: theme.colorScheme.onSurface,
+//                   size: 20,
+//                 ),
+//               ),
+//               onPressed: () {
+//                 HapticFeedback.lightImpact();
+//                 Navigator.pop(context);
+//               },
+//             ),
+//             flexibleSpace: FlexibleSpaceBar(
+//               background: Image.network(
+//                 event["coverImage"],
+//                 width: double.infinity,
+//                 height: 30.h,
+//                 fit: BoxFit.cover,
+//                 semanticLabel: event["semanticLabel"],
+//               ),
+//             ),
+//           ),
+//           SliverToBoxAdapter(
+//             child: Padding(
+//               padding: EdgeInsets.all(4.w),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text(
+//                     event["title"],
+//                     style: theme.textTheme.headlineSmall?.copyWith(
+//                       fontWeight: FontWeight.w600,
+//                     ),
+//                   ),
+//                   SizedBox(height: 2.h),
+//                   _buildInfoCard(theme),
+//                   SizedBox(height: 2.h),
+//                   Text(
+//                     'About Event',
+//                     style: theme.textTheme.titleMedium?.copyWith(
+//                       fontWeight: FontWeight.w600,
+//                     ),
+//                   ),
+//                   SizedBox(height: 1.h),
+//                   Text(
+//                     event["description"],
+//                     style: theme.textTheme.bodyMedium?.copyWith(
+//                       color: theme.colorScheme.onSurfaceVariant,
+//                       height: 1.5,
+//                     ),
+//                   ),
+//                   SizedBox(height: 2.h),
+//                   _buildAttendeesList(theme),
+//                   SizedBox(height: 10.h),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//       bottomSheet: _buildBottomActions(context, theme),
+//     );
+//   }
+
+//   Widget _buildInfoCard(ThemeData theme) {
+//     return Container(
+//       padding: EdgeInsets.all(4.w),
+//       decoration: BoxDecoration(
+//         color: theme.colorScheme.surfaceContainerHighest,
+//         borderRadius: BorderRadius.circular(16.r),
+//       ),
+//       child: Column(
+//         children: [
+//           _buildInfoRow(
+//             Icon(
+//               Icons.calendar_today,
+//               color: theme.colorScheme.primary,
+//               size: 20,
+//             ),
+//             'Date & Time',
+//             '${event["date"]}\n${event["time"]}',
+//             theme,
+//           ),
+//           Divider(height: 3.h),
+//           _buildInfoRow(
+//             Icon(Icons.location_on, color: theme.colorScheme.primary, size: 20),
+//             'Location',
+//             event["location"],
+//             theme,
+//           ),
+//           Divider(height: 3.h),
+//           _buildInfoRow(
+//             Icon(Icons.person, color: theme.colorScheme.primary, size: 20),
+//             'Organizer',
+//             event["organizer"],
+//             theme,
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildInfoRow(
+//     Widget icon,
+//     String label,
+//     String value,
+//     ThemeData theme,
+//   ) {
+//     return Row(
+//       children: [
+//         icon,
+//         SizedBox(width: 4.w),
+//         Expanded(
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text(
+//                 label,
+//                 style: theme.textTheme.labelSmall?.copyWith(
+//                   color: theme.colorScheme.onSurfaceVariant,
+//                 ),
+//               ),
+//               SizedBox(height: 0.5.h),
+//               Text(
+//                 value,
+//                 style: theme.textTheme.bodyMedium?.copyWith(
+//                   fontWeight: FontWeight.w500,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   Widget _buildAttendeesList(ThemeData theme) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             Text(
+//               'Attendees',
+//               style: theme.textTheme.titleMedium?.copyWith(
+//                 fontWeight: FontWeight.w600,
+//               ),
+//             ),
+//             Text(
+//               '${event["attendees"]} going',
+//               style: theme.textTheme.bodySmall?.copyWith(
+//                 color: theme.colorScheme.onSurfaceVariant,
+//               ),
+//             ),
+//           ],
+//         ),
+//         SizedBox(height: 1.h),
+//         SizedBox(
+//           height: 10.w,
+//           child: ListView.builder(
+//             scrollDirection: Axis.horizontal,
+//             itemCount: 10,
+//             itemBuilder: (context, index) {
+//               return Container(
+//                 margin: EdgeInsets.only(right: 2.w),
+//                 child: ClipRRect(
+//                   borderRadius: BorderRadius.circular(25.r),
+//                   child: Image.network(
+//                     'https://randomuser.me/api/portraits/${index % 2 == 0 ? 'men' : 'women'}/${index + 20}.jpg',
+//                     width: 10.w,
+//                     height: 10.w,
+//                     fit: BoxFit.cover,
+//                     semanticLabel: 'Profile photo of attendee ${index + 1}',
+//                   ),
+//                 ),
+//               );
+//             },
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   Widget _buildBottomActions(BuildContext context, ThemeData theme) {
+//     return Container(
+//       padding: EdgeInsets.all(4.w),
+//       decoration: BoxDecoration(
+//         color: theme.colorScheme.surface,
+//         boxShadow: [
+//           BoxShadow(
+//             color: theme.colorScheme.shadow.withValues(alpha: 0.12),
+//             blurRadius: 8,
+//             offset: const Offset(0, -2),
+//           ),
+//         ],
+//       ),
+//       child: SafeArea(
+//         child: Row(
+//           children: [
+//             Expanded(
+//               child: ElevatedButton(
+//                 onPressed: () {
+//                   HapticFeedback.mediumImpact();
+//                   Navigator.pop(context);
+//                 },
+//                 style: ElevatedButton.styleFrom(
+//                   padding: EdgeInsets.symmetric(vertical: 1.8.h),
+//                 ),
+//                 child: const Text('RSVP Going'),
+//               ),
+//             ),
+//             SizedBox(width: 3.w),
+//             OutlinedButton(
+//               onPressed: () {
+//                 HapticFeedback.lightImpact();
+//                 // ignore: deprecated_member_use
+//                 Share.share(
+//                   'Join me at ${event["title"]} on ${event["date"]}!',
+//                   subject: event["title"],
+//                 );
+//               },
+//               style: OutlinedButton.styleFrom(padding: EdgeInsets.all(1.8.h)),
+//               child: Icon(
+//                 Icons.share,
+//                 color: theme.colorScheme.primary,
+//                 size: 20,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+/// Modern Event Detail Screen — fully responsive with flutter_screenutil
+class EventDetailScreen extends StatefulWidget {
   final Map<String, dynamic> event;
 
-  const _EventDetailScreen({required this.event});
+  const EventDetailScreen({super.key, required this.event});
+
+  @override
+  State<EventDetailScreen> createState() => _EventDetailScreenState();
+}
+
+class _EventDetailScreenState extends State<EventDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animCtrl;
+  late final Animation<double> _fadeIn;
+  late final Animation<Offset> _slideUp;
+  bool _isGoing = false;
+  bool _isSaved = false;
+  final ScrollController _scrollCtrl = ScrollController();
+  bool _isHeaderCollapsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeIn = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _slideUp = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
+
+    _animCtrl.forward();
+
+    _scrollCtrl.addListener(() {
+      final collapsed = _scrollCtrl.offset > 200.h;
+      if (collapsed != _isHeaderCollapsed) {
+        setState(() => _isHeaderCollapsed = collapsed);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: colorScheme.surface,
       body: CustomScrollView(
+        controller: _scrollCtrl,
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverAppBar(
-            expandedHeight: 30.h,
-            pinned: true,
-            backgroundColor: theme.colorScheme.surface,
-            leading: IconButton(
-              icon: Container(
-                padding: EdgeInsets.all(2.w),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: theme.colorScheme.onSurface,
-                  size: 20,
-                ),
-              ),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                Navigator.pop(context);
-              },
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.network(
-                event["coverImage"],
-                width: double.infinity,
-                height: 30.h,
-                fit: BoxFit.cover,
-                semanticLabel: event["semanticLabel"],
-              ),
-            ),
-          ),
+          _buildSliverAppBar(colorScheme, isDark),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(4.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event["title"],
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  _buildInfoCard(theme),
-                  SizedBox(height: 2.h),
-                  Text(
-                    'About Event',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 1.h),
-                  Text(
-                    event["description"],
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  _buildAttendeesList(theme),
-                  SizedBox(height: 10.h),
-                ],
+            child: FadeTransition(
+              opacity: _fadeIn,
+              child: SlideTransition(
+                position: _slideUp,
+                child: _buildContent(context, theme, colorScheme, isDark),
               ),
             ),
           ),
         ],
       ),
-      bottomSheet: _buildBottomActions(context, theme),
+      bottomNavigationBar: _buildBottomBar(context, theme, colorScheme),
     );
   }
 
-  Widget _buildInfoCard(ThemeData theme) {
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16.r),
+  // ─── Sliver App Bar ───────────────────────────────────────────────────────
+
+  Widget _buildSliverAppBar(ColorScheme cs, bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 280.h,
+      pinned: true,
+      stretch: true,
+      backgroundColor: cs.surface,
+      elevation: _isHeaderCollapsed ? 0.5 : 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+
+      // leading: IconButton(
+      //   icon: Icon(Icons.arrow_back_ios_new_rounded),
+      //   onPressed: () {
+      //     HapticFeedback.lightImpact();
+      //     Navigator.pop(context);
+      //   },
+      // ),
+      leadingWidth: 44.w,
+      leading: Padding(
+        padding: EdgeInsets.only(left: 8.w),
+        child: _circleButton(
+          icon: Icons.arrow_back_ios_new_rounded,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            Navigator.pop(context);
+          },
+        ),
       ),
-      child: Column(
-        children: [
-          _buildInfoRow(
-            Icon(
-              Icons.calendar_today,
-              color: theme.colorScheme.primary,
-              size: 20,
+      actions: [
+        _circleButton(
+          icon: _isSaved
+              ? Icons.bookmark_rounded
+              : Icons.bookmark_border_rounded,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            setState(() => _isSaved = !_isSaved);
+          },
+          accent: _isSaved,
+        ),
+        SizedBox(width: 10.w),
+        _circleButton(
+          icon: Icons.ios_share_rounded,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            Share.share(
+              'Join me at ${widget.event["title"]} on ${widget.event["date"]}!',
+              subject: widget.event["title"],
+            );
+          },
+        ),
+        SizedBox(width: 4.w),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [
+          StretchMode.zoomBackground,
+          StretchMode.blurBackground,
+        ],
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              widget.event["coverImage"] ?? '',
+              fit: BoxFit.cover,
+              semanticLabel: widget.event["semanticLabel"] ?? 'Event cover',
             ),
-            'Date & Time',
-            '${event["date"]}\n${event["time"]}',
-            theme,
+            // Gradient overlay for readability
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.15),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.65),
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
+            ),
+            // Category chip
+            Positioned(
+              bottom: 16.h,
+              left: 16.w,
+              child: _CategoryChip(label: widget.event["category"] ?? 'Event'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _circleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool accent = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36.w,
+        height: 36.w,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.35),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 0.5,
           ),
-          Divider(height: 3.h),
-          _buildInfoRow(
-            Icon(Icons.location_on, color: theme.colorScheme.primary, size: 20),
-            'Location',
-            event["location"],
-            theme,
+        ),
+        child: Icon(
+          icon,
+          size: 16.sp,
+          color: accent ? Colors.amber[300] : Colors.white,
+        ),
+      ),
+    );
+  }
+
+  // ─── Main Content ──────────────────────────────────────────────────────────
+
+  Widget _buildContent(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme cs,
+    bool isDark,
+  ) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 20.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title section
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.event["title"] ?? 'Untitled Event',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                    height: 1.2,
+                    color: cs.onSurface,
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                _buildQuickStats(theme, cs, isDark),
+              ],
+            ),
           ),
-          Divider(height: 3.h),
-          _buildInfoRow(
-            Icon(Icons.person, color: theme.colorScheme.primary, size: 20),
-            'Organizer',
-            event["organizer"],
-            theme,
+
+          SizedBox(height: 20.h),
+          _buildInfoCards(theme, cs, isDark),
+          SizedBox(height: 20.h),
+
+          // Attendees
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: _buildAttendeesSection(theme, cs),
+          ),
+
+          // About
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: _buildAboutSection(theme, cs),
+          ),
+
+          SizedBox(height: 16.h),
+
+          // Tags
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: _buildTags(cs, isDark),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(
-    Widget icon,
-    String label,
-    String value,
-    ThemeData theme,
-  ) {
+  // ─── Quick Stats Row ───────────────────────────────────────────────────────
+
+  Widget _buildQuickStats(ThemeData theme, ColorScheme cs, bool isDark) {
     return Row(
       children: [
-        icon,
-        SizedBox(width: 4.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              SizedBox(height: 0.5.h),
-              Text(
-                value,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+        _StatPill(
+          icon: Icons.people_alt_rounded,
+          label: '${widget.event["attendees"] ?? 0} going',
+          cs: cs,
+          isDark: isDark,
+        ),
+        SizedBox(width: 8.w),
+        _StatPill(
+          icon: Icons.star_rounded,
+          label: '${widget.event["rating"] ?? "4.8"}',
+          cs: cs,
+          isDark: isDark,
+          color: Colors.amber,
+        ),
+        SizedBox(width: 8.w),
+        _StatPill(
+          icon: Icons.confirmation_num_rounded,
+          label: widget.event["price"] ?? 'Free',
+          cs: cs,
+          isDark: isDark,
+          color: cs.primary,
         ),
       ],
     );
   }
 
-  Widget _buildAttendeesList(ThemeData theme) {
+  // ─── Info Cards ────────────────────────────────────────────────────────────
+
+  Widget _buildInfoCards(ThemeData theme, ColorScheme cs, bool isDark) {
+    final bgColor = isDark
+        ? cs.surfaceContainerHighest.withValues(alpha: 0.6)
+        : cs.surfaceContainerLowest;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          _InfoCard(
+            icon: Icons.calendar_month_rounded,
+            title: 'Date',
+            subtitle: '${widget.event["date"]}\n',
+            accent: cs.primary,
+            bg: bgColor,
+            theme: theme,
+          ),
+          SizedBox(width: 10.w),
+          _InfoCard(
+            icon: Icons.schedule_rounded,
+            title: 'Time',
+            subtitle: widget.event["time"] ?? '—',
+            accent: const Color(0xFF7C3AED),
+            bg: bgColor,
+            theme: theme,
+          ),
+          SizedBox(width: 10.w),
+          _InfoCard(
+            icon: Icons.location_on_rounded,
+            title: 'Venue',
+            subtitle: widget.event["location"] ?? '—',
+            accent: const Color(0xFF059669),
+            bg: bgColor,
+            theme: theme,
+          ),
+          SizedBox(width: 10.w),
+          _InfoCard(
+            icon: Icons.person_rounded,
+            title: 'Host',
+            subtitle: widget.event["organizer"] ?? '—',
+            accent: const Color(0xFFEA580C),
+            bg: bgColor,
+            theme: theme,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Attendees Section ─────────────────────────────────────────────────────
+
+  Widget _buildAttendeesSection(ThemeData theme, ColorScheme cs) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2005,90 +2408,422 @@ class _EventDetailScreen extends StatelessWidget {
             Text(
               'Attendees',
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
               ),
             ),
-            Text(
-              '${event["attendees"]} going',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            GestureDetector(
+              onTap: () => HapticFeedback.selectionClick(),
+              child: Text(
+                'View all',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
         ),
-        SizedBox(height: 1.h),
+        SizedBox(height: 12.h),
         SizedBox(
-          height: 10.w,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 10,
-            itemBuilder: (context, index) {
-              return Container(
-                margin: EdgeInsets.only(right: 2.w),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(25.r),
-                  child: Image.network(
-                    'https://randomuser.me/api/portraits/${index % 2 == 0 ? 'men' : 'women'}/${index + 20}.jpg',
-                    width: 10.w,
-                    height: 10.w,
-                    fit: BoxFit.cover,
-                    semanticLabel: 'Profile photo of attendee ${index + 1}',
+          height: 52.h,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: (10 * 32.0).clamp(0, 260).w,
+                child: Stack(
+                  children: List.generate(
+                    8,
+                    (i) => Positioned(
+                      left: (i * 24).w,
+                      child: _AvatarBubble(index: i),
+                    ),
                   ),
                 ),
-              );
-            },
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                '+${(widget.event["attendees"] ?? 0) - 8} more',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildBottomActions(BuildContext context, ThemeData theme) {
+  // ─── About Section ─────────────────────────────────────────────────────────
+
+  Widget _buildAboutSection(ThemeData theme, ColorScheme cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'About this event',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Text(
+          widget.event["description"] ?? '',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.65,
+            fontSize: 14.sp,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── Tags ──────────────────────────────────────────────────────────────────
+
+  Widget _buildTags(ColorScheme cs, bool isDark) {
+    final tags =
+        (widget.event["tags"] as List?)?.cast<String>() ??
+        ['Music', 'Live', 'Community', 'Outdoor'];
+
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: tags
+          .map((tag) => _TagChip(label: '#$tag', cs: cs, isDark: isDark))
+          .toList(),
+    );
+  }
+
+  // ─── Bottom Bar ────────────────────────────────────────────────────────────
+
+  Widget _buildBottomBar(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme cs,
+  ) {
     return Container(
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.12),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+        border: Border(
+          top: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: 0.4),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Price / availability badge
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.event["price"] ?? 'Free',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.primary,
+                  fontSize: 18.sp,
+                ),
+              ),
+              Text(
+                'per person',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(width: 16.w),
+          // RSVP Button
+          Expanded(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  setState(() => _isGoing = !_isGoing);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  height: 50.h,
+                  decoration: BoxDecoration(
+                    color: _isGoing ? cs.primaryContainer : cs.primary,
+                    borderRadius: BorderRadius.circular(14.r),
+                    boxShadow: _isGoing
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: cs.primary.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          _isGoing
+                              ? Icons.check_circle_rounded
+                              : Icons.celebration_rounded,
+                          key: ValueKey(_isGoing),
+                          color: _isGoing
+                              ? cs.onPrimaryContainer
+                              : cs.onPrimary,
+                          size: 18.sp,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          _isGoing ? "You're Going!" : 'RSVP Now',
+                          key: ValueKey(_isGoing),
+                          style: TextStyle(
+                            color: _isGoing
+                                ? cs.onPrimaryContainer
+                                : cs.onPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15.sp,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 1.8.h),
-                ),
-                child: const Text('RSVP Going'),
+    );
+  }
+}
+
+// ─── Supporting Widgets ──────────────────────────────────────────────────────
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+
+  const _CategoryChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.4),
+          width: 0.5,
+        ),
+        backgroundBlendMode: BlendMode.overlay,
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final ColorScheme cs;
+  final bool isDark;
+  final Color? color;
+
+  const _StatPill({
+    required this.icon,
+    required this.label,
+    required this.cs,
+    required this.isDark,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? cs.onSurfaceVariant;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: isDark
+            ? cs.surfaceContainerHighest.withValues(alpha: 0.7)
+            : cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.5),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13.sp, color: c),
+          SizedBox(width: 4.w),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: c,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final Color bg;
+  final ThemeData theme;
+
+  const _InfoCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.bg,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 130.w,
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34.w,
+            height: 34.w,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(icon, color: accent, size: 17.sp),
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            title,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.3,
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 12.sp,
+              height: 1.3,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AvatarBubble extends StatelessWidget {
+  final int index;
+
+  const _AvatarBubble({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40.w,
+      height: 40.w,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Theme.of(context).colorScheme.surface,
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 4),
+        ],
+      ),
+      child: ClipOval(
+        child: Image.network(
+          'https://randomuser.me/api/portraits/${index % 2 == 0 ? 'men' : 'women'}/${index + 20}.jpg',
+          fit: BoxFit.cover,
+          semanticLabel: 'Attendee ${index + 1}',
+          errorBuilder: (_, __, ___) => CircleAvatar(
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            child: Text(
+              '${index + 1}',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
               ),
             ),
-            SizedBox(width: 3.w),
-            OutlinedButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                // ignore: deprecated_member_use
-                Share.share(
-                  'Join me at ${event["title"]} on ${event["date"]}!',
-                  subject: event["title"],
-                );
-              },
-              style: OutlinedButton.styleFrom(padding: EdgeInsets.all(1.8.h)),
-              child: Icon(
-                Icons.share,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-            ),
-          ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  final String label;
+  final ColorScheme cs;
+  final bool isDark;
+
+  const _TagChip({required this.label, required this.cs, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: isDark ? 0.3 : 0.5),
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: cs.primary,
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -2330,9 +3065,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
   Widget _buildPollQuestion(Map<String, dynamic> poll, ThemeData theme) {
     return Text(
       poll["question"],
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-      ),
+      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 
@@ -2348,7 +3081,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
         final votes = option["votes"] as int;
         final percentage = totalVotes > 0 ? (votes / totalVotes * 100) : 0.0;
         final isSelected = hasVoted && selectedOption == index;
-    
+
         return GestureDetector(
           onTap: poll["status"] == "active"
               ? () => _handleVote(poll["id"], index)

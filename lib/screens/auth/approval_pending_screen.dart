@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_event.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class ApprovalPendingScreen extends StatelessWidget {
   const ApprovalPendingScreen({super.key});
@@ -11,8 +12,12 @@ class ApprovalPendingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight;
-    final subtitleColor = isDarkMode ? AppTheme.onPrimary.withValues(alpha: 0.7) : AppTheme.onBackgroundLight;
+    final textColor = isDarkMode
+        ? AppTheme.onPrimary
+        : AppTheme.onBackgroundLight;
+    final subtitleColor = isDarkMode
+        ? AppTheme.onPrimary.withValues(alpha: 0.7)
+        : AppTheme.onBackgroundLight;
 
     return Scaffold(
       body: Center(
@@ -69,7 +74,9 @@ class ApprovalPendingScreen extends StatelessWidget {
                       ? null
                       : [
                           BoxShadow(
-                            color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                            color: AppTheme.onBackgroundLight.withValues(
+                              alpha: 0.1,
+                            ),
                             blurRadius: 12.r,
                             offset: Offset(0, 6.h),
                           ),
@@ -102,11 +109,16 @@ class ApprovalPendingScreen extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () {
                     // Add real-time status check logic here
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Checking approval status...'),
-                        backgroundColor: AppTheme.primary,
-                      ),
+                    // ScaffoldMessenger.of(context).showSnackBar(
+                    //   SnackBar(
+                    //     content: Text('Checking approval status...'),
+                    //     backgroundColor: AppTheme.primary,
+                    //   ),
+                    // );
+                    AppSnackbar.show(
+                      context: context,
+                      message: 'Checking approval status...',
+                      type: SnackBarType.primary,
                     );
                   },
                   style: OutlinedButton.styleFrom(
@@ -131,7 +143,9 @@ class ApprovalPendingScreen extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   context.read<AuthBloc>().add(LogoutRequested());
-                  Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/auth', (route) => false);
                 },
                 child: Text(
                   'Logout',
@@ -186,7 +200,9 @@ class ApprovalPendingScreen extends StatelessWidget {
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: completed
-                      ? (isDarkMode ? AppTheme.onPrimary : AppTheme.onBackgroundLight)
+                      ? (isDarkMode
+                            ? AppTheme.onPrimary
+                            : AppTheme.onBackgroundLight)
                       : AppTheme.onBackgroundLight,
                 ),
               ),

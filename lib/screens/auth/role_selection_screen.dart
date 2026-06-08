@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_event.dart';
-import 'package:mygate_coepd/theme/app_theme.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -484,7 +483,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                                     fontWeight: FontWeight.w500,
                                     color: isDarkMode
                                         ? Colors.white.withValues(alpha: 0.7)
-                                        : gradient[0].withOpacity(0.8),
+                                        : gradient[0].withValues(alpha: 0.8),
                                   ),
                                 ),
                               ],

@@ -16,7 +16,6 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animCtrl;
-  late Animation<double> _fade;
 
   Amenity? _selected;
   String _date = '';
@@ -50,7 +49,6 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _fade = CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut);
     final n = DateTime.now();
     _date =
         '${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';

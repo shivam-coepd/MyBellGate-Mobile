@@ -72,6 +72,36 @@ class HouseholdRepository {
     }
   }
 
+  /// PUT /api/family/{id} — update a family member
+  Future<void> updateFamilyMember({
+    required String id,
+    String? name,
+    String? relation,
+    String? phone,
+    String? imageUrl,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (name != null && name.isNotEmpty) data['name'] = name;
+      if (relation != null && relation.isNotEmpty) data['relation'] = relation;
+      if (phone != null) data['phone'] = phone;
+      if (imageUrl != null) data['image_url'] = imageUrl;
+
+      if (data.isEmpty) {
+        throw Exception('No fields to update');
+      }
+
+      final response = await _apiService.dio.put('/family/$id', data: data);
+      log('updateFamilyMember($id): ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to update family member');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
   // ─────────────────────────────────────────────────────
   //  VEHICLE TYPES
   // ─────────────────────────────────────────────────────
@@ -163,6 +193,42 @@ class HouseholdRepository {
       log('deleteVehicle($id): ${response.data}');
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to delete vehicle');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
+  /// PUT /api/vehicles/{id} — update a vehicle
+  Future<void> updateVehicle({
+    required String id,
+    int? vehicleTypeId,
+    String? make,
+    String? model,
+    String? color,
+    String? parkingSpot,
+    int? isElectric,
+    int? isParked,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (vehicleTypeId != null) data['vehicle_type_id'] = vehicleTypeId;
+      if (make != null) data['make'] = make;
+      if (model != null) data['model'] = model;
+      if (color != null) data['color'] = color;
+      if (parkingSpot != null) data['parking_spot'] = parkingSpot;
+      if (isElectric != null) data['is_electric'] = isElectric;
+      if (isParked != null) data['is_parked'] = isParked;
+
+      if (data.isEmpty) {
+        throw Exception('No fields to update');
+      }
+
+      final response = await _apiService.dio.put('/vehicles/$id', data: data);
+      log('updateVehicle($id): ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to update vehicle');
       }
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
@@ -267,6 +333,46 @@ class HouseholdRepository {
     }
   }
 
+  /// PUT /api/pets/{id} — update a pet (uses form-data approach)
+  Future<void> updatePet({
+    required String id,
+    int? petTypeId,
+    String? name,
+    String? breed,
+    int? age,
+    double? weight,
+    String? vaccinationStatus,
+    String? notes,
+    String? imageUrl,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (name != null && name.isNotEmpty) data['name'] = name;
+      if (petTypeId != null) data['pet_type_id'] = petTypeId;
+      if (breed != null) data['breed'] = breed;
+      if (age != null) data['age'] = age;
+      if (weight != null) data['weight'] = weight;
+      if (vaccinationStatus != null) data['vaccination_status'] = vaccinationStatus;
+      if (notes != null) data['notes'] = notes;
+      if (imageUrl != null) data['image_url'] = imageUrl;
+
+      if (data.isEmpty) {
+        throw Exception('No fields to update');
+      }
+
+      // Backend does not have a dedicated PUT for pets, so we use addPet-like approach
+      // or attempt a direct PUT (may need backend adjustment)
+      final response = await _apiService.dio.put('/pets/$id', data: data);
+      log('updatePet($id): ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to update pet');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
   // ─────────────────────────────────────────────────────
   //  DAILY HELP (via Visitors table)
   // ─────────────────────────────────────────────────────
@@ -332,6 +438,37 @@ class HouseholdRepository {
       log('deleteDailyHelper($id): ${response.data}');
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to delete daily helper');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
+  /// PUT /api/visitors/{id} — update a daily helper's info
+  Future<void> updateDailyHelper({
+    required int id,
+    String? name,
+    String? phone,
+    String? purpose,
+    String? visitTime,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (name != null && name.isNotEmpty) data['name'] = name;
+      if (phone != null && phone.isNotEmpty) data['phone'] = phone;
+      if (purpose != null && purpose.isNotEmpty) data['purpose'] = purpose;
+      if (visitTime != null) data['visit_time'] = visitTime;
+
+      if (data.isEmpty) {
+        throw Exception('No fields to update');
+      }
+
+      // Use PATCH or PUT to update visitor fields
+      final response = await _apiService.dio.put('/visitors/$id', data: data);
+      log('updateDailyHelper($id): ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to update daily helper');
       }
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
