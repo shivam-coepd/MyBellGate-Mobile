@@ -151,6 +151,28 @@ class UserRepository {
     }
   }
 
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/auth/change-password',
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        },
+      );
+
+      if (response.data != null && response.data['status'] == true) {
+        return;
+      } else {
+        throw Exception(response.data?['message'] ?? 'Failed to change password');
+      }
+    } on DioException catch (e) {
+      final message =
+          e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(message);
+    }
+  }
+
   Future<User?> updateProfile({
     String? name,
     String? email,

@@ -10,6 +10,7 @@ import 'package:mygate_coepd/screens/resident/resident_main_screen.dart';
 import 'package:mygate_coepd/screens/guard/guard_main_screen.dart';
 import 'package:mygate_coepd/screens/auth/approval_pending_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -238,11 +239,17 @@ class _AuthScreenState extends State<AuthScreen> {
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
                   if (state is AuthError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: AppTheme.error,
-                      ),
+                    // ScaffoldMessenger.of(context).showSnackBar(
+                    //   SnackBar(
+                    //     content: Text(state.message),
+                    //     backgroundColor: AppTheme.error,
+                    //   ),
+                    // );
+                    AppSnackbar.show(
+                      context: context,
+                      message: state.message,
+                      type: SnackBarType.error,
+                      position: SnackBarPosition.top,
                     );
                   } else if (state is Authenticated) {
                     // Navigate based on the selected role from AppConfig, not the user's role from database

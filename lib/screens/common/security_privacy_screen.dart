@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mygate_coepd/repositories/user_repository.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class SecurityPrivacyScreen extends StatefulWidget {
   const SecurityPrivacyScreen({super.key});
@@ -60,9 +63,11 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
               children: [
                 Center(
                   child: Container(
-                    width: 40.w, height: 4.h,
+                    width: 40.w,
+                    height: 4.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey[400], borderRadius: BorderRadius.circular(2),
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
@@ -83,11 +88,18 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                   decoration: InputDecoration(
                     labelText: 'Current Password',
                     suffixIcon: IconButton(
-                      icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 20),
-                      onPressed: () => sSet(() => obscureCurrent = !obscureCurrent),
+                      icon: Icon(
+                        obscureCurrent
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          sSet(() => obscureCurrent = !obscureCurrent),
                     ),
                   ),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Required' : null,
                 ),
                 SizedBox(height: 16.h),
                 TextFormField(
@@ -96,7 +108,10 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                   decoration: InputDecoration(
                     labelText: 'New Password',
                     suffixIcon: IconButton(
-                      icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
+                      icon: Icon(
+                        obscureNew ? Icons.visibility_off : Icons.visibility,
+                        size: 20,
+                      ),
                       onPressed: () => sSet(() => obscureNew = !obscureNew),
                     ),
                   ),
@@ -110,7 +125,9 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                 TextFormField(
                   controller: confirmCtrl,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Confirm New Password'),
+                  decoration: const InputDecoration(
+                    labelText: 'Confirm New Password',
+                  ),
                   validator: (v) {
                     if (v != newCtrl.text) return 'Passwords do not match';
                     return null;
@@ -120,10 +137,54 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (formKey.currentState!.validate()) {
-                        Navigator.pop(ctx);
-                        _showSnackBar('Password changed successfully', color: Colors.green);
+                        try {
+                          showDialog(
+                            context: ctx,
+                            barrierDismissible: false,
+                            builder: (context) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+
+                          await context.read<UserRepository>().changePassword(
+                            currentCtrl.text,
+                            newCtrl.text,
+                          );
+
+                          if (ctx.mounted)
+                            Navigator.pop(ctx); // dismiss loading
+                          if (ctx.mounted)
+                            Navigator.pop(ctx); // dismiss bottom sheet
+
+                          if (mounted) {
+                            // _showSnackBar(
+                            //   'Password changed successfully',
+                            //   color: Colors.green,
+                            // );
+                            AppSnackbar.show(
+                              context: context,
+                              message: 'Password changed successfully',
+                              type: SnackBarType.success,
+                            );
+                          }
+                        } catch (e) {
+                          if (ctx.mounted)
+                            Navigator.pop(ctx); // dismiss loading
+                          if (mounted) {
+                            // _showSnackBar(e.toString().replaceAll('Exception: ', ''), color: Colors.red);
+                            AppSnackbar.show(
+                              context: context,
+                              message: e.toString().replaceAll(
+                                'Exception: ',
+                                '',
+                              ),
+                              type: SnackBarType.error,
+                              position: SnackBarPosition.top,
+                            );
+                          }
+                        }
                       }
                     },
                     child: const Text('Update Password'),
@@ -148,7 +209,9 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: EdgeInsets.only(
-          left: 24.w, right: 24.w, top: 20.h,
+          left: 24.w,
+          right: 24.w,
+          top: 20.h,
           bottom: MediaQuery.of(ctx).viewInsets.bottom + 24.h,
         ),
         decoration: BoxDecoration(
@@ -163,24 +226,38 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
             children: [
               Center(
                 child: Container(
-                  width: 40.w, height: 4.h,
-                  decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
               SizedBox(height: 20.h),
-              Text('Set PIN Lock', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              Text(
+                'Set PIN Lock',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
               SizedBox(height: 4.h),
-              Text('Set a 4 or 6-digit PIN to lock the app', style: TextStyle(fontSize: 13, color: Colors.grey)),
+              Text(
+                'Set a 4 or 6-digit PIN to lock the app',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
               SizedBox(height: 20.h),
               TextFormField(
                 controller: pinCtrl,
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Enter PIN', counterText: ''),
+                decoration: const InputDecoration(
+                  labelText: 'Enter PIN',
+                  counterText: '',
+                ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
-                  if (v.length != 4 && v.length != 6) return 'PIN must be 4 or 6 digits';
+                  if (v.length != 4 && v.length != 6)
+                    return 'PIN must be 4 or 6 digits';
                   return null;
                 },
               ),
@@ -190,7 +267,10 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm PIN', counterText: ''),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm PIN',
+                  counterText: '',
+                ),
                 validator: (v) {
                   if (v != pinCtrl.text) return 'PINs do not match';
                   return null;
@@ -204,7 +284,10 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                     if (formKey.currentState!.validate()) {
                       Navigator.pop(ctx);
                       setState(() => _pinLockEnabled = true);
-                      _showSnackBar('PIN lock set successfully', color: Colors.green);
+                      _showSnackBar(
+                        'PIN lock set successfully',
+                        color: Colors.green,
+                      );
                     }
                   },
                   child: const Text('Set PIN'),
@@ -247,13 +330,21 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              _showSnackBar('Account deletion request submitted. You will receive a confirmation email.');
+              _showSnackBar(
+                'Account deletion request submitted. You will receive a confirmation email.',
+              );
             },
-            child: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Delete Account',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -268,7 +359,10 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
         children: [
           Text('• ', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
           Expanded(
-            child: Text(text, style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+            ),
           ),
         ],
       ),
@@ -278,7 +372,9 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
   void _showActiveSessions() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) => Container(
         padding: EdgeInsets.all(24.w),
         child: Column(
@@ -287,21 +383,34 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
           children: [
             Center(
               child: Container(
-                width: 40.w, height: 4.h,
-                decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             SizedBox(height: 16.h),
-            Text('Active Sessions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(
+              'Active Sessions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
             SizedBox(height: 16.h),
             _buildSessionItem(
-              icon: Icons.phone_android, label: 'This Device', subtitle: 'Android · Active now',
-              isCurrent: true, theme: Theme.of(ctx),
+              icon: Icons.phone_android,
+              label: 'This Device',
+              subtitle: 'Android · Active now',
+              isCurrent: true,
+              theme: Theme.of(ctx),
             ),
             Divider(height: 1),
             _buildSessionItem(
-              icon: Icons.computer, label: 'Chrome · Windows', subtitle: 'Last active: 2 hours ago',
-              isCurrent: false, theme: Theme.of(ctx),
+              icon: Icons.computer,
+              label: 'Chrome · Windows',
+              subtitle: 'Last active: 2 hours ago',
+              isCurrent: false,
+              theme: Theme.of(ctx),
               onRevoke: () {
                 Navigator.pop(ctx);
                 _showSnackBar('Session revoked', color: Colors.green);
@@ -314,10 +423,14 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    _showSnackBar('All other sessions revoked', color: Colors.green);
+                    _showSnackBar(
+                      'All other sessions revoked',
+                      color: Colors.green,
+                    );
                   },
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red, side: BorderSide(color: Colors.red),
+                    foregroundColor: Colors.red,
+                    side: BorderSide(color: Colors.red),
                   ),
                   child: const Text('Revoke All Other Sessions'),
                 ),
@@ -329,31 +442,57 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
   }
 
   Widget _buildSessionItem({
-    required IconData icon, required String label, required String subtitle,
-    required bool isCurrent, required ThemeData theme, VoidCallback? onRevoke,
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool isCurrent,
+    required ThemeData theme,
+    VoidCallback? onRevoke,
   }) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isCurrent ? theme.colorScheme.primary.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+          color: isCurrent
+              ? theme.colorScheme.primary.withValues(alpha: 0.1)
+              : Colors.grey.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: isCurrent ? theme.colorScheme.primary : Colors.grey),
+        child: Icon(
+          icon,
+          color: isCurrent ? theme.colorScheme.primary : Colors.grey,
+        ),
       ),
       title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-      subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey)),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(fontSize: 12, color: Colors.grey),
+      ),
       trailing: isCurrent
           ? Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4),
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
               ),
-              child: Text('Current', style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.w600)),
+              child: Text(
+                'Current',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.green,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             )
           : (onRevoke != null
-              ? TextButton(onPressed: onRevoke, child: const Text('Revoke', style: TextStyle(color: Colors.red)))
-              : null),
+                ? TextButton(
+                    onPressed: onRevoke,
+                    child: const Text(
+                      'Revoke',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  )
+                : null),
     );
   }
 
@@ -375,115 +514,258 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
           children: [
             // ── Authentication ────────────────────────────────────────────
             _sectionHeader(theme, 'AUTHENTICATION'),
-            _card(theme, children: [
-              ListTile(
-                leading: Icon(Icons.lock_outline, color: theme.colorScheme.primary),
-                title: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Last changed 30 days ago', style: TextStyle(fontSize: 12)),
-                trailing: Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
-                onTap: _showChangePasswordSheet,
-              ),
-              Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
-              SwitchListTile(
-                secondary: Icon(Icons.fingerprint, color: theme.colorScheme.primary),
-                title: const Text('Biometric Login', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Use fingerprint or face ID to unlock', style: TextStyle(fontSize: 12)),
-                value: _biometricEnabled,
-                activeThumbColor: theme.colorScheme.primary,
-                onChanged: (v) => setState(() => _biometricEnabled = v),
-              ),
-              Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
-              SwitchListTile(
-                secondary: Icon(Icons.pin_outlined, color: theme.colorScheme.primary),
-                title: const Text('PIN Lock', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Require PIN to open the app', style: TextStyle(fontSize: 12)),
-                value: _pinLockEnabled,
-                activeThumbColor: theme.colorScheme.primary,
-                onChanged: (v) {
-                  if (v) {
-                    _showSetPinSheet();
-                  } else {
-                    setState(() => _pinLockEnabled = false);
-                    _showSnackBar('PIN lock removed');
-                  }
-                },
-              ),
-              Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
-              SwitchListTile(
-                secondary: Icon(Icons.security, color: theme.colorScheme.primary),
-                title: const Text('Two-Factor Authentication', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Add extra security with OTP verification', style: TextStyle(fontSize: 12)),
-                value: _twoFactorEnabled,
-                activeThumbColor: theme.colorScheme.primary,
-                onChanged: (v) {
-                  setState(() => _twoFactorEnabled = v);
-                  _showSnackBar('2FA ${v ? "enabled" : "disabled"}');
-                },
-              ),
-            ]),
+            _card(
+              theme,
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.lock_outline,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Change Password',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Last changed 30 days ago',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  onTap: _showChangePasswordSheet,
+                ),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                SwitchListTile(
+                  secondary: Icon(
+                    Icons.fingerprint,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Biometric Login',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Use fingerprint or face ID to unlock',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: _biometricEnabled,
+                  activeThumbColor: theme.colorScheme.primary,
+                  onChanged: (v) => setState(() => _biometricEnabled = v),
+                ),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                SwitchListTile(
+                  secondary: Icon(
+                    Icons.pin_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'PIN Lock',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Require PIN to open the app',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: _pinLockEnabled,
+                  activeThumbColor: theme.colorScheme.primary,
+                  onChanged: (v) {
+                    if (v) {
+                      _showSetPinSheet();
+                    } else {
+                      setState(() => _pinLockEnabled = false);
+                      _showSnackBar('PIN lock removed');
+                    }
+                  },
+                ),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                SwitchListTile(
+                  secondary: Icon(
+                    Icons.security,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Two-Factor Authentication',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Add extra security with OTP verification',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: _twoFactorEnabled,
+                  activeThumbColor: theme.colorScheme.primary,
+                  onChanged: (v) {
+                    setState(() => _twoFactorEnabled = v);
+                    _showSnackBar('2FA ${v ? "enabled" : "disabled"}');
+                  },
+                ),
+              ],
+            ),
 
             // ── Sessions ─────────────────────────────────────────────────
             _sectionHeader(theme, 'SESSIONS'),
-            _card(theme, children: [
-              ListTile(
-                leading: Icon(Icons.devices_outlined, color: theme.colorScheme.primary),
-                title: const Text('Active Sessions', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('2 devices currently logged in', style: TextStyle(fontSize: 12)),
-                trailing: Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
-                onTap: _showActiveSessions,
-              ),
-            ]),
+            _card(
+              theme,
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.devices_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Active Sessions',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    '2 devices currently logged in',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  onTap: _showActiveSessions,
+                ),
+              ],
+            ),
 
             // ── Privacy ──────────────────────────────────────────────────
             _sectionHeader(theme, 'PRIVACY'),
-            _card(theme, children: [
-              SwitchListTile(
-                secondary: Icon(Icons.wifi_protected_setup, color: theme.colorScheme.primary),
-                title: const Text('Show Online Status', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Others can see when you are online', style: TextStyle(fontSize: 12)),
-                value: _showOnlineStatus,
-                activeThumbColor: theme.colorScheme.primary,
-                onChanged: (v) => setState(() => _showOnlineStatus = v),
-              ),
-              Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
-              SwitchListTile(
-                secondary: Icon(Icons.person_outline, color: theme.colorScheme.primary),
-                title: const Text('Profile Visibility', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Allow society members to view your profile', style: TextStyle(fontSize: 12)),
-                value: _profileVisible,
-                activeThumbColor: theme.colorScheme.primary,
-                onChanged: (v) => setState(() => _profileVisible = v),
-              ),
-              Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
-              SwitchListTile(
-                secondary: Icon(Icons.history, color: theme.colorScheme.primary),
-                title: const Text('Activity Visibility', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Show your activity in community feed', style: TextStyle(fontSize: 12)),
-                value: _activityVisible,
-                activeThumbColor: theme.colorScheme.primary,
-                onChanged: (v) => setState(() => _activityVisible = v),
-              ),
-            ]),
+            _card(
+              theme,
+              children: [
+                SwitchListTile(
+                  secondary: Icon(
+                    Icons.wifi_protected_setup,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Show Online Status',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Others can see when you are online',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: _showOnlineStatus,
+                  activeThumbColor: theme.colorScheme.primary,
+                  onChanged: (v) => setState(() => _showOnlineStatus = v),
+                ),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                SwitchListTile(
+                  secondary: Icon(
+                    Icons.person_outline,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Profile Visibility',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Allow society members to view your profile',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: _profileVisible,
+                  activeThumbColor: theme.colorScheme.primary,
+                  onChanged: (v) => setState(() => _profileVisible = v),
+                ),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                SwitchListTile(
+                  secondary: Icon(
+                    Icons.history,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Activity Visibility',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Show your activity in community feed',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: _activityVisible,
+                  activeThumbColor: theme.colorScheme.primary,
+                  onChanged: (v) => setState(() => _activityVisible = v),
+                ),
+              ],
+            ),
 
             // ── Data ─────────────────────────────────────────────────────
             _sectionHeader(theme, 'DATA & ACCOUNT'),
-            _card(theme, children: [
-              ListTile(
-                leading: Icon(Icons.download_outlined, color: theme.colorScheme.primary),
-                title: const Text('Download My Data', style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: const Text('Request a copy of your personal data', style: TextStyle(fontSize: 12)),
-                trailing: Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
-                onTap: () => _showSnackBar('Data export request submitted. You will receive an email shortly.'),
-              ),
-              Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
-              ListTile(
-                leading: Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.red)),
-                subtitle: const Text('Permanently delete your account and data', style: TextStyle(fontSize: 12, color: Colors.red)),
-                trailing: Icon(Icons.chevron_right, color: Colors.red),
-                onTap: _showDeleteAccountDialog,
-              ),
-            ]),
+            _card(
+              theme,
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.download_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Download My Data',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Request a copy of your personal data',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  onTap: () => _showSnackBar(
+                    'Data export request submitted. You will receive an email shortly.',
+                  ),
+                ),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.delete_outline, color: Colors.red),
+                  title: const Text(
+                    'Delete Account',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Permanently delete your account and data',
+                    style: TextStyle(fontSize: 12, color: Colors.red),
+                  ),
+                  trailing: Icon(Icons.chevron_right, color: Colors.red),
+                  onTap: _showDeleteAccountDialog,
+                ),
+              ],
+            ),
 
             SizedBox(height: 40.h),
           ],
@@ -498,7 +780,9 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.8,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.8,
           color: theme.colorScheme.onSurfaceVariant,
         ),
       ),

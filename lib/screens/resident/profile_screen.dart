@@ -12,11 +12,11 @@ import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
+import 'package:mygate_coepd/screens/common/notification_settings_screen.dart';
 import 'package:mygate_coepd/screens/common/security_privacy_screen.dart';
 import 'package:mygate_coepd/screens/common/share_app_screen.dart';
 import 'package:mygate_coepd/screens/common/support_feedback_screen.dart';
 import 'package:mygate_coepd/screens/resident/add_new_property_screen.dart';
-import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/screens/resident/order_history_screen.dart';
 import 'package:mygate_coepd/screens/resident/property_details_screen.dart';
 import 'package:mygate_coepd/screens/resident/saved_payments_screen.dart';
@@ -460,7 +460,7 @@ class ProfileScreenState extends State<ProfileScreen> {
       case 'Notification Settings':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+          MaterialPageRoute(builder: (_) => const NotificationSettingsScreen()),
         );
         break;
       case 'Security & Privacy':
