@@ -7,7 +7,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:mygate_coepd/config/app_config.dart';
-import 'package:mygate_coepd/screens/auth/address/LocationSelectionScreen.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_screen.dart';
 import 'package:mygate_coepd/screens/resident/visitor_management_screen.dart';
@@ -132,10 +131,7 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
     final double screenHeight = MediaQuery.of(context).size.height;
     log("Log Screen size: $screenWidth x $screenHeight");
     return ScreenUtilInit(
-      designSize: const Size(
-        375,
-        812,
-      ), // Standard/common mobile device size
+      designSize: const Size(375, 812), // Standard/common mobile device size
       // designSize: Size(screenWidth, screenHeight), // According to current device size
       minTextAdapt: true,
       splitScreenMode: true,
@@ -176,14 +172,12 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
               ),
             ),
             BlocProvider<AmenityBloc>(
-              create: (context) => AmenityBloc(
-                repository: context.read<AmenityRepository>(),
-              ),
+              create: (context) =>
+                  AmenityBloc(repository: context.read<AmenityRepository>()),
             ),
             BlocProvider<HelpdeskBloc>(
-              create: (context) => HelpdeskBloc(
-                repository: context.read<HelpdeskRepository>(),
-              ),
+              create: (context) =>
+                  HelpdeskBloc(repository: context.read<HelpdeskRepository>()),
             ),
             BlocProvider<CommunicationsBloc>(
               create: (context) => CommunicationsBloc(
@@ -196,9 +190,8 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
               ),
             ),
             BlocProvider<GuardBloc>(
-              create: (context) => GuardBloc(
-                repository: context.read<GuardRepository>(),
-              ),
+              create: (context) =>
+                  GuardBloc(repository: context.read<GuardRepository>()),
             ),
           ],
           child: MaterialApp(
@@ -241,7 +234,6 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
       '/profile': (context) => const ProfileScreen(),
       '/profile-details': (context) => const ProfileDetailsScreen(),
       '/resident-notifications': (context) => const NotificationsScreen(),
-      '/location-selection': (context) => const LocationSelectionScreen(),
       '/otp-verification': (context) => throw UnimplementedError(
         'OTP Verification Screen requires parameters',
       ),

@@ -153,10 +153,12 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                             newCtrl.text,
                           );
 
-                          if (ctx.mounted)
+                          if (ctx.mounted) {
                             Navigator.pop(ctx); // dismiss loading
-                          if (ctx.mounted)
+                          }
+                          if (ctx.mounted) {
                             Navigator.pop(ctx); // dismiss bottom sheet
+                          }
 
                           if (mounted) {
                             // _showSnackBar(
@@ -170,8 +172,9 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                             );
                           }
                         } catch (e) {
-                          if (ctx.mounted)
+                          if (ctx.mounted) {
                             Navigator.pop(ctx); // dismiss loading
+                          }
                           if (mounted) {
                             // _showSnackBar(e.toString().replaceAll('Exception: ', ''), color: Colors.red);
                             AppSnackbar.show(
@@ -256,8 +259,9 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
-                  if (v.length != 4 && v.length != 6)
+                  if (v.length != 4 && v.length != 6) {
                     return 'PIN must be 4 or 6 digits';
+                  }
                   return null;
                 },
               ),
