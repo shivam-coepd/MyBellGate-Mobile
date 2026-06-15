@@ -39,6 +39,7 @@ import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/repositories/guard_repository.dart';
+import 'package:mygate_coepd/blocs/theme/theme_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -193,16 +194,23 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
               create: (context) =>
                   GuardBloc(repository: context.read<GuardRepository>()),
             ),
+            BlocProvider<ThemeCubit>(
+              create: (context) => ThemeCubit(),
+            ),
           ],
-          child: MaterialApp(
-            navigatorKey: apiNavigatorKey,
-            title: 'MyGateBell',
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.system,
-            initialRoute: '/',
-            routes: {..._getMainRoutes()},
-            debugShowCheckedModeBanner: false,
+          child: BlocBuilder<ThemeCubit, ThemeMode>(
+            builder: (context, themeMode) {
+              return MaterialApp(
+                navigatorKey: apiNavigatorKey,
+                title: 'MyGateBell',
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: themeMode,
+                initialRoute: '/',
+                routes: {..._getMainRoutes()},
+                debugShowCheckedModeBanner: false,
+              );
+            },
           ),
         ),
       ),

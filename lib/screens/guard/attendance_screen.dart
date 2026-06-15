@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
-import 'package:mygate_coepd/screens/guard/details/guard_patrolling_screen.dart';
+import 'package:mygate_coepd/widgets/app_internet_check.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
@@ -64,22 +65,31 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<GuardBloc, GuardState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AttendanceMarked) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.type == 'in'
-                ? 'Check-in marked successfully'
-                : 'Check-out marked successfully'),
-            backgroundColor: AppTheme.success,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.type == 'in'
+                    ? 'Check-in marked successfully'
+                    : 'Check-out marked successfully',
+              ),
+              backgroundColor: AppTheme.success,
+            ),
+          );
           context.read<GuardBloc>().add(const LoadGuardAttendance());
         } else if (state is GuardError) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.message),
-            backgroundColor: AppTheme.error,
-          ));
+          if (await AppInternetCheck().hasInternetConnection()) {
+            AppSnackbar.show(
+              context: context,
+              message: "Can't load data now. Please try again later.",
+              type: SnackBarType.error,
+            );
+          } else {
+            AppInternetCheck.checkInternet(context: context);
+          }
           // Reload even on error to keep UI consistent
-          context.read<GuardBloc>().add(const LoadGuardAttendance());
+          // context.read<GuardBloc>().add(const LoadGuardAttendance());
         }
       },
       builder: (context, state) {
@@ -98,8 +108,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
         return Scaffold(
           body: RefreshIndicator(
-            onRefresh: () async =>
-                context.read<GuardBloc>().add(const LoadGuardAttendance()),
+            onRefresh: () async {
+              if (await AppInternetCheck().hasInternetConnection()) {
+                context.read<GuardBloc>().add(const LoadGuardAttendance());
+              } else {
+                AppInternetCheck.checkInternet(context: context);
+              }
+            },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
@@ -107,32 +122,39 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Quick Actions
-                  Text('Quick Actions',
-                      style: TextStyle(
-                          fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   SizedBox(height: 12.h),
                   Row(
                     children: [
-                      _quickAction(
-                        icon: Icons.directions_walk,
-                        label: 'Patrolling',
-                        color: AppTheme.primary,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  const GuardPatrollingScreen()),
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
+                      // _quickAction(
+                      //   icon: Icons.directions_walk,
+                      //   label: 'Patrolling',
+                      //   color: AppTheme.primary,
+                      //   onTap: () => Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //       builder: (_) => const GuardPatrollingScreen(),
+                      //     ),
+                      //   ),
+                      // ),
+                      // SizedBox(width: 16.w),
                       _quickAction(
                         icon: Icons.qr_code_scanner,
                         label: 'Scan QR',
                         color: AppTheme.success,
-                        onTap: () => ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(
-                                content: Text(
-                                    'Use Visitor Management > QR Scanner'))),
+                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Use Visitor Management > QR Scanner',
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -140,9 +162,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   SizedBox(height: 20.h),
 
                   // Today's Attendance
-                  Text("Today's Attendance",
-                      style: TextStyle(
-                          fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Today's Attendance",
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   SizedBox(height: 12.h),
                   Card(
                     child: Padding(
@@ -155,17 +181,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    _statItem('In Time',
-                                        _formatTime(today?['in_time'])),
-                                    _statItem('Out Time',
-                                        _formatTime(today?['out_time'])),
                                     _statItem(
-                                        'Status',
-                                        hasCheckedIn
-                                            ? (hasCheckedOut
-                                                ? 'Done'
-                                                : 'Active')
-                                            : 'Pending'),
+                                      'In Time',
+                                      _formatTime(today?['in_time']),
+                                    ),
+                                    _statItem(
+                                      'Out Time',
+                                      _formatTime(today?['out_time']),
+                                    ),
+                                    _statItem(
+                                      'Status',
+                                      hasCheckedIn
+                                          ? (hasCheckedOut ? 'Done' : 'Active')
+                                          : 'Pending',
+                                    ),
                                   ],
                                 ),
                                 SizedBox(height: 16.h),
@@ -175,14 +204,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     child: ElevatedButton.icon(
                                       onPressed: _markIn,
                                       style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppTheme.success,
-                                          minimumSize:
-                                              Size(double.infinity, 48.h)),
-                                      icon: const Icon(Icons.login,
-                                          color: Colors.white),
-                                      label: const Text('Mark Check-In',
-                                          style:
-                                              TextStyle(color: Colors.white)),
+                                        backgroundColor: AppTheme.success,
+                                        minimumSize: Size(
+                                          double.infinity,
+                                          48.h,
+                                        ),
+                                      ),
+                                      icon: const Icon(
+                                        Icons.login,
+                                        color: Colors.white,
+                                      ),
+                                      label: const Text(
+                                        'Mark Check-In',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   )
                                 else if (!hasCheckedOut)
@@ -191,37 +226,47 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     child: ElevatedButton.icon(
                                       onPressed: _markOut,
                                       style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppTheme.error,
-                                          minimumSize:
-                                              Size(double.infinity, 48.h)),
-                                      icon: const Icon(Icons.logout,
-                                          color: Colors.white),
-                                      label: const Text('Mark Check-Out',
-                                          style:
-                                              TextStyle(color: Colors.white)),
+                                        backgroundColor: AppTheme.error,
+                                        minimumSize: Size(
+                                          double.infinity,
+                                          48.h,
+                                        ),
+                                      ),
+                                      icon: const Icon(
+                                        Icons.logout,
+                                        color: Colors.white,
+                                      ),
+                                      label: const Text(
+                                        'Mark Check-Out',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   )
                                 else
                                   Container(
                                     padding: EdgeInsets.all(12.w),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.success
-                                          .withValues(alpha: 0.1),
-                                      borderRadius:
-                                          BorderRadius.circular(12.r),
+                                      color: AppTheme.success.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12.r),
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        const Icon(Icons.check_circle,
-                                            color: AppTheme.success),
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: AppTheme.success,
+                                        ),
                                         SizedBox(width: 8.w),
                                         const Text(
-                                            'Shift completed for today',
-                                            style: TextStyle(
-                                                color: AppTheme.success,
-                                                fontWeight: FontWeight.w600)),
+                                          'Shift completed for today',
+                                          style: TextStyle(
+                                            color: AppTheme.success,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -234,9 +279,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
                   // Shift Progress
                   if (hasCheckedIn && !hasCheckedOut) ...[
-                    Text('Shift Progress',
-                        style: TextStyle(
-                            fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Shift Progress',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     SizedBox(height: 12.h),
                     Card(
                       child: Padding(
@@ -245,18 +294,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           children: [
                             LinearProgressIndicator(
                               value: progress,
-                              backgroundColor:
-                                  AppTheme.onBackgroundLight.withValues(alpha: 0.2),
+                              backgroundColor: AppTheme.onBackgroundLight
+                                  .withValues(alpha: 0.2),
                               valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primary),
+                                AppTheme.primary,
+                              ),
                               minHeight: 8,
                             ),
                             SizedBox(height: 8.h),
                             Text(
                               '${(progress * 100).toStringAsFixed(0)}% of shift completed',
                               style: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: AppTheme.onBackgroundLight),
+                                fontSize: 13.sp,
+                                color: AppTheme.onBackgroundLight,
+                              ),
                             ),
                           ],
                         ),
@@ -266,9 +317,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ],
 
                   // Attendance History
-                  Text('Attendance History',
-                      style: TextStyle(
-                          fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Attendance History',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   SizedBox(height: 12.h),
 
                   if (isLoading)
@@ -278,9 +333,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       child: Padding(
                         padding: EdgeInsets.all(24.w),
                         child: Center(
-                          child: Text('No history available',
-                              style: TextStyle(
-                                  color: Colors.grey, fontSize: 14.sp)),
+                          child: Text(
+                            'No history available',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14.sp,
+                            ),
+                          ),
                         ),
                       ),
                     )
@@ -294,14 +353,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           3: FlexColumnWidth(1.5),
                         },
                         border: TableBorder.all(
-                          color:
-                              AppTheme.onBackgroundLight.withValues(alpha: 0.15),
+                          color: AppTheme.onBackgroundLight.withValues(
+                            alpha: 0.15,
+                          ),
                           width: 0.5,
                         ),
                         children: [
                           const TableRow(
-                            decoration:
-                                BoxDecoration(color: AppTheme.primary),
+                            decoration: BoxDecoration(color: AppTheme.primary),
                             children: [
                               _TableHeader('Date'),
                               _TableHeader('In'),
@@ -309,14 +368,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                               _TableHeader('Status'),
                             ],
                           ),
-                          ...history.map((r) => TableRow(
-                                children: [
-                                  _tableCell(_formatDate(r['date'])),
-                                  _tableCell(_formatTime(r['in_time'])),
-                                  _tableCell(_formatTime(r['out_time'])),
-                                  _tableCellStatus(r['status'] ?? 'present'),
-                                ],
-                              )),
+                          ...history.map(
+                            (r) => TableRow(
+                              children: [
+                                _tableCell(_formatDate(r['date'])),
+                                _tableCell(_formatTime(r['in_time'])),
+                                _tableCell(_formatTime(r['out_time'])),
+                                _tableCellStatus(r['status'] ?? 'present'),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -346,9 +407,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: [
                 BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4))
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
             child: Icon(icon, color: Colors.white, size: 28.sp),
@@ -363,13 +425,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Widget _statItem(String label, String value) {
     return Column(
       children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 12.sp, color: AppTheme.onBackgroundLight)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12.sp, color: AppTheme.onBackgroundLight),
+        ),
         SizedBox(height: 4.h),
-        Text(value,
-            style:
-                TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
@@ -383,9 +447,14 @@ class _TableHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8),
-      child: Text(text,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 }
@@ -416,8 +485,7 @@ Widget _tableCellStatus(String status) {
     padding: const EdgeInsets.all(8),
     child: Text(
       status == 'half_day' ? 'Half' : _cap(status),
-      style: TextStyle(
-          fontSize: 11, color: color, fontWeight: FontWeight.bold),
+      style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.bold),
     ),
   );
 }

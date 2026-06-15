@@ -64,6 +64,7 @@ class _AuthScreenState extends State<AuthScreen> {
           LoginRequested(
             phone: _phoneController.text,
             password: _passwordController.text,
+            role: AppConfig.selectedRole ?? 'resident',
           ),
         );
       } else {
@@ -249,20 +250,19 @@ class _AuthScreenState extends State<AuthScreen> {
                       context: context,
                       message: state.message,
                       type: SnackBarType.error,
-                      position: SnackBarPosition.top,
                     );
                   } else if (state is Authenticated) {
-                    // Navigate based on the selected role from AppConfig, not the user's role from database
-                    // This ensures navigation follows the role selected in role selection screen
-                    final selectedRole = AppConfig.selectedRole ?? 'resident';
-                    if (selectedRole == 'guard') {
+                    // Navigate based on the actual user role from the database
+                    final userRole = state.user.role;
+
+                    if (userRole == 'guard') {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
                           builder: (context) => const GuardMainScreen(),
                         ),
                         (route) => false,
                       );
-                    } else {
+                    } else if (userRole == 'resident') {
                       // Check if user is approved
                       if (state.user.isApproved == false) {
                         Navigator.of(context).pushAndRemoveUntil(
@@ -279,6 +279,13 @@ class _AuthScreenState extends State<AuthScreen> {
                           (route) => false,
                         );
                       }
+                    } else {
+                      // Fallback for other roles or if not explicitly handled
+                      AppSnackbar.show(
+                        context: context,
+                        message: 'Role not supported yet',
+                        type: SnackBarType.error,
+                      );
                     }
                   }
                 },
@@ -632,25 +639,26 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                         SizedBox(height: 20.h),
-                        Center(
-                          child: TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _isLogin = !_isLogin;
-                              });
-                            },
-                            child: Text(
-                              _isLogin
-                                  ? "Don't have an account? Sign up"
-                                  : 'Already have an account? Sign in',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                color: iconColor,
-                                fontWeight: FontWeight.bold,
+                        if (selectedRole != 'resident')
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isLogin = !_isLogin;
+                                });
+                              },
+                              child: Text(
+                                _isLogin
+                                    ? "Don't have an account? Sign up"
+                                    : 'Already have an account? Sign in',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  color: iconColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                         Center(
                           child: TextButton(
                             onPressed: () {

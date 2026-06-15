@@ -39,11 +39,15 @@ class UserRepository {
     await AppConfig.setToken(null);
   }
 
-  Future<User?> login(String phone, String password) async {
+  Future<User?> login(String phone, String password, {String? role}) async {
     try {
       final response = await _apiService.dio.post(
         '/auth/login',
-        data: {'phone': phone, 'password': password},
+        data: {
+          'phone': phone, 
+          'password': password,
+          if (role != null) 'role': role,
+        },
       );
 
       log("User Login Raw Response: ${response.data}");

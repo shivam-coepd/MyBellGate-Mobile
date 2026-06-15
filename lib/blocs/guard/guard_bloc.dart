@@ -10,8 +10,8 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   final GuardRepository _repository;
 
   GuardBloc({required GuardRepository repository})
-      : _repository = repository,
-        super(GuardInitial()) {
+    : _repository = repository,
+      super(GuardInitial()) {
     on<LoadVisitors>(_onLoadVisitors);
     on<LoadVisitorById>(_onLoadVisitorById);
     on<AddVisitor>(_onAddVisitor);
@@ -30,7 +30,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadVisitors(
-      LoadVisitors event, Emitter<GuardState> emit) async {
+    LoadVisitors event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final visitors = await _repository.getVisitors(
@@ -47,7 +49,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadVisitorById(
-      LoadVisitorById event, Emitter<GuardState> emit) async {
+    LoadVisitorById event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final visitor = await _repository.getVisitorById(event.id);
@@ -61,8 +65,7 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
     }
   }
 
-  Future<void> _onAddVisitor(
-      AddVisitor event, Emitter<GuardState> emit) async {
+  Future<void> _onAddVisitor(AddVisitor event, Emitter<GuardState> emit) async {
     emit(GuardLoading());
     try {
       final result = await _repository.addVisitor(
@@ -84,7 +87,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onUpdateVisitorStatus(
-      UpdateVisitorStatus event, Emitter<GuardState> emit) async {
+    UpdateVisitorStatus event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       await _repository.updateVisitorStatus(event.id, event.status);
@@ -95,7 +100,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadSecurityAlerts(
-      LoadSecurityAlerts event, Emitter<GuardState> emit) async {
+    LoadSecurityAlerts event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final alerts = await _repository.getSecurityAlerts(
@@ -112,7 +119,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onReportSecurityAlert(
-      ReportSecurityAlert event, Emitter<GuardState> emit) async {
+    ReportSecurityAlert event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final result = await _repository.reportSecurityAlert(
@@ -129,7 +138,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onUpdateAlertStatus(
-      UpdateAlertStatus event, Emitter<GuardState> emit) async {
+    UpdateAlertStatus event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       await _repository.updateAlertStatus(event.id, event.status);
@@ -140,7 +151,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadEmergencyContacts(
-      LoadEmergencyContacts event, Emitter<GuardState> emit) async {
+    LoadEmergencyContacts event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final contacts = await _repository.getEmergencyContacts(
@@ -155,7 +168,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadGuardDashboard(
-      LoadGuardDashboard event, Emitter<GuardState> emit) async {
+    LoadGuardDashboard event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final pendingVisitors = await _repository.getVisitors(
@@ -163,10 +178,12 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
         limit: 10,
       );
       final recentVisitors = await _repository.getVisitors(limit: 5);
-      emit(GuardDashboardLoaded(
-        pendingVisitors: pendingVisitors,
-        recentActivity: recentVisitors,
-      ));
+      emit(
+        GuardDashboardLoaded(
+          pendingVisitors: pendingVisitors,
+          recentActivity: recentVisitors,
+        ),
+      );
     } catch (e) {
       log('LoadGuardDashboard error: $e');
       emit(GuardError(e.toString().replaceFirst('Exception: ', '')));
@@ -174,7 +191,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadResidents(
-      LoadResidents event, Emitter<GuardState> emit) async {
+    LoadResidents event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final residents = await _repository.getResidents(
@@ -190,7 +209,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadVehicles(
-      LoadVehicles event, Emitter<GuardState> emit) async {
+    LoadVehicles event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final vehicles = await _repository.getVehicleEntries(
@@ -206,7 +227,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onAddVehicleEntry(
-      AddVehicleEntry event, Emitter<GuardState> emit) async {
+    AddVehicleEntry event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final result = await _repository.addVehicleEntry(
@@ -224,7 +247,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onUpdateVehicleEntryStatus(
-      UpdateVehicleEntryStatus event, Emitter<GuardState> emit) async {
+    UpdateVehicleEntryStatus event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       await _repository.updateVehicleEntryStatus(event.id, event.status);
@@ -235,14 +260,18 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onLoadGuardAttendance(
-      LoadGuardAttendance event, Emitter<GuardState> emit) async {
+    LoadGuardAttendance event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       final attendance = await _repository.getGuardAttendance();
-      emit(AttendanceLoaded(
-        todayRecord: attendance['today'],
-        history: List<Map<String, dynamic>>.from(attendance['history'] ?? []),
-      ));
+      emit(
+        AttendanceLoaded(
+          todayRecord: attendance['today'],
+          history: List<Map<String, dynamic>>.from(attendance['history'] ?? []),
+        ),
+      );
     } catch (e) {
       log('LoadGuardAttendance error: $e');
       emit(GuardError(e.toString().replaceFirst('Exception: ', '')));
@@ -250,7 +279,9 @@ class GuardBloc extends Bloc<GuardEvent, GuardState> {
   }
 
   Future<void> _onMarkAttendance(
-      MarkAttendance event, Emitter<GuardState> emit) async {
+    MarkAttendance event,
+    Emitter<GuardState> emit,
+  ) async {
     emit(GuardLoading());
     try {
       await _repository.markAttendance(event.type);

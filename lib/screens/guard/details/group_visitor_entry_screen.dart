@@ -131,10 +131,6 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
 
     for (final member in _members) {
       try {
-        await context.read<GuardBloc>().stream
-            .firstWhere((s) => s is! GuardLoading)
-            .timeout(const Duration(seconds: 15));
-
         if (!mounted) break;
         context.read<GuardBloc>().add(AddVisitor(
               name: member['name'],

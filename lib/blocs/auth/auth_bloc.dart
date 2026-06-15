@@ -41,7 +41,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      final user = await userRepository.login(event.phone, event.password);
+      final user = await userRepository.login(
+        event.phone, 
+        event.password,
+        role: event.role,
+      );
       log("User Login Response: $user");
       if (user != null) {
         emit(Authenticated(user: user));

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
+import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/models/ticket.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -72,7 +74,9 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (sCtx, sSet) => Container(
           padding: EdgeInsets.only(
-            left: 24.w, right: 24.w, top: 20.h,
+            left: 24.w,
+            right: 24.w,
+            top: 20.h,
             bottom: MediaQuery.of(sCtx).viewInsets.bottom + 24.h,
           ),
           decoration: BoxDecoration(
@@ -88,47 +92,87 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                 children: [
                   Center(
                     child: Container(
-                      width: 40.w, height: 4.h,
+                      width: 40.w,
+                      height: 4.h,
                       decoration: BoxDecoration(
-                        color: Colors.grey[400], borderRadius: BorderRadius.circular(2),
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
                   SizedBox(height: 20.h),
-                  Text('Raise a Ticket', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Raise a Ticket',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
                   SizedBox(height: 4.h),
-                  Text('Describe your issue and our team will get back to you',
-                      style: TextStyle(fontSize: 13, color: Colors.grey)),
+                  Text(
+                    'Describe your issue and our team will get back to you',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
                   SizedBox(height: 20.h),
                   TextFormField(
                     controller: titleCtrl,
-                    decoration: const InputDecoration(labelText: 'Subject', hintText: 'Brief summary of your issue'),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Subject',
+                      hintText: 'Brief summary of your issue',
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Required' : null,
                   ),
                   SizedBox(height: 16.h),
                   TextFormField(
                     controller: descCtrl,
-                    minLines: 4, maxLines: 8,
-                    decoration: const InputDecoration(labelText: 'Description', hintText: 'Provide details about your issue...'),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                    minLines: 4,
+                    maxLines: 8,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      hintText: 'Provide details about your issue...',
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Required' : null,
                   ),
                   SizedBox(height: 16.h),
-                  Text('Category', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Category',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   SizedBox(height: 8.h),
                   Wrap(
-                    spacing: 8.w, runSpacing: 8.h,
+                    spacing: 8.w,
+                    runSpacing: 8.h,
                     children: [
-                      for (final cat in ['general', 'maintenance', 'security', 'billing', 'other'])
+                      for (final cat in [
+                        'general',
+                        'maintenance',
+                        'security',
+                        'billing',
+                        'other',
+                      ])
                         ChoiceChip(
                           label: Text(cat[0].toUpperCase() + cat.substring(1)),
                           selected: category == cat,
-                          selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                          onSelected: (v) => v ? sSet(() => category = cat) : null,
+                          selectedColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.2,
+                          ),
+                          onSelected: (v) =>
+                              v ? sSet(() => category = cat) : null,
                         ),
                     ],
                   ),
                   SizedBox(height: 16.h),
-                  Text('Priority', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Priority',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   SizedBox(height: 8.h),
                   Wrap(
                     spacing: 8.w,
@@ -139,8 +183,11 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                           selected: priority == p,
                           selectedColor: p == 'urgent'
                               ? Colors.red.withValues(alpha: 0.2)
-                              : theme.colorScheme.primary.withValues(alpha: 0.2),
-                          onSelected: (v) => v ? sSet(() => priority = p) : null,
+                              : theme.colorScheme.primary.withValues(
+                                  alpha: 0.2,
+                                ),
+                          onSelected: (v) =>
+                              v ? sSet(() => priority = p) : null,
                         ),
                     ],
                   ),
@@ -150,14 +197,19 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                     child: ElevatedButton(
                       onPressed: () {
                         if (formKey.currentState!.validate()) {
-                          context.read<HelpdeskBloc>().add(CreateTicket(
-                            title: titleCtrl.text,
-                            description: descCtrl.text,
-                            category: category,
-                            priority: priority,
-                          ));
+                          context.read<HelpdeskBloc>().add(
+                            CreateTicket(
+                              title: titleCtrl.text,
+                              description: descCtrl.text,
+                              category: category,
+                              priority: priority,
+                            ),
+                          );
                           Navigator.pop(ctx);
-                          _showSnackBar('Ticket raised successfully!', bg: Colors.green);
+                          _showSnackBar(
+                            'Ticket raised successfully!',
+                            bg: Colors.green,
+                          );
                         }
                       },
                       child: const Text('Submit Ticket'),
@@ -175,61 +227,94 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Support & Feedback'),
-      ),
-      body: Column(
-        children: [
-          // Quick actions
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            child: Row(
-              children: [
-                _quickAction(theme, Icons.call_outlined, 'Call Us', _openCall),
-                SizedBox(width: 12.w),
-                _quickAction(theme, Icons.email_outlined, 'Email Us', _openEmail),
-                SizedBox(width: 12.w),
-                _quickAction(theme, Icons.add_comment_outlined, 'Raise Ticket', _showRaiseTicketSheet),
-              ],
-            ),
-          ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is! Authenticated) {
+          return const SizedBox.shrink(); // Or show loading/unauthenticated drawer
+        }
 
-          // Tabs
-          TabBar(
-            controller: _tabCtrl,
-            labelColor: theme.colorScheme.primary,
-            unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-            indicatorColor: theme.colorScheme.primary,
-            indicatorWeight: 3,
-            tabs: const [
-              Tab(text: 'FAQ'),
-              Tab(text: 'My Tickets'),
-              Tab(text: 'Feedback'),
+        final user = state.user;
+        final userRole = user.role;
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text('Support & Feedback'),
+          ),
+          body: Column(
+            children: [
+              // Quick actions
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                child: Row(
+                  children: [
+                    _quickAction(
+                      theme,
+                      Icons.call_outlined,
+                      'Call Us',
+                      _openCall,
+                    ),
+                    SizedBox(width: 12.w),
+                    _quickAction(
+                      theme,
+                      Icons.email_outlined,
+                      'Email Us',
+                      _openEmail,
+                    ),
+                    SizedBox(width: 12.w),
+                    if (userRole == 'resident')
+                      _quickAction(
+                        theme,
+                        Icons.add_comment_outlined,
+                        'Raise Ticket',
+                        _showRaiseTicketSheet,
+                      ),
+                  ],
+                ),
+              ),
+
+              // Tabs
+              TabBar(
+                controller: _tabCtrl,
+                labelColor: theme.colorScheme.primary,
+                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                indicatorColor: theme.colorScheme.primary,
+                indicatorWeight: 3,
+                tabs: [
+                  const Tab(text: 'FAQ'),
+                  // Tab(text: 'My Tickets'),
+                  if (userRole == 'resident') const Tab(text: 'My Tickets'),
+                  const Tab(text: 'Feedback'),
+                ],
+              ),
+
+              Expanded(
+                child: TabBarView(
+                  controller: _tabCtrl,
+                  children: [
+                    _buildFaqTab(theme),
+                    // _buildTicketsTab(theme),
+                    if (userRole == 'resident') _buildTicketsTab(theme),
+                    _buildFeedbackTab(theme),
+                  ],
+                ),
+              ),
             ],
           ),
-
-          Expanded(
-            child: TabBarView(
-              controller: _tabCtrl,
-              children: [
-                _buildFaqTab(theme),
-                _buildTicketsTab(theme),
-                _buildFeedbackTab(theme),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _quickAction(ThemeData theme, IconData icon, String label, VoidCallback onTap) {
+  Widget _quickAction(
+    ThemeData theme,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -246,7 +331,8 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                   color: theme.colorScheme.primary,
                 ),
               ),
@@ -261,35 +347,43 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
     final faqs = [
       {
         'q': 'How do I add a family member?',
-        'a': 'Go to Profile > Household section > tap "Add" > select "Family Member". Fill in the name, relationship, and phone number. You can also import from your contacts.',
+        'a':
+            'Go to Profile > Household section > tap "Add" > select "Family Member". Fill in the name, relationship, and phone number. You can also import from your contacts.',
       },
       {
         'q': 'How do I approve a visitor entry?',
-        'a': 'When a guard logs a visitor, you receive a push notification. Open the notification or go to Visitors screen to Approve or Deny the entry. You can also pre-approve expected visitors.',
+        'a':
+            'When a guard logs a visitor, you receive a push notification. Open the notification or go to Visitors screen to Approve or Deny the entry. You can also pre-approve expected visitors.',
       },
       {
         'q': 'How do I pay my society bills?',
-        'a': 'Go to Bills & Payments from the home screen. You will see all your invoices. Tap on any unpaid invoice and select a payment method (UPI, Card, or Net Banking) to pay.',
+        'a':
+            'Go to Bills & Payments from the home screen. You will see all your invoices. Tap on any unpaid invoice and select a payment method (UPI, Card, or Net Banking) to pay.',
       },
       {
         'q': 'What is Flash Approval?',
-        'a': 'Flash Approvals allow visitors to be auto-approved if you have pre-registered them. This speeds up entry at the gate without requiring manual confirmation each time.',
+        'a':
+            'Flash Approvals allow visitors to be auto-approved if you have pre-registered them. This speeds up entry at the gate without requiring manual confirmation each time.',
       },
       {
         'q': 'How do I book an amenity?',
-        'a': 'Go to Amenities from the home screen. Browse available amenities, select a date and time slot, and confirm your booking. Some amenities may require approval from the society admin.',
+        'a':
+            'Go to Amenities from the home screen. Browse available amenities, select a date and time slot, and confirm your booking. Some amenities may require approval from the society admin.',
       },
       {
         'q': 'How do I change my password?',
-        'a': 'Go to Profile > Security & Privacy > Change Password. Enter your current password and set a new strong password with at least 8 characters.',
+        'a':
+            'Go to Profile > Security & Privacy > Change Password. Enter your current password and set a new strong password with at least 8 characters.',
       },
       {
         'q': 'How do I raise a maintenance complaint?',
-        'a': 'Go to Support & Feedback > Raise Ticket. Select "Maintenance" category and describe your issue. Our team will respond within 24 hours.',
+        'a':
+            'Go to Support & Feedback > Raise Ticket. Select "Maintenance" category and describe your issue. Our team will respond within 24 hours.',
       },
       {
         'q': 'Can I add multiple properties?',
-        'a': 'Yes! Go to Profile > Manage Flats > Add New Property to register another flat or property in the same or different society.',
+        'a':
+            'Yes! Go to Profile > Manage Flats > Add New Property to register another flat or property in the same or different society.',
       },
     ];
 
@@ -304,12 +398,20 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
           childrenPadding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
           title: Text(
             faqs[i]['q']!,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           children: [
             Text(
               faqs[i]['a']!,
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant, height: 1.5),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -331,11 +433,16 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
         if (state is TicketsLoaded) {
           final tickets = state.tickets;
           if (tickets.isEmpty) {
-            return _emptyState(theme, Icons.confirmation_number_outlined,
-                'No tickets yet', 'Raise a ticket to get help from our support team');
+            return _emptyState(
+              theme,
+              Icons.confirmation_number_outlined,
+              'No tickets yet',
+              'Raise a ticket to get help from our support team',
+            );
           }
           return RefreshIndicator(
-            onRefresh: () async => ctx.read<HelpdeskBloc>().add(const LoadTickets()),
+            onRefresh: () async =>
+                ctx.read<HelpdeskBloc>().add(const LoadTickets()),
             child: ListView.builder(
               padding: EdgeInsets.all(16.w),
               itemCount: tickets.length,
@@ -353,15 +460,20 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                 Text(state.message, textAlign: TextAlign.center),
                 SizedBox(height: 12.h),
                 ElevatedButton(
-                  onPressed: () => ctx.read<HelpdeskBloc>().add(const LoadTickets()),
+                  onPressed: () =>
+                      ctx.read<HelpdeskBloc>().add(const LoadTickets()),
                   child: const Text('Retry'),
                 ),
               ],
             ),
           );
         }
-        return _emptyState(theme, Icons.confirmation_number_outlined,
-            'No tickets yet', 'Raise a ticket to get help from our support team');
+        return _emptyState(
+          theme,
+          Icons.confirmation_number_outlined,
+          'No tickets yet',
+          'Raise a ticket to get help from our support team',
+        );
       },
     );
   }
@@ -369,10 +481,17 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
   Widget _ticketCard(ThemeData theme, Ticket t) {
     Color statusColor;
     switch (t.status) {
-      case 'in_progress': statusColor = Colors.orange; break;
-      case 'resolved': statusColor = Colors.green; break;
-      case 'closed': statusColor = Colors.grey; break;
-      default: statusColor = Colors.blue;
+      case 'in_progress':
+        statusColor = Colors.orange;
+        break;
+      case 'resolved':
+        statusColor = Colors.green;
+        break;
+      case 'closed':
+        statusColor = Colors.grey;
+        break;
+      default:
+        statusColor = Colors.blue;
     }
 
     return Card(
@@ -388,7 +507,11 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                 Expanded(
                   child: Text(
                     t.title,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                 ),
                 Container(
@@ -399,7 +522,11 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                   ),
                   child: Text(
                     t.statusLabel,
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
+                    ),
                   ),
                 ),
               ],
@@ -407,8 +534,12 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             SizedBox(height: 6.h),
             Text(
               t.description,
-              maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             SizedBox(height: 8.h),
             Row(
@@ -423,7 +554,10 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                 if (t.createdAt != null)
                   Text(
                     _formatDate(t.createdAt!),
-                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
               ],
             ),
@@ -439,7 +573,13 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
       children: [
         Icon(icon, size: 13, color: theme.colorScheme.onSurfaceVariant),
         SizedBox(width: 3.w),
-        Text(value, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 11,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }
@@ -466,12 +606,24 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             Center(
               child: Column(
                 children: [
-                  Icon(Icons.rate_review_outlined, size: 48, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.rate_review_outlined,
+                    size: 48,
+                    color: theme.colorScheme.primary,
+                  ),
                   SizedBox(height: 8.h),
-                  Text('Rate Your Experience', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Rate Your Experience',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
                   SizedBox(height: 4.h),
-                  Text('Help us improve by sharing your feedback',
-                      style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Help us improve by sharing your feedback',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -479,35 +631,55 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) => GestureDetector(
-                  onTap: () => sSet(() => rating = i + 1),
-                  child: Icon(
-                    i < rating ? Icons.star : Icons.star_border,
-                    size: 36,
-                    color: i < rating ? Colors.amber : Colors.grey,
+                children: List.generate(
+                  5,
+                  (i) => GestureDetector(
+                    onTap: () => sSet(() => rating = i + 1),
+                    child: Icon(
+                      i < rating ? Icons.star : Icons.star_border,
+                      size: 36,
+                      color: i < rating ? Colors.amber : Colors.grey,
+                    ),
                   ),
-                )),
+                ),
               ),
             ),
             SizedBox(height: 24.h),
-            Text('Additional Feedback', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            Text(
+              'Additional Feedback',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
             SizedBox(height: 8.h),
             TextField(
               controller: feedbackCtrl,
-              minLines: 4, maxLines: 8,
+              minLines: 4,
+              maxLines: 8,
               decoration: InputDecoration(
                 hintText: 'Tell us what you like or what could be improved...',
                 filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
             SizedBox(height: 12.h),
-            Text('Quick Tags', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            Text(
+              'Quick Tags',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
             SizedBox(height: 8.h),
             Wrap(
-              spacing: 8.w, runSpacing: 8.h,
+              spacing: 8.w,
+              runSpacing: 8.h,
               children: [
-                for (final tag in ['Easy to use', 'Fast performance', 'Great design', 'Needs improvement', 'Bugs found'])
+                for (final tag in [
+                  'Easy to use',
+                  'Fast performance',
+                  'Great design',
+                  'Needs improvement',
+                  'Bugs found',
+                ])
                   ActionChip(
                     label: Text(tag),
                     onPressed: () {
@@ -522,10 +694,18 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: rating == 0 ? null : () {
-                  _showSnackBar('Thank you for your feedback!', bg: Colors.green);
-                  sSet(() { rating = 0; feedbackCtrl.clear(); });
-                },
+                onPressed: rating == 0
+                    ? null
+                    : () {
+                        _showSnackBar(
+                          'Thank you for your feedback!',
+                          bg: Colors.green,
+                        );
+                        sSet(() {
+                          rating = 0;
+                          feedbackCtrl.clear();
+                        });
+                      },
                 child: const Text('Submit Feedback'),
               ),
             ),
@@ -534,7 +714,10 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
               child: TextButton.icon(
                 onPressed: () => _showSnackBar('Thank you for rating us!'),
                 icon: Icon(Icons.star_border, color: theme.colorScheme.primary),
-                label: Text('Rate us on Play Store', style: TextStyle(color: theme.colorScheme.primary)),
+                label: Text(
+                  'Rate us on Play Store',
+                  style: TextStyle(color: theme.colorScheme.primary),
+                ),
               ),
             ),
           ],
@@ -543,19 +726,41 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
     );
   }
 
-  Widget _emptyState(ThemeData theme, IconData icon, String title, String subtitle) {
+  Widget _emptyState(
+    ThemeData theme,
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(40.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+            Icon(
+              icon,
+              size: 64,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
             SizedBox(height: 16.h),
-            Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
             SizedBox(height: 6.h),
-            Text(subtitle, textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),

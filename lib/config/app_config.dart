@@ -4,11 +4,19 @@ class AppConfig {
   static const String _keyOnboardingComplete = 'onboarding_complete';
   static const String _keyRememberDevice = 'remember_device';
   static const String _keySelectedRole = 'selected_role';
+  static const String _keyThemeMode = 'theme_mode';
 
   static late SharedPreferences _prefs;
 
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+  }
+
+  // Theme Mode
+  static String get themeMode => _prefs.getString(_keyThemeMode) ?? 'system';
+
+  static Future<void> setThemeMode(String value) async {
+    await _prefs.setString(_keyThemeMode, value);
   }
 
   // Onboarding

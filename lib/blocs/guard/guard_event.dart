@@ -141,11 +141,7 @@ class LoadResidents extends GuardEvent {
   final int page;
   final int limit;
 
-  const LoadResidents({
-    this.search,
-    this.page = 1,
-    this.limit = 50,
-  });
+  const LoadResidents({this.search, this.page = 1, this.limit = 50});
 
   @override
   List<Object?> get props => [search, page, limit];
@@ -156,11 +152,7 @@ class LoadVehicles extends GuardEvent {
   final int page;
   final int limit;
 
-  const LoadVehicles({
-    this.status,
-    this.page = 1,
-    this.limit = 50,
-  });
+  const LoadVehicles({this.status, this.page = 1, this.limit = 50});
 
   @override
   List<Object?> get props => [status, page, limit];
@@ -184,7 +176,13 @@ class AddVehicleEntry extends GuardEvent {
   });
 
   @override
-  List<Object?> get props => [vehicleType, vehicleNumber, driverName, driverPhone, purpose];
+  List<Object?> get props => [
+    vehicleType,
+    vehicleNumber,
+    driverName,
+    driverPhone,
+    purpose,
+  ];
 }
 
 class UpdateVehicleEntryStatus extends GuardEvent {

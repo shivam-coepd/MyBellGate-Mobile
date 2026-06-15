@@ -20,6 +20,7 @@ import 'package:mygate_coepd/screens/resident/add_new_property_screen.dart';
 import 'package:mygate_coepd/screens/resident/order_history_screen.dart';
 import 'package:mygate_coepd/screens/resident/property_details_screen.dart';
 import 'package:mygate_coepd/screens/resident/saved_payments_screen.dart';
+import 'package:mygate_coepd/blocs/theme/theme_cubit.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -269,6 +270,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   void _showDisplayModePicker() {
     final theme = Theme.of(context);
+    final currentMode = context.read<ThemeCubit>().state;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -313,7 +315,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                   letterSpacing: 0,
                 ),
               ),
+              trailing: currentMode == ThemeMode.light
+                  ? Icon(Icons.check, color: theme.primaryColor, size: 20)
+                  : null,
               onTap: () {
+                context.read<ThemeCubit>().updateTheme(ThemeMode.light);
                 Navigator.pop(context);
                 _showSnackBar('Light mode enabled');
               },
@@ -332,7 +338,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                   letterSpacing: 0,
                 ),
               ),
+              trailing: currentMode == ThemeMode.dark
+                  ? Icon(Icons.check, color: theme.primaryColor, size: 20)
+                  : null,
               onTap: () {
+                context.read<ThemeCubit>().updateTheme(ThemeMode.dark);
                 Navigator.pop(context);
                 _showSnackBar('Dark mode enabled');
               },
@@ -351,7 +361,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                   letterSpacing: 0,
                 ),
               ),
+              trailing: currentMode == ThemeMode.system
+                  ? Icon(Icons.check, color: theme.primaryColor, size: 20)
+                  : null,
               onTap: () {
+                context.read<ThemeCubit>().updateTheme(ThemeMode.system);
                 Navigator.pop(context);
                 _showSnackBar('System default mode enabled');
               },
@@ -530,6 +544,13 @@ class ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeMode = context.watch<ThemeCubit>().state;
+    String displayModeText = 'System Default';
+    if (themeMode == ThemeMode.light) {
+      displayModeText = 'Light';
+    } else if (themeMode == ThemeMode.dark) {
+      displayModeText = 'Dark';
+    }
     return BlocConsumer<ProfileBloc, ProfileState>(
       listener: (context, state) {
         if (state is ProfileLoaded) {
@@ -701,6 +722,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   child: _buildNavItem(
                     icon: Icons.dark_mode_outlined,
                     title: 'Display Mode',
+                    trailing: displayModeText,
                     onTap: _showDisplayModePicker,
                     theme: theme,
                   ),
