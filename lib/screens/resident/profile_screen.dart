@@ -378,24 +378,24 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showLogoutConfirmation() {
+    final authBloc = context.read<AuthBloc>();
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Logout'),
           content: const Text('Are you sure you want to logout?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                context.read<AuthBloc>().add(LogoutRequested());
-                Navigator.of(
-                  context,
-                ).pushNamedAndRemoveUntil('/auth', (route) => false);
+                final navigator = Navigator.of(dialogContext);
+                navigator.pop();
+                authBloc.add(LogoutRequested());
+                navigator.pushNamedAndRemoveUntil('/auth', (route) => false);
               },
               child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),

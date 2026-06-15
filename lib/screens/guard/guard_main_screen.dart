@@ -721,10 +721,11 @@ class _GuardDrawerState extends State<GuardDrawer>
 
   void _showLogoutConfirmation(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authBloc = context.read<AuthBloc>();
 
     showDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.r),
         ),
@@ -773,7 +774,7 @@ class _GuardDrawerState extends State<GuardDrawer>
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: isDark
                             ? Colors.white
@@ -801,11 +802,10 @@ class _GuardDrawerState extends State<GuardDrawer>
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
-                        context.read<AuthBloc>().add(LogoutRequested());
-                        Navigator.of(
-                          context,
-                        ).pushNamedAndRemoveUntil('/auth', (route) => false);
+                        final navigator = Navigator.of(dialogContext);
+                        navigator.pop();
+                        authBloc.add(LogoutRequested());
+                        navigator.pushNamedAndRemoveUntil('/auth', (route) => false);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
