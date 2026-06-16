@@ -389,7 +389,8 @@ class _GuardDashboardScreenState extends State<GuardDashboardScreen> {
                                         ),
                                         SizedBox(height: 15.h),
                                         const Text(
-                                          'No pending approvals',
+                                          'No pending approvals\nPull down to refresh',
+                                          textAlign: TextAlign.center,
                                           style: TextStyle(color: Colors.grey),
                                         ),
                                       ],

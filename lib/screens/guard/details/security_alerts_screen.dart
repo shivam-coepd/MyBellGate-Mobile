@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_internet_check.dart';
 
 class SecurityAlertsScreen extends StatefulWidget {
   const SecurityAlertsScreen({super.key});
@@ -367,7 +368,15 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                     ? const Center(child: CircularProgressIndicator())
                     : alerts.isEmpty
                         ? RefreshIndicator(
-                            onRefresh: () async => _loadAlerts(),
+                            onRefresh: () async {
+                              if (await AppInternetCheck().hasInternetConnection()) {
+                                _loadAlerts();
+                              } else {
+                                if (mounted) {
+                                  AppInternetCheck.checkInternet(context: context);
+                                }
+                              }
+                            },
                             child: ListView(
                               children: [
                                 SizedBox(height: 120.h),
@@ -391,7 +400,15 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                             ),
                           )
                         : RefreshIndicator(
-                            onRefresh: () async => _loadAlerts(),
+                            onRefresh: () async {
+                              if (await AppInternetCheck().hasInternetConnection()) {
+                                _loadAlerts();
+                              } else {
+                                if (mounted) {
+                                  AppInternetCheck.checkInternet(context: context);
+                                }
+                              }
+                            },
                             child: ListView.builder(
                               padding: EdgeInsets.all(16.w),
                               itemCount: alerts.length,

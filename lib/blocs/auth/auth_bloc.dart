@@ -17,6 +17,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LogoutRequested>(_onLogoutRequested);
     on<RoleSelected>(_onRoleSelected);
     on<OnboardingCompleted>(_onOnboardingCompleted);
+    on<UserUpdated>((event, emit) {
+      emit(Authenticated(user: event.user));
+    });
   }
 
   void _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {

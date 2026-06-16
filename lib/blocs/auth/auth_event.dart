@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:mygate_coepd/models/user.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
@@ -68,3 +69,11 @@ class RoleSelected extends AuthEvent {
 }
 
 class OnboardingCompleted extends AuthEvent {}
+
+class UserUpdated extends AuthEvent {
+  final User user;
+  const UserUpdated(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}

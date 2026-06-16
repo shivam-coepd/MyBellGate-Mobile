@@ -5,6 +5,7 @@ import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mygate_coepd/widgets/app_internet_check.dart';
 
 class EIntercomScreen extends StatefulWidget {
   const EIntercomScreen({super.key});
@@ -133,9 +134,17 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
                     ? const Center(child: CircularProgressIndicator())
                     : residents.isEmpty
                         ? RefreshIndicator(
-                            onRefresh: () async => context
-                                .read<GuardBloc>()
-                                .add(const LoadResidents(limit: 100)),
+                            onRefresh: () async {
+                              if (await AppInternetCheck().hasInternetConnection()) {
+                                if (context.mounted) {
+                                  context.read<GuardBloc>().add(const LoadResidents(limit: 100));
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  AppInternetCheck.checkInternet(context: context);
+                                }
+                              }
+                            },
                             child: ListView(
                               children: [
                                 SizedBox(height: 120.h),
@@ -158,9 +167,17 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
                             ),
                           )
                         : RefreshIndicator(
-                            onRefresh: () async => context
-                                .read<GuardBloc>()
-                                .add(const LoadResidents(limit: 100)),
+                            onRefresh: () async {
+                              if (await AppInternetCheck().hasInternetConnection()) {
+                                if (context.mounted) {
+                                  context.read<GuardBloc>().add(const LoadResidents(limit: 100));
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  AppInternetCheck.checkInternet(context: context);
+                                }
+                              }
+                            },
                             child: ListView.builder(
                               padding: EdgeInsets.all(16.w),
                               itemCount: residents.length,

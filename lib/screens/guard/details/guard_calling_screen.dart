@@ -4,6 +4,7 @@ import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mygate_coepd/widgets/app_internet_check.dart';
 
 class GuardCallingScreen extends StatefulWidget {
   const GuardCallingScreen({super.key});
@@ -108,11 +109,22 @@ class _GuardCallingScreenState extends State<GuardCallingScreen> {
                 ),
               ],
             ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            body: RefreshIndicator(
+              onRefresh: () async {
+                if (await AppInternetCheck().hasInternetConnection()) {
+                  if (mounted) setState(() {});
+                } else {
+                  if (context.mounted) {
+                    AppInternetCheck.checkInternet(context: context);
+                  }
+                }
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   // Active Guards
                   const Text(
                     'Active Guards',
@@ -325,16 +337,17 @@ class _GuardCallingScreenState extends State<GuardCallingScreen> {
                 ],
               ),
             ),
-          );
-        }
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
           ),
         );
-      },
-    );
-  }
+      }
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    },
+  );
+}
 
   Widget _buildQuickAction(IconData icon, String label, Color color, VoidCallback onTap) {
     return Column(

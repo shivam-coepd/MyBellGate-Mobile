@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_internet_check.dart';
 
 /// Vendor access is a "service" visitor type — integrates with the real visitors API.
 class VendorAccessScreen extends StatefulWidget {
@@ -253,9 +254,17 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
 
           if (vendors.isEmpty) {
             return RefreshIndicator(
-              onRefresh: () async => context
-                  .read<GuardBloc>()
-                  .add(const LoadVisitors(visitorType: 'service', limit: 50)),
+              onRefresh: () async {
+                if (await AppInternetCheck().hasInternetConnection()) {
+                  if (context.mounted) {
+                    context.read<GuardBloc>().add(const LoadVisitors(visitorType: 'service', limit: 50));
+                  }
+                } else {
+                  if (context.mounted) {
+                    AppInternetCheck.checkInternet(context: context);
+                  }
+                }
+              },
               child: ListView(
                 children: [
                   SizedBox(height: 120.h),
@@ -279,9 +288,17 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () async => context
-                .read<GuardBloc>()
-                .add(const LoadVisitors(visitorType: 'service', limit: 50)),
+            onRefresh: () async {
+              if (await AppInternetCheck().hasInternetConnection()) {
+                if (context.mounted) {
+                  context.read<GuardBloc>().add(const LoadVisitors(visitorType: 'service', limit: 50));
+                }
+              } else {
+                if (context.mounted) {
+                  AppInternetCheck.checkInternet(context: context);
+                }
+              }
+            },
             child: ListView.builder(
               padding: EdgeInsets.all(16.w),
               itemCount: vendors.length,

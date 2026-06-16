@@ -36,7 +36,7 @@ class _GuardMainScreenState extends State<GuardMainScreen>
     super.initState();
     _screens = [
       const GuardDashboardScreen(),
-      const GuardVisitorManagementScreen(),
+      const GuardVisitorManagementScreen(isBackButton: false),
       const AttendanceScreen(),
       const GuardProfileScreen(),
     ];
@@ -805,7 +805,10 @@ class _GuardDrawerState extends State<GuardDrawer>
                         final navigator = Navigator.of(dialogContext);
                         navigator.pop();
                         authBloc.add(LogoutRequested());
-                        navigator.pushNamedAndRemoveUntil('/auth', (route) => false);
+                        navigator.pushNamedAndRemoveUntil(
+                          '/auth',
+                          (route) => false,
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
@@ -1120,7 +1123,7 @@ class _GuardDrawerState extends State<GuardDrawer>
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        user.phone ?? 'ID: ${user.id ?? 'N/A'}',
+                        user.phone,
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.7),
                           fontSize: 13.sp,

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mygate_coepd/widgets/app_internet_check.dart';
 
 class UtilityVehicleTrackingScreen extends StatefulWidget {
   const UtilityVehicleTrackingScreen({super.key});
@@ -262,7 +263,15 @@ class _UtilityVehicleTrackingScreenState
 
           if (vehicles.isEmpty) {
             return RefreshIndicator(
-              onRefresh: () async => _load(),
+              onRefresh: () async {
+                if (await AppInternetCheck().hasInternetConnection()) {
+                  _load();
+                } else {
+                  if (context.mounted) {
+                    AppInternetCheck.checkInternet(context: context);
+                  }
+                }
+              },
               child: ListView(
                 children: [
                   SizedBox(height: 120.h),
@@ -288,7 +297,15 @@ class _UtilityVehicleTrackingScreenState
           }
 
           return RefreshIndicator(
-            onRefresh: () async => _load(),
+            onRefresh: () async {
+              if (await AppInternetCheck().hasInternetConnection()) {
+                _load();
+              } else {
+                if (context.mounted) {
+                  AppInternetCheck.checkInternet(context: context);
+                }
+              }
+            },
             child: ListView.builder(
               padding: EdgeInsets.all(16.w),
               itemCount: vehicles.length,
