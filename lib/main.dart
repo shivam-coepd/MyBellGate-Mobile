@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:mygate_coepd/config/app_config.dart';
+import 'package:mygate_coepd/firebase_options.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_screen.dart';
 import 'package:mygate_coepd/screens/resident/visitor_management_screen.dart';
@@ -43,6 +45,8 @@ import 'package:mygate_coepd/blocs/theme/theme_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   bool hasShownError = false;
 
@@ -194,9 +198,7 @@ class _MyGateBellState extends State<MyGateBell> with WidgetsBindingObserver {
               create: (context) =>
                   GuardBloc(repository: context.read<GuardRepository>()),
             ),
-            BlocProvider<ThemeCubit>(
-              create: (context) => ThemeCubit(),
-            ),
+            BlocProvider<ThemeCubit>(create: (context) => ThemeCubit()),
           ],
           child: BlocBuilder<ThemeCubit, ThemeMode>(
             builder: (context, themeMode) {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1076167782513",
+    "project_id": "mygatebell",
+    "storage_bucket": "mygatebell.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1076167782513:android:00952d26c75ed5f0812bd0",
+        "android_client_info": {
+          "package_name": "com.mygatebell.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBf6akvTapEHAHKbgg9IUHKN1FV1HQ63mQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
