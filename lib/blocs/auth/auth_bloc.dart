@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/config/app_config.dart';
+import 'package:mygate_coepd/services/fcm_service.dart';
 import 'package:mygate_coepd/blocs/auth/auth_event.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 
@@ -51,6 +52,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       log("User Login Response: $user");
       if (user != null) {
+        // Register FCM token
+        try {
+          await FcmService().registerDeviceToken();
+        } catch (e) {
+          log("Failed to register FCM token: $e");
+        }
         emit(Authenticated(user: user));
       } else {
         emit(AuthError('Login failed'));
@@ -77,6 +84,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
       if (user != null) {
+        // Register FCM token
+        try {
+          await FcmService().registerDeviceToken();
+        } catch (e) {
+          log("Failed to register FCM token: $e");
+        }
         emit(Authenticated(user: user));
       } else {
         emit(AuthError('Registration failed'));
@@ -101,6 +114,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    try {
+      await FcmService().unregisterDeviceToken();
+    } catch (e) {
+      log("Failed to unregister FCM token: $e");
+    }
     await userRepository.logout();
     // Clear selected role if remember device is disabled
     if (!AppConfig.rememberDevice) {

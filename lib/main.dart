@@ -6,6 +6,7 @@ import 'package:mygate_coepd/app.dart';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/firebase_options.dart';
 import 'package:mygate_coepd/models/user.dart';
+import 'package:mygate_coepd/services/fcm_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +60,14 @@ void main() async {
   // Initialize app configuration
   await AppConfig.init();
 
-  // runApp(const MyGateBell());
+  // Initialize FCM
+  try {
+    await FcmService().init();
+  } catch (e) {
+    print('Failed to initialize FCM: $e');
+    print('Failed to initialize FCM: ${e.toString()}');
+  }
+
   // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
   Future.wait([
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),

@@ -15,6 +15,7 @@ import 'package:mygate_coepd/widgets/app_internet_check.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:mygate_coepd/screens/guard/guard_add_visitor_bottom_sheet.dart';
 
 class GuardVisitorManagementScreen extends StatefulWidget {
   final bool isBackButton;
@@ -254,184 +255,27 @@ class _VisitorManagementScreenState
   }
 
   void _showAddVisitorForm({Map<String, dynamic>? prefill}) {
-    final nameCtrl = TextEditingController(text: prefill?['name'] ?? '');
-    final phoneCtrl = TextEditingController(text: prefill?['phone'] ?? '');
-    final purposeCtrl = TextEditingController(text: prefill?['purpose'] ?? '');
-    final residentIdCtrl = TextEditingController();
-    String visitorType = 'guest';
-    final formKey = GlobalKey<FormState>();
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (ctx) => BlocListener<GuardBloc, GuardState>(
-        listener: (ctx, state) {
-          if (state is VisitorAdded) {
-            Navigator.pop(ctx);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Visitor added successfully'),
-                backgroundColor: AppTheme.success,
-              ),
-            );
-            _loadVisitors();
-          } else if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.error,
-              ),
-            );
-          }
-        },
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 20.w,
-            right: 20.w,
-            top: 20.h,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20.h,
-          ),
-          child: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Add Visitor',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  TextFormField(
-                    controller: nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Visitor Name *',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Required' : null,
-                  ),
-                  SizedBox(height: 12.h),
-                  TextFormField(
-                    controller: phoneCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone Number *',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.phone,
-                    validator: (v) => (v == null || v.length < 10)
-                        ? 'Enter valid phone'
-                        : null,
-                  ),
-                  SizedBox(height: 12.h),
-                  TextFormField(
-                    controller: purposeCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Purpose *',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Required' : null,
-                  ),
-                  SizedBox(height: 12.h),
-                  TextFormField(
-                    controller: residentIdCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Resident ID *',
-                      border: OutlineInputBorder(),
-                      hintText: 'Enter resident ID',
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (v) => (v == null || v.isEmpty)
-                        ? 'Resident ID is required'
-                        : null,
-                  ),
-                  SizedBox(height: 12.h),
-                  StatefulBuilder(
-                    builder: (ctx, setStateSB) =>
-                        DropdownButtonFormField<String>(
-                          initialValue: visitorType,
-                          decoration: const InputDecoration(
-                            labelText: 'Visitor Type',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'guest',
-                              child: Text('Guest'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'delivery',
-                              child: Text('Delivery'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'service',
-                              child: Text('Service'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'other',
-                              child: Text('Other'),
-                            ),
-                          ],
-                          onChanged: (v) =>
-                              setStateSB(() => visitorType = v ?? 'guest'),
-                        ),
-                  ),
-                  SizedBox(height: 20.h),
-                  BlocBuilder<GuardBloc, GuardState>(
-                    builder: (ctx, state) {
-                      return ElevatedButton(
-                        onPressed: state is GuardLoading
-                            ? null
-                            : () {
-                                if (formKey.currentState!.validate()) {
-                                  ctx.read<GuardBloc>().add(
-                                    AddVisitor(
-                                      name: nameCtrl.text.trim(),
-                                      phone: phoneCtrl.text.trim(),
-                                      purpose: purposeCtrl.text.trim(),
-                                      visitorType: visitorType,
-                                      residentId: int.tryParse(
-                                        residentIdCtrl.text.trim(),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          minimumSize: Size(double.infinity, 50.h),
-                        ),
-                        child: state is GuardLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Add Visitor',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
         ),
+        child: GuardAddVisitorBottomSheet(prefill: prefill),
       ),
-    );
+    ).then((result) {
+      if (result != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Visitor added successfully'),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+        _loadVisitors();
+      }
+    });
   }
 
   @override
