@@ -36,6 +36,7 @@ class HouseholdRepository {
   Future<void> addFamilyMember({
     required String name,
     required String relation,
+    String? memberType,
     String? phone,
     String? imageUrl,
   }) async {
@@ -44,6 +45,7 @@ class HouseholdRepository {
         'name': name,
         'relation': relation,
       };
+      if (memberType != null && memberType.isNotEmpty) data['member_type'] = memberType;
       if (phone != null && phone.isNotEmpty) data['phone'] = phone;
       if (imageUrl != null && imageUrl.isNotEmpty) data['image_url'] = imageUrl;
 
@@ -77,6 +79,7 @@ class HouseholdRepository {
     required String id,
     String? name,
     String? relation,
+    String? memberType,
     String? phone,
     String? imageUrl,
   }) async {
@@ -84,6 +87,7 @@ class HouseholdRepository {
       final data = <String, dynamic>{};
       if (name != null && name.isNotEmpty) data['name'] = name;
       if (relation != null && relation.isNotEmpty) data['relation'] = relation;
+      if (memberType != null && memberType.isNotEmpty) data['member_type'] = memberType;
       if (phone != null) data['phone'] = phone;
       if (imageUrl != null) data['image_url'] = imageUrl;
 
@@ -160,6 +164,7 @@ class HouseholdRepository {
     String? parkingSpot,
     int? isElectric,
     int? isParked,
+    String? imageUrl,
   }) async {
     try {
       final data = <String, dynamic>{
@@ -174,6 +179,7 @@ class HouseholdRepository {
       }
       if (isElectric != null) data['is_electric'] = isElectric;
       if (isParked != null) data['is_parked'] = isParked;
+      if (imageUrl != null) data['image_url'] = imageUrl;
 
       final response = await _apiService.dio.post('/vehicles', data: data);
       log('addVehicle: ${response.data}');
@@ -210,6 +216,7 @@ class HouseholdRepository {
     String? parkingSpot,
     int? isElectric,
     int? isParked,
+    String? imageUrl,
   }) async {
     try {
       final data = <String, dynamic>{};
@@ -220,6 +227,7 @@ class HouseholdRepository {
       if (parkingSpot != null) data['parking_spot'] = parkingSpot;
       if (isElectric != null) data['is_electric'] = isElectric;
       if (isParked != null) data['is_parked'] = isParked;
+      if (imageUrl != null) data['image_url'] = imageUrl;
 
       if (data.isEmpty) {
         throw Exception('No fields to update');
@@ -385,6 +393,7 @@ class HouseholdRepository {
     required String serviceType,
     String? daysOfWeek,
     String? visitTime,
+    String? imageUrl,
   }) async {
     try {
       final data = <String, dynamic>{
@@ -396,6 +405,7 @@ class HouseholdRepository {
       if (visitTime != null && visitTime.isNotEmpty) {
         data['visit_time'] = visitTime;
       }
+      if (imageUrl != null) data['image_url'] = imageUrl;
 
       final response = await _apiService.dio.post('/visitors', data: data);
       log('addDailyHelper: ${response.data}');
@@ -452,13 +462,15 @@ class HouseholdRepository {
     String? phone,
     String? purpose,
     String? visitTime,
+    String? imageUrl,
   }) async {
     try {
       final data = <String, dynamic>{};
       if (name != null && name.isNotEmpty) data['name'] = name;
       if (phone != null && phone.isNotEmpty) data['phone'] = phone;
-      if (purpose != null && purpose.isNotEmpty) data['purpose'] = purpose;
+      if (purpose != null) data['purpose'] = purpose;
       if (visitTime != null) data['visit_time'] = visitTime;
+      if (imageUrl != null) data['image_url'] = imageUrl;
 
       if (data.isEmpty) {
         throw Exception('No fields to update');

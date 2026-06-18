@@ -132,13 +132,14 @@ class FamilyMemberAdapter extends TypeAdapter<FamilyMember> {
       profileImage: fields[3] as String?,
       phone: fields[4] as String?,
       isActive: fields[5] as bool,
+      memberType: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, FamilyMember obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -150,7 +151,9 @@ class FamilyMemberAdapter extends TypeAdapter<FamilyMember> {
       ..writeByte(4)
       ..write(obj.phone)
       ..writeByte(5)
-      ..write(obj.isActive);
+      ..write(obj.isActive)
+      ..writeByte(6)
+      ..write(obj.memberType);
   }
 
   @override
@@ -184,13 +187,15 @@ class ResidentVehicleAdapter extends TypeAdapter<ResidentVehicle> {
       parkingSpot: fields[6] as String?,
       vehicleTypeId: fields[7] as int,
       isElectric: fields[8] as int?,
+      isParked: fields[9] as int?,
+      imageUrl: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ResidentVehicle obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -208,7 +213,11 @@ class ResidentVehicleAdapter extends TypeAdapter<ResidentVehicle> {
       ..writeByte(7)
       ..write(obj.vehicleTypeId)
       ..writeByte(8)
-      ..write(obj.isElectric);
+      ..write(obj.isElectric)
+      ..writeByte(9)
+      ..write(obj.isParked)
+      ..writeByte(10)
+      ..write(obj.imageUrl);
   }
 
   @override

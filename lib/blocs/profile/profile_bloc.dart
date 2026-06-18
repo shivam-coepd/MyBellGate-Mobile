@@ -93,6 +93,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       await householdRepository.addFamilyMember(
         name: event.name,
         relation: event.relation,
+        memberType: event.memberType,
         phone: event.phone,
         imageUrl: event.imageUrl,
       );
@@ -155,6 +156,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         id: event.id,
         name: event.name,
         relation: event.relation,
+        memberType: event.memberType,
         phone: event.phone,
         imageUrl: event.imageUrl,
       );
@@ -196,6 +198,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         parkingSpot: event.parkingSpot,
         isElectric: event.isElectric,
         isParked: event.isParked,
+        imageUrl: event.imageUrl,
       );
       final refreshed = await userRepository.getProfile();
       if (refreshed != null) {
@@ -260,6 +263,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         parkingSpot: event.parkingSpot,
         isElectric: event.isElectric,
         isParked: event.isParked,
+        imageUrl: event.imageUrl,
       );
       final refreshed = await userRepository.getProfile();
       if (refreshed != null) {
@@ -399,6 +403,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         phone: event.phone,
         serviceType: event.serviceType,
         visitTime: event.visitTime,
+        imageUrl: event.imageUrl,
       );
       // Daily helpers don't appear in the profile endpoint, so just restore state
       if (currentUser != null) {
@@ -456,6 +461,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         phone: event.phone,
         purpose: event.serviceType,
         visitTime: event.visitTime,
+        imageUrl: event.imageUrl,
       );
       if (currentUser != null) {
         emit(HouseholdUpdateSuccess(

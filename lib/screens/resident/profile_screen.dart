@@ -180,12 +180,12 @@ class ProfileScreenState extends State<ProfileScreen> {
   ) {
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.all(10.w),
         decoration: BoxDecoration(
           color: theme.primaryColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
-        child: Icon(icon, color: theme.colorScheme.onSurface),
+        child: Icon(icon, color: theme.colorScheme.primary),
       ),
       title: Text(
         title,
@@ -1436,6 +1436,20 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
   bool _isUploadingImage = false;
   final _s3 = S3UploadService();
 
+  String _selectedRelation = 'Spouse';
+  final List<String> _relationships = [
+    'Spouse',
+    'Son',
+    'Daughter',
+    'Father',
+    'Mother',
+    'Brother',
+    'Sister',
+    'Grandfather',
+    'Grandmother',
+    'Other',
+  ];
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -1532,7 +1546,7 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
       return;
     }
     final cleanPhone = _mobileController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cleanPhone.length != 10) {
+    if (cleanPhone.length != 10 && cleanPhone.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a valid 10-digit mobile number'),
@@ -1540,13 +1554,14 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
       );
       return;
     }
-    final formattedPhone = '+91$cleanPhone';
-    final relation = _selectedTab == 0 ? 'Adult' : 'Kid';
+    final formattedPhone = cleanPhone.isNotEmpty ? '+91$cleanPhone' : null;
+    final memberType = _selectedTab == 0 ? 'Adult' : 'Kid';
 
     context.read<ProfileBloc>().add(
       AddFamilyMember(
         name: _nameController.text.trim(),
-        relation: relation,
+        relation: _selectedRelation,
+        memberType: memberType,
         phone: formattedPhone,
         imageUrl: _uploadedImageUrl,
       ),
@@ -1796,6 +1811,34 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: _selectedRelation,
+                      items: _relationships.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value, style: TextStyle(fontSize: 16.sp)),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          if (newValue != null) _selectedRelation = newValue;
+                        });
+                      },
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: 24.h),

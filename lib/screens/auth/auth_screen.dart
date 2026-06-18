@@ -240,12 +240,6 @@ class _AuthScreenState extends State<AuthScreen> {
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
                   if (state is AuthError) {
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //   SnackBar(
-                    //     content: Text(state.message),
-                    //     backgroundColor: AppTheme.error,
-                    //   ),
-                    // );
                     AppSnackbar.show(
                       context: context,
                       message: state.message,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -16,41 +17,13 @@ class _NotificationSettingsScreenState
 
   // Category toggles: push / email / sms
   final Map<String, Map<String, bool>> _categorySettings = {
-    'security_alerts': {
-      'push': true,
-      'email': true,
-      'sms': false,
-    },
-    'visitor_arrivals': {
-      'push': true,
-      'email': false,
-      'sms': false,
-    },
-    'notices_announcements': {
-      'push': true,
-      'email': true,
-      'sms': false,
-    },
-    'billing_payments': {
-      'push': true,
-      'email': true,
-      'sms': true,
-    },
-    'community_updates': {
-      'push': true,
-      'email': false,
-      'sms': false,
-    },
-    'maintenance_alerts': {
-      'push': true,
-      'email': true,
-      'sms': false,
-    },
-    'delivery_otp': {
-      'push': true,
-      'email': false,
-      'sms': true,
-    },
+    'security_alerts': {'push': true, 'email': true, 'sms': false},
+    'visitor_arrivals': {'push': true, 'email': false, 'sms': false},
+    'notices_announcements': {'push': true, 'email': true, 'sms': false},
+    'billing_payments': {'push': true, 'email': true, 'sms': true},
+    'community_updates': {'push': true, 'email': false, 'sms': false},
+    'maintenance_alerts': {'push': true, 'email': true, 'sms': false},
+    'delivery_otp': {'push': true, 'email': false, 'sms': true},
   };
 
   // Quiet hours
@@ -105,12 +78,18 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _pickQuietStartTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _quietStart);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _quietStart,
+    );
     if (picked != null) setState(() => _quietStart = picked);
   }
 
   Future<void> _pickQuietEndTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _quietEnd);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _quietEnd,
+    );
     if (picked != null) setState(() => _quietEnd = picked);
   }
 
@@ -121,7 +100,10 @@ class _NotificationSettingsScreenState
   }
 
   void _saveSettings() {
-    _showSnackBar('Notification preferences saved successfully');
+    AppSnackbar.show(
+      context: context,
+      message: 'Notification preferences saved successfully',
+    );
     Navigator.pop(context);
   }
 
@@ -210,13 +192,18 @@ class _NotificationSettingsScreenState
                 theme,
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -251,7 +238,12 @@ class _NotificationSettingsScreenState
                       ],
                     ),
                   ),
-                  Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                  Divider(
+                    height: 0,
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.3,
+                    ),
+                  ),
                   Row(
                     children: [
                       _buildChannelChip(theme, 'Push', settings['push']!, (v) {
@@ -259,7 +251,9 @@ class _NotificationSettingsScreenState
                           setState(() => settings['push'] = v);
                         }
                       }),
-                      _buildChannelChip(theme, 'Email', settings['email']!, (v) {
+                      _buildChannelChip(theme, 'Email', settings['email']!, (
+                        v,
+                      ) {
                         if (_allNotificationsEnabled) {
                           setState(() => settings['email'] = v);
                         }
@@ -312,9 +306,17 @@ class _NotificationSettingsScreenState
                   onChanged: (v) => setState(() => _quietHoursEnabled = v),
                 ),
                 if (_quietHoursEnabled) ...[
-                  Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                  Divider(
+                    height: 0,
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.3,
+                    ),
+                  ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -324,7 +326,11 @@ class _NotificationSettingsScreenState
                           _formatTime(_quietStart),
                           _pickQuietStartTime,
                         ),
-                        Icon(Icons.arrow_forward, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                        Icon(
+                          Icons.arrow_forward,
+                          size: 18,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                         _buildTimePicker(
                           theme,
                           'To',
@@ -355,21 +361,40 @@ class _NotificationSettingsScreenState
               theme,
               children: [
                 SwitchListTile(
-                  title: Text('Notification Sound', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                  title: Text(
+                    'Notification Sound',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
                   value: _soundEnabled,
                   activeThumbColor: theme.colorScheme.primary,
                   onChanged: (v) => setState(() => _soundEnabled = v),
                 ),
-                Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
                 SwitchListTile(
-                  title: Text('Vibration', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                  title: Text(
+                    'Vibration',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
                   value: _vibrationEnabled,
                   activeThumbColor: theme.colorScheme.primary,
                   onChanged: (v) => setState(() => _vibrationEnabled = v),
                 ),
-                Divider(height: 0, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                Divider(
+                  height: 0,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
                 SwitchListTile(
-                  title: Text('Badge Count', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                  title: Text(
+                    'Badge Count',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
                   value: _badgeCountEnabled,
                   activeColor: theme.colorScheme.primary,
                   onChanged: (v) => setState(() => _badgeCountEnabled = v),
@@ -392,7 +417,10 @@ class _NotificationSettingsScreenState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Save Preferences', style: TextStyle(fontSize: 16)),
+                  child: const Text(
+                    'Save Preferences',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ),
@@ -445,7 +473,9 @@ class _NotificationSettingsScreenState
               Icon(
                 value ? Icons.check_circle : Icons.check_circle_outline,
                 size: 14,
-                color: value ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                color: value
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
               ),
               SizedBox(width: 4.w),
               Text(
@@ -453,7 +483,9 @@ class _NotificationSettingsScreenState
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: value ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                  color: value
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -491,7 +523,11 @@ class _NotificationSettingsScreenState
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.access_time, size: 16, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
                 SizedBox(width: 8.w),
                 Text(
                   value,

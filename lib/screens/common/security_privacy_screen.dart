@@ -161,10 +161,6 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                           }
 
                           if (mounted) {
-                            // _showSnackBar(
-                            //   'Password changed successfully',
-                            //   color: Colors.green,
-                            // );
                             AppSnackbar.show(
                               context: context,
                               message: 'Password changed successfully',
@@ -176,7 +172,6 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                             Navigator.pop(ctx); // dismiss loading
                           }
                           if (mounted) {
-                            // _showSnackBar(e.toString().replaceAll('Exception: ', ''), color: Colors.red);
                             AppSnackbar.show(
                               context: context,
                               message: e.toString().replaceAll(
@@ -288,9 +283,10 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                     if (formKey.currentState!.validate()) {
                       Navigator.pop(ctx);
                       setState(() => _pinLockEnabled = true);
-                      _showSnackBar(
-                        'PIN lock set successfully',
-                        color: Colors.green,
+                      AppSnackbar.show(
+                        context: context,
+                        message: 'PIN lock set successfully',
+                        type: SnackBarType.success,
                       );
                     }
                   },
@@ -341,8 +337,11 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              _showSnackBar(
-                'Account deletion request submitted. You will receive a confirmation email.',
+              AppSnackbar.show(
+                context: context,
+                message:
+                    'Account deletion request submitted. You will receive a confirmation email.',
+                type: SnackBarType.success,
               );
             },
             child: const Text(
@@ -618,33 +617,6 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                     setState(() => _twoFactorEnabled = v);
                     _showSnackBar('2FA ${v ? "enabled" : "disabled"}');
                   },
-                ),
-              ],
-            ),
-
-            // ── Sessions ─────────────────────────────────────────────────
-            _sectionHeader(theme, 'SESSIONS'),
-            _card(
-              theme,
-              children: [
-                ListTile(
-                  leading: Icon(
-                    Icons.devices_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Active Sessions',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    '2 devices currently logged in',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  trailing: Icon(
-                    Icons.chevron_right,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  onTap: _showActiveSessions,
                 ),
               ],
             ),

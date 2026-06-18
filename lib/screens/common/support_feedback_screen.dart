@@ -282,6 +282,7 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                 labelColor: theme.colorScheme.primary,
                 unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                 indicatorColor: theme.colorScheme.primary,
+                dividerColor: theme.colorScheme.primary,
                 indicatorWeight: 3,
                 tabs: [
                   const Tab(text: 'FAQ'),
@@ -390,30 +391,40 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
       itemCount: faqs.length,
-      itemBuilder: (ctx, i) => Card(
+      itemBuilder: (ctx, i) => Container(
         margin: EdgeInsets.only(bottom: 8.h),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
-          childrenPadding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
-          title: Text(
-            faqs[i]['q']!,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: theme.colorScheme.onSurface,
-            ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: ExpansionTileTheme(
+          data: const ExpansionTileThemeData(
+            shape: Border(),
+            collapsedShape: Border(),
           ),
-          children: [
-            Text(
-              faqs[i]['a']!,
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
+            childrenPadding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
+            title: Text(
+              faqs[i]['q']!,
               style: TextStyle(
-                fontSize: 13,
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.5,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
               ),
             ),
-          ],
+            children: [
+              Text(
+                faqs[i]['a']!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -10,6 +10,10 @@ import 'package:mygate_coepd/repositories/household_repository.dart';
 import 'package:mygate_coepd/screens/resident/edit_profile_screen.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:mygate_coepd/services/s3_upload_service.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ProfileDetailsScreen extends StatefulWidget {
@@ -194,14 +198,16 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
           hintText: hint,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: Theme.of(context).scaffoldBackgroundColor,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
@@ -237,14 +243,16 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
           labelText: label,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: Theme.of(context).scaffoldBackgroundColor,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
@@ -288,6 +296,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
     final nameCtrl = TextEditingController(text: member?.name ?? '');
     final phoneCtrl = TextEditingController(text: member?.phone ?? '');
     String relation = member?.relationship ?? 'Spouse';
+    String memberType = member?.memberType ?? 'Adult';
+    String? uploadedImageUrl = member?.profileImage;
+    bool isUploadingImage = false;
+    final s3 = S3UploadService();
 
     final relationships = [
       'Spouse',
@@ -343,6 +355,86 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     ),
                   ),
                   SizedBox(height: 24.h),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final image = await picker.pickImage(
+                          source: ImageSource.gallery,
+                          imageQuality: 85,
+                        );
+                        if (image == null) return;
+                        setSheetState(() {
+                          isUploadingImage = true;
+                          uploadedImageUrl = null;
+                        });
+                        try {
+                          final url = await s3.uploadImage(
+                            File(image.path),
+                            folder: S3UploadService.folderProfiles,
+                          );
+                          setSheetState(() => uploadedImageUrl = url);
+                        } catch (e) {
+                          if (mounted) {
+                            AppSnackbar.show(
+                              context: context,
+                              message: 'Failed: $e',
+                              type: SnackBarType.error,
+                            );
+                          }
+                        } finally {
+                          setSheetState(() => isUploadingImage = false);
+                        }
+                      },
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 100.w,
+                            height: 100.w,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                              image: uploadedImageUrl != null
+                                  ? DecorationImage(
+                                      image: NetworkImage(uploadedImageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: uploadedImageUrl == null
+                                ? Icon(
+                                    Icons.camera_alt,
+                                    size: 40,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  )
+                                : null,
+                          ),
+                          if (isUploadingImage)
+                            SizedBox(
+                              width: 20.w,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  _buildDropdownField<String>(
+                    value: memberType,
+                    label: 'Member Type *',
+                    prefixIcon: Icons.person_search,
+                    items: ['Adult', 'Kid']
+                        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                        .toList(),
+                    onChanged: (v) =>
+                        setSheetState(() => memberType = v ?? 'Adult'),
+                  ),
                   _buildInputField(
                     controller: nameCtrl,
                     label: 'Full Name *',
@@ -387,7 +479,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                             id: member.id,
                             name: nameCtrl.text.trim(),
                             relation: relation,
+                            memberType: memberType,
                             phone: phoneCtrl.text.trim(),
+                            imageUrl: uploadedImageUrl,
                           ),
                         );
                       } else {
@@ -395,9 +489,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                           AddFamilyMember(
                             name: nameCtrl.text.trim(),
                             relation: relation,
+                            memberType: memberType,
                             phone: phoneCtrl.text.trim().isNotEmpty
                                 ? phoneCtrl.text.trim()
                                 : null,
+                            imageUrl: uploadedImageUrl,
                           ),
                         );
                       }
@@ -444,6 +540,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
         vehicle?.vehicleTypeId ??
         (_vehicleTypes.isNotEmpty ? _vehicleTypes.first['id'] as int : 1);
     bool isElectric = vehicle?.isElectric == 1;
+    bool isParked = vehicle?.isParked == 1;
+    String? uploadedImageUrl = vehicle?.imageUrl;
+    bool isUploadingImage = false;
+    final s3 = S3UploadService();
 
     showModalBottomSheet(
       context: context,
@@ -483,6 +583,74 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final image = await picker.pickImage(
+                          source: ImageSource.gallery,
+                          imageQuality: 85,
+                        );
+                        if (image == null) return;
+                        setSheetState(() {
+                          isUploadingImage = true;
+                          uploadedImageUrl = null;
+                        });
+                        try {
+                          final url = await s3.uploadImage(
+                            File(image.path),
+                            folder: 'vehicles',
+                          );
+                          setSheetState(() => uploadedImageUrl = url);
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed: $e')),
+                            );
+                          }
+                        } finally {
+                          setSheetState(() => isUploadingImage = false);
+                        }
+                      },
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 100.w,
+                            height: 100.w,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                              image: uploadedImageUrl != null
+                                  ? DecorationImage(
+                                      image: NetworkImage(uploadedImageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: uploadedImageUrl == null
+                                ? Icon(
+                                    Icons.camera_alt,
+                                    size: 40,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  )
+                                : null,
+                          ),
+                          if (isUploadingImage)
+                            SizedBox(
+                              width: 20.w,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 24.h),
@@ -557,6 +725,12 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     onChanged: (v) => setSheetState(() => isElectric = v),
                     contentPadding: EdgeInsets.zero,
                   ),
+                  SwitchListTile(
+                    title: const Text('Currently Parked'),
+                    value: isParked,
+                    onChanged: (v) => setSheetState(() => isParked = v),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                   SizedBox(height: 8.h),
                   _buildPrimaryButton(
                     isEdit ? 'Update Vehicle' : 'Add Vehicle',
@@ -589,6 +763,8 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                                 ? parkingCtrl.text.trim()
                                 : null,
                             isElectric: isElectric ? 1 : 0,
+                            isParked: isParked ? 1 : 0,
+                            imageUrl: uploadedImageUrl,
                           ),
                         );
                       } else {
@@ -609,6 +785,8 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                                 ? parkingCtrl.text.trim()
                                 : null,
                             isElectric: isElectric ? 1 : 0,
+                            isParked: isParked ? 1 : 0,
+                            imageUrl: uploadedImageUrl,
                           ),
                         );
                       }
@@ -653,6 +831,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
         pet?.petTypeId ??
         (_petTypes.isNotEmpty ? _petTypes.first['id'] as int : 1);
     String vaccinationStatus = pet?.vaccinationStatus ?? 'pending';
+    String? uploadedImageUrl = pet?.imageUrl;
+    bool isUploadingImage = false;
+    final s3 = S3UploadService();
 
     showModalBottomSheet(
       context: context,
@@ -692,6 +873,70 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final image = await picker.pickImage(
+                          source: ImageSource.gallery,
+                          imageQuality: 85,
+                        );
+                        if (image == null) return;
+                        setSheetState(() {
+                          isUploadingImage = true;
+                          uploadedImageUrl = null;
+                        });
+                        try {
+                          final url = await s3.uploadImage(
+                            File(image.path),
+                            folder: S3UploadService.folderPets ?? 'pets',
+                          );
+                          setSheetState(() => uploadedImageUrl = url);
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed: $e')),
+                            );
+                          }
+                        } finally {
+                          setSheetState(() => isUploadingImage = false);
+                        }
+                      },
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 100.w,
+                            height: 100.w,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              shape: BoxShape.circle,
+                              image: uploadedImageUrl != null
+                                  ? DecorationImage(
+                                      image: NetworkImage(uploadedImageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: uploadedImageUrl == null
+                                ? Icon(
+                                    Icons.camera_alt,
+                                    size: 40,
+                                    color: Colors.grey.shade400,
+                                  )
+                                : null,
+                          ),
+                          if (isUploadingImage)
+                            SizedBox(
+                              width: 20.w,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 24.h),
@@ -749,13 +994,30 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     ],
                   ),
                   _buildDropdownField<String>(
-                    value: vaccinationStatus,
+                    value: const [
+                      'pending',
+                      'up_to_date',
+                      'not_vaccinated',
+                      'partial',
+                      'complete',
+                      'not_required',
+                    ].contains(vaccinationStatus)
+                        ? vaccinationStatus
+                        : 'pending',
                     label: 'Vaccination Status',
                     prefixIcon: Icons.vaccines,
                     items: const [
                       DropdownMenuItem(
                         value: 'pending',
                         child: Text('Pending'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'up_to_date',
+                        child: Text('Up to Date'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'not_vaccinated',
+                        child: Text('Not Vaccinated'),
                       ),
                       DropdownMenuItem(
                         value: 'partial',
@@ -808,6 +1070,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                           notes: notesCtrl.text.trim().isNotEmpty
                               ? notesCtrl.text.trim()
                               : null,
+                          imageUrl: uploadedImageUrl,
                         ),
                       );
                     } else {
@@ -824,6 +1087,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                           notes: notesCtrl.text.trim().isNotEmpty
                               ? notesCtrl.text.trim()
                               : null,
+                          imageUrl: uploadedImageUrl,
                         ),
                       );
                     }
@@ -857,6 +1121,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
     final visitTimeCtrl = TextEditingController(
       text: helper?['visit_time']?.toString() ?? '',
     );
+    String? uploadedImageUrl = helper?['image_url']?.toString();
+    bool isUploadingImage = false;
+    final s3 = S3UploadService();
 
     final serviceTypes = [
       'Maid',
@@ -909,6 +1176,70 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final image = await picker.pickImage(
+                          source: ImageSource.gallery,
+                          imageQuality: 85,
+                        );
+                        if (image == null) return;
+                        setSheetState(() {
+                          isUploadingImage = true;
+                          uploadedImageUrl = null;
+                        });
+                        try {
+                          final url = await s3.uploadImage(
+                            File(image.path),
+                            folder: 'visitors',
+                          );
+                          setSheetState(() => uploadedImageUrl = url);
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed: $e')),
+                            );
+                          }
+                        } finally {
+                          setSheetState(() => isUploadingImage = false);
+                        }
+                      },
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 100.w,
+                            height: 100.w,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              shape: BoxShape.circle,
+                              image: uploadedImageUrl != null
+                                  ? DecorationImage(
+                                      image: NetworkImage(uploadedImageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: uploadedImageUrl == null
+                                ? Icon(
+                                    Icons.camera_alt,
+                                    size: 40,
+                                    color: Colors.grey.shade400,
+                                  )
+                                : null,
+                          ),
+                          if (isUploadingImage)
+                            SizedBox(
+                              width: 20.w,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 24.h),
@@ -1005,6 +1336,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                             visitTime: visitTimeCtrl.text.trim().isNotEmpty
                                 ? visitTimeCtrl.text.trim()
                                 : null,
+                            imageUrl: uploadedImageUrl,
                           ),
                         );
                       } else {
@@ -1016,6 +1348,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                             visitTime: visitTimeCtrl.text.trim().isNotEmpty
                                 ? visitTimeCtrl.text.trim()
                                 : null,
+                            imageUrl: uploadedImageUrl,
                           ),
                         );
                       }
@@ -1537,7 +1870,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
       color: theme.cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
+        side: BorderSide(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          width: 1,
+        ),
       ),
       margin: EdgeInsets.only(bottom: 12.h),
       child: Padding(
@@ -1682,7 +2018,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
       color: theme.cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
+        side: BorderSide(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          width: 1,
+        ),
       ),
       margin: EdgeInsets.only(bottom: 12.h),
       child: Padding(
@@ -1860,7 +2199,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
       color: theme.cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
+        side: BorderSide(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          width: 1,
+        ),
       ),
       margin: EdgeInsets.only(bottom: 12.h),
       child: Padding(
@@ -2004,7 +2346,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
       color: theme.cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
+        side: BorderSide(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          width: 1,
+        ),
       ),
       margin: EdgeInsets.only(bottom: 12.h),
       child: Padding(

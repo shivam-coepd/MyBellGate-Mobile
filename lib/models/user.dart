@@ -132,6 +132,7 @@ class User extends Equatable {
           phone: fm['phone'],
           profileImage: fm['image_url'],
           isActive: fm['is_active'] == 1 || fm['is_active'] == true,
+          memberType: fm['member_type'] ?? 'Adult',
         )).toList();
       }
 
@@ -296,6 +297,9 @@ class FamilyMember extends Equatable {
   @HiveField(5)
   final bool isActive;
 
+  @HiveField(6)
+  final String? memberType;
+
   const FamilyMember({
     required this.id,
     required this.name,
@@ -303,10 +307,11 @@ class FamilyMember extends Equatable {
     this.profileImage,
     this.phone,
     this.isActive = true,
+    this.memberType,
   });
 
   @override
-  List<Object?> get props => [id, name, relationship, profileImage, phone, isActive];
+  List<Object?> get props => [id, name, relationship, profileImage, phone, isActive, memberType];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -341,8 +346,11 @@ class ResidentVehicle extends Equatable {
   @HiveField(8)
   final int? isElectric;
 
-  @HiveField(8)
+  @HiveField(9)
   final int? isParked;
+
+  @HiveField(10)
+  final String? imageUrl;
 
   const ResidentVehicle({
     required this.id,
@@ -355,6 +363,7 @@ class ResidentVehicle extends Equatable {
     this.vehicleTypeId = 0,
     this.isElectric,
     this.isParked,
+    this.imageUrl,
   });
 
   factory ResidentVehicle.fromJson(Map<String, dynamic> json) {
@@ -369,6 +378,7 @@ class ResidentVehicle extends Equatable {
       vehicleTypeId: int.tryParse(json['vehicle_type_id']?.toString() ?? '0') ?? 0,
       isElectric: json['is_electric'] != null ? int.tryParse(json['is_electric'].toString()) : null,
       isParked: json['is_parked'] != null ? int.tryParse(json['is_parked'].toString()) : null,
+      imageUrl: json['image_url'],
     );
   }
 

@@ -510,6 +510,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
             indicatorColor: theme.colorScheme.primary,
+            dividerColor: theme.colorScheme.primary,
             indicatorWeight: 3,
             isScrollable: true,
             tabAlignment: TabAlignment.start,

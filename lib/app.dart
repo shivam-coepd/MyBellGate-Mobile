@@ -18,6 +18,8 @@ import 'package:mygate_coepd/repositories/guard_repository.dart';
 import 'package:mygate_coepd/repositories/helpdesk_repository.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
+import 'package:mygate_coepd/repositories/notification_repository.dart';
+import 'package:mygate_coepd/blocs/notification/notification_bloc.dart';
 import 'package:mygate_coepd/screens/auth/auth_screen.dart';
 import 'package:mygate_coepd/screens/auth/onboarding_screen.dart';
 import 'package:mygate_coepd/screens/auth/role_selection_screen.dart';
@@ -98,12 +100,19 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
           RepositoryProvider<GuardRepository>(
             create: (context) => GuardRepository(),
           ),
+          RepositoryProvider<NotificationRepository>(
+            create: (context) => NotificationRepository(),
+          ),
         ],
         child: MultiBlocProvider(
           providers: [
             BlocProvider<AuthBloc>(
               create: (context) =>
                   AuthBloc(userRepository: context.read<UserRepository>()),
+            ),
+            BlocProvider<NotificationBloc>(
+              create: (context) => NotificationBloc(
+                  repository: context.read<NotificationRepository>()),
             ),
             BlocProvider<ProfileBloc>(
               create: (context) => ProfileBloc(

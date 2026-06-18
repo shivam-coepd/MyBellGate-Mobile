@@ -108,13 +108,6 @@ class ApprovalPendingScreen extends StatelessWidget {
                 height: 52.h,
                 child: OutlinedButton(
                   onPressed: () {
-                    // Add real-time status check logic here
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //   SnackBar(
-                    //     content: Text('Checking approval status...'),
-                    //     backgroundColor: AppTheme.primary,
-                    //   ),
-                    // );
                     AppSnackbar.show(
                       context: context,
                       message: 'Checking approval status...',
