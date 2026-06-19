@@ -7,6 +7,7 @@ import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/blocs/amenity/amenity_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
+import 'package:mygate_coepd/blocs/community/community_bloc.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:mygate_coepd/blocs/theme/theme_cubit.dart';
 import 'package:mygate_coepd/repositories/accounting_repository.dart';
 import 'package:mygate_coepd/repositories/amenity_repository.dart';
 import 'package:mygate_coepd/repositories/communications_repository.dart';
+import 'package:mygate_coepd/repositories/community_repository.dart';
 import 'package:mygate_coepd/repositories/guard_repository.dart';
 import 'package:mygate_coepd/repositories/helpdesk_repository.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
@@ -94,6 +96,9 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
           RepositoryProvider<CommunicationsRepository>(
             create: (context) => CommunicationsRepository(),
           ),
+          RepositoryProvider<CommunityRepository>(
+            create: (context) => CommunityRepository(),
+          ),
           RepositoryProvider<AccountingRepository>(
             create: (context) => AccountingRepository(),
           ),
@@ -131,6 +136,11 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
             BlocProvider<CommunicationsBloc>(
               create: (context) => CommunicationsBloc(
                 repository: context.read<CommunicationsRepository>(),
+              ),
+            ),
+            BlocProvider<CommunityBloc>(
+              create: (context) => CommunityBloc(
+                 context.read<CommunityRepository>(),
               ),
             ),
             BlocProvider<AccountingBloc>(

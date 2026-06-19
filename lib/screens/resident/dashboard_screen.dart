@@ -586,30 +586,6 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Shimmer.fromColors(
-              //   baseColor: Colors.grey[300]!,
-              //   highlightColor: Colors.grey[100]!,
-              //   child: Container(
-              //     width: 120.w,
-              //     height: 22.h,
-              //     decoration: BoxDecoration(
-              //       color: Colors.white,
-              //       borderRadius: BorderRadius.circular(4.r),
-              //     ),
-              //   ),
-              // ),
-              // Shimmer.fromColors(
-              //   baseColor: Colors.grey[300]!,
-              //   highlightColor: Colors.grey[100]!,
-              //   child: Container(
-              //     width: 50.w,
-              //     height: 16.h,
-              //     decoration: BoxDecoration(
-              //       color: Colors.white,
-              //       borderRadius: BorderRadius.circular(4.r),
-              //     ),
-              //   ),
-              // ),
               Text(
                 'Latest Updates',
                 style: TextStyle(
@@ -800,7 +776,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                 case 'community':
                                   Navigator.pushReplacementNamed(
                                     context,
-                                    '/resident-main/community',
+                                    '/community',
                                   );
                                   break;
                                 case 'announcements':
