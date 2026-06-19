@@ -82,4 +82,31 @@ class CommunityRepository {
       throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
     }
   }
+  Future<List<Map<String, dynamic>>> getComments(int postId) async {
+    try {
+      final response = await _apiService.dio.get('/community/posts/$postId/comments');
+      if (response.data != null && response.data['status'] == true) {
+        final List<dynamic> data = response.data['data']['comments'] ?? [];
+        return List<Map<String, dynamic>>.from(data);
+      }
+      throw Exception(response.data?['message'] ?? 'Failed to load comments');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+    }
+  }
+
+  Future<Map<String, dynamic>> commentOnPost(int postId, String content) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/community/posts/$postId/comments',
+        data: {'content': content},
+      );
+      if (response.data != null && response.data['status'] == true) {
+        return Map<String, dynamic>.from(response.data['data']['comment']);
+      }
+      throw Exception(response.data?['message'] ?? 'Failed to add comment');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+    }
+  }
 }

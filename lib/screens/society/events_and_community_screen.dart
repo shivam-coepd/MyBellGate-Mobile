@@ -4,9 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:mygate_coepd/repositories/community_repository.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
+import 'package:mygate_coepd/blocs/auth/auth_state.dart';
+import 'package:mygate_coepd/blocs/community/community_bloc.dart';
+import 'package:mygate_coepd/models/community_post.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EventsAndCommunityScreen extends StatefulWidget {
   const EventsAndCommunityScreen({super.key});
@@ -28,6 +35,9 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
     _scrollController.addListener(_handleScroll);
+
+    // Load dynamic community data
+    context.read<CommunityBloc>().add(LoadCommunityData());
   }
 
   @override
@@ -209,129 +219,34 @@ class CommunityFeedSectionWidget extends StatefulWidget {
 
 class _CommunityFeedSectionWidgetState
     extends State<CommunityFeedSectionWidget> {
-  final List<Map<String, dynamic>> _posts = [
-    {
-      "id": 1,
-      "type": "post",
-      "author": "Priya Sharma",
-      "authorAvatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_1b618025b-1765165480659.png",
-      "authorAvatarLabel":
-          "Woman with long black hair wearing a red top smiling at camera",
-      "timestamp": "2 hours ago",
-      "content":
-          "Great news! The new children's play area is now open. Thank you to the maintenance team for the wonderful work. My kids are absolutely loving it! 🎉",
-      "images": [
-        {
-          "url":
-              "https://img.rocket.new/generatedImages/rocket_gen_img_1d8ad7d26-1766018948634.png",
-          "semanticLabel":
-              "Colorful playground with slides, swings, and climbing equipment in a residential area",
-        },
-      ],
-      "likes": 45,
-      "comments": 12,
-      "shares": 3,
-      "isLiked": false,
-      "category": "Announcement",
-    },
-    {
-      "id": 2,
-      "type": "discussion",
-      "author": "Rajesh Kumar",
-      "authorAvatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_16d43d804-1765703781841.png",
-      "authorAvatarLabel":
-          "Man with short black hair and glasses wearing a blue shirt",
-      "timestamp": "5 hours ago",
-      "content":
-          "Does anyone know if the swimming pool will be open this weekend? Planning a family gathering and would love to use the facility.",
-      "images": [],
-      "likes": 23,
-      "comments": 18,
-      "shares": 1,
-      "isLiked": true,
-      "category": "Question",
-    },
-    {
-      "id": 3,
-      "type": "announcement",
-      "author": "Society Committee",
-      "authorAvatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_10df5a971-1765003957966.png",
-      "authorAvatarLabel":
-          "Professional woman in formal attire with short brown hair",
-      "timestamp": "1 day ago",
-      "content":
-          "Important Notice: Water supply will be interrupted tomorrow from 10 AM to 2 PM for maintenance work. Please store water accordingly. We apologize for any inconvenience.",
-      "images": [],
-      "likes": 89,
-      "comments": 34,
-      "shares": 15,
-      "isLiked": false,
-      "category": "Important",
-    },
-    {
-      "id": 4,
-      "type": "post",
-      "author": "Anita Desai",
-      "authorAvatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_19147d633-1765716447945.png",
-      "authorAvatarLabel":
-          "Elderly woman with gray hair wearing traditional Indian attire",
-      "timestamp": "2 days ago",
-      "content":
-          "Wonderful Diwali celebration organized by our society! The decorations were beautiful and the cultural program was amazing. Looking forward to more such events.",
-      "images": [
-        {
-          "url": "https://images.unsplash.com/photo-1729986918572-8311fedf08a1",
-          "semanticLabel":
-              "Beautiful Diwali decorations with colorful lights, diyas, and rangoli patterns",
-        },
-        {
-          "url":
-              "https://img.rocket.new/generatedImages/rocket_gen_img_12cc8ed01-1765289716212.png",
-          "semanticLabel":
-              "Group of people in traditional Indian clothing celebrating Diwali festival",
-        },
-      ],
-      "likes": 156,
-      "comments": 42,
-      "shares": 8,
-      "isLiked": true,
-      "category": "Social",
-    },
-  ];
-
   void _handleLike(int postId) {
     HapticFeedback.lightImpact();
-    setState(() {
-      final post = _posts.firstWhere((p) => p["id"] == postId);
-      post["isLiked"] = !post["isLiked"];
-      post["likes"] = post["isLiked"] ? post["likes"] + 1 : post["likes"] - 1;
-    });
+    context.read<CommunityBloc>().add(LikeCommunityPost(postId));
   }
 
   void _handleComment(int postId) {
     HapticFeedback.mediumImpact();
+    final communityBloc = context.read<CommunityBloc>();
+    final communityRepo = context.read<CommunityRepository>();
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _CommentsBottomSheet(postId: postId),
+      builder: (context) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: communityBloc),
+          RepositoryProvider.value(value: communityRepo),
+        ],
+        child: _CommentsBottomSheet(postId: postId),
+      ),
     );
   }
 
-  void _handleShare(Map<String, dynamic> post) {
+  void _handleShare(CommunityPost post) {
     HapticFeedback.mediumImpact();
     // ignore: deprecated_member_use
-    Share.share(
-      '${post["author"]}: ${post["content"]}',
-      subject: 'Community Post',
-    );
-    setState(() {
-      post["shares"] = post["shares"] + 1;
-    });
+    Share.share('${post.userName}: ${post.content}', subject: 'Community Post');
   }
 
   void _handleReport(int postId) {
@@ -376,29 +291,92 @@ class _CommunityFeedSectionWidgetState
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void _handleDelete(int postId) {
+    HapticFeedback.mediumImpact();
     final theme = Theme.of(context);
-
-    return RefreshIndicator(
-      onRefresh: () async {
-        await Future.delayed(const Duration(seconds: 1));
-        HapticFeedback.lightImpact();
-      },
-      child: ListView.builder(
-        controller: widget.scrollController,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        itemCount: _posts.length,
-        itemBuilder: (context, index) {
-          final post = _posts[index];
-          return _buildPostCard(post, theme);
-        },
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Post', style: theme.textTheme.titleMedium),
+        content: Text(
+          'Are you sure you want to delete this post?',
+          style: theme.textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<CommunityBloc>().add(DeleteCommunityPost(postId));
+            },
+            child: Text(
+              'Delete',
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildPostCard(Map<String, dynamic> post, ThemeData theme) {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return BlocBuilder<CommunityBloc, CommunityState>(
+      builder: (context, state) {
+        if (state is CommunityLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is CommunityError) {
+          return Center(child: Text(state.message));
+        } else if (state is CommunityLoaded) {
+          final posts = state.posts;
+
+          final authState = context.read<AuthBloc>().state;
+          final currentUserId = (authState is Authenticated)
+              ? int.tryParse(authState.user.id)
+              : null;
+
+          if (posts.isEmpty) {
+            return Center(
+              child: Text(
+                'No community posts yet.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<CommunityBloc>().add(LoadCommunityData());
+              await Future.delayed(const Duration(seconds: 1));
+              HapticFeedback.lightImpact();
+            },
+            child: ListView.builder(
+              controller: widget.scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                final post = posts[index];
+                return _buildPostCard(post, currentUserId, theme);
+              },
+            ),
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildPostCard(
+    CommunityPost post,
+    int? currentUserId,
+    ThemeData theme,
+  ) {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(14.w),
@@ -417,9 +395,9 @@ class _CommunityFeedSectionWidgetState
         spacing: 10.h,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPostHeader(post, theme),
+          _buildPostHeader(post, currentUserId, theme),
           _buildPostContent(post, theme),
-          if ((post["images"] as List).isNotEmpty)
+          if (post.image != null && post.image!.isNotEmpty)
             _buildPostImages(post, theme),
           _buildPostActions(post, theme),
         ],
@@ -427,17 +405,24 @@ class _CommunityFeedSectionWidgetState
     );
   }
 
-  Widget _buildPostHeader(Map<String, dynamic> post, ThemeData theme) {
+  Widget _buildPostHeader(
+    CommunityPost post,
+    int? currentUserId,
+    ThemeData theme,
+  ) {
     return Row(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(25.r),
-          child: Image.network(
-            post["authorAvatar"],
-            width: 36.w,
-            height: 36.w,
-            fit: BoxFit.cover,
-            semanticLabel: post["authorAvatarLabel"],
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25.r),
+            border: Border.all(color: theme.primaryColor, width: 1.w),
+          ),
+          child: CircleAvatar(
+            radius: 18.r,
+            backgroundImage: post.userAvatar != null
+                ? CachedNetworkImageProvider(post.userAvatar!)
+                : null,
+            child: post.userAvatar == null ? const Icon(Icons.person) : null,
           ),
         ),
         SizedBox(width: 10.w),
@@ -449,7 +434,7 @@ class _CommunityFeedSectionWidgetState
                 children: [
                   Flexible(
                     child: Text(
-                      post["author"],
+                      post.userName,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -464,17 +449,13 @@ class _CommunityFeedSectionWidgetState
                       vertical: 3.h,
                     ),
                     decoration: BoxDecoration(
-                      color: post["category"] == "Important"
-                          ? theme.colorScheme.error.withValues(alpha: 0.12)
-                          : theme.colorScheme.primary.withValues(alpha: 0.12),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Text(
-                      post["category"],
+                      'Post',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: post["category"] == "Important"
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.primary,
+                        color: theme.colorScheme.primary,
                         fontSize: 9.sp,
                         fontWeight: FontWeight.w600,
                       ),
@@ -484,7 +465,7 @@ class _CommunityFeedSectionWidgetState
               ),
               SizedBox(height: 0.3.h),
               Text(
-                post["timestamp"],
+                post.time.split(' ').first,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -495,23 +476,41 @@ class _CommunityFeedSectionWidgetState
         PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'report') {
-              _handleReport(post["id"]);
+              _handleReport(post.id);
+            } else if (value == 'delete') {
+              _handleDelete(post.id);
             }
           },
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),
           itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'report',
-              child: Row(
-                children: [
-                  Icon(Icons.flag, color: theme.colorScheme.error, size: 20),
-                  SizedBox(width: 3.w),
-                  Text('Report Post', style: theme.textTheme.bodyMedium),
-                ],
+            if (currentUserId == post.userId)
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete,
+                      color: theme.colorScheme.error,
+                      size: 20,
+                    ),
+                    SizedBox(width: 3.w),
+                    Text('Delete Post', style: theme.textTheme.bodyMedium),
+                  ],
+                ),
               ),
-            ),
+            if (currentUserId != post.userId)
+              PopupMenuItem(
+                value: 'report',
+                child: Row(
+                  children: [
+                    Icon(Icons.flag, color: theme.colorScheme.error, size: 20),
+                    SizedBox(width: 3.w),
+                    Text('Report Post', style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+              ),
           ],
           child: Padding(
             padding: EdgeInsets.all(2.w),
@@ -526,67 +525,43 @@ class _CommunityFeedSectionWidgetState
     );
   }
 
-  Widget _buildPostContent(Map<String, dynamic> post, ThemeData theme) {
+  Widget _buildPostContent(CommunityPost post, ThemeData theme) {
     return Text(
-      post["content"],
+      post.content,
       style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
     );
   }
 
-  Widget _buildPostImages(Map<String, dynamic> post, ThemeData theme) {
-    final images = post["images"] as List;
-
+  Widget _buildPostImages(CommunityPost post, ThemeData theme) {
     return SizedBox(
-      height: images.length > 1 ? 80.h : 130.h,
-      child: images.length == 1
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(12.r.r),
-              child: Image.network(
-                images[0]["url"],
-                width: double.infinity,
-                height: 30.h,
-                fit: BoxFit.cover,
-                semanticLabel: images[0]["semanticLabel"],
-              ),
-            )
-          : ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: images.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(right: 8.w),
-                  width: 80.w,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: Image.network(
-                      images[index]["url"],
-                      // width: 70.w,
-                      height: 70.h,
-                      fit: BoxFit.cover,
-                      semanticLabel: images[index]["semanticLabel"],
-                    ),
-                  ),
-                );
-              },
-            ),
+      height: 130.h,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12.r.r),
+        child: CachedNetworkImage(
+          imageUrl: post.image!,
+          width: double.infinity,
+          height: 130.h,
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 
-  Widget _buildPostActions(Map<String, dynamic> post, ThemeData theme) {
+  Widget _buildPostActions(CommunityPost post, ThemeData theme) {
     return Padding(
       padding: EdgeInsets.all(4.w),
       child: Row(
         children: [
           _buildActionButton(
             Icon(
-              Icons.favorite_border_outlined,
-              color: post["isLiked"]
+              post.hasLiked ? Icons.favorite : Icons.favorite_border_outlined,
+              color: post.hasLiked
                   ? theme.colorScheme.error
                   : theme.colorScheme.onSurfaceVariant,
               size: 20,
             ),
-            '${post["likes"]}',
-            () => _handleLike(post["id"]),
+            '${post.likesCount}',
+            () => _handleLike(post.id),
             theme,
           ),
           SizedBox(width: 4.w),
@@ -596,8 +571,8 @@ class _CommunityFeedSectionWidgetState
               color: theme.colorScheme.onSurfaceVariant,
               size: 20,
             ),
-            '${post["comments"]}',
-            () => _handleComment(post["id"]),
+            '${post.commentsCount}',
+            () => _handleComment(post.id),
             theme,
           ),
           SizedBox(width: 4.w),
@@ -607,7 +582,7 @@ class _CommunityFeedSectionWidgetState
               color: theme.colorScheme.onSurfaceVariant,
               size: 20,
             ),
-            '${post["shares"]}',
+            '0',
             () => _handleShare(post),
             theme,
           ),
@@ -656,43 +631,71 @@ class _CommentsBottomSheet extends StatefulWidget {
 
 class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
   final TextEditingController _commentController = TextEditingController();
-  final List<Map<String, dynamic>> _comments = [
-    {
-      "author": "Amit Patel",
-      "avatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_1e771e724-1763294071742.png",
-      "avatarLabel": "Man with short black hair wearing a green shirt",
-      "comment": "This is wonderful news! Thanks for sharing.",
-      "timestamp": "1 hour ago",
-    },
-    {
-      "author": "Sneha Reddy",
-      "avatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_1b618025b-1765165480659.png",
-      "avatarLabel": "Woman with long brown hair wearing a blue top",
-      "comment": "Great initiative by the society committee!",
-      "timestamp": "30 minutes ago",
-    },
-  ];
+  final FocusNode _commentFocusNode = FocusNode();
+  bool _hasText = false;
+
+  List<Map<String, dynamic>> _comments = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadComments();
+    _commentController.addListener(() {
+      final hasText = _commentController.text.trim().isNotEmpty;
+      if (hasText != _hasText) {
+        setState(() => _hasText = hasText);
+      }
+    });
+  }
+
+  Future<void> _loadComments() async {
+    try {
+      final repository = context.read<CommunityRepository>();
+      final comments = await repository.getComments(widget.postId);
+      if (mounted) {
+        setState(() {
+          _comments = comments;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
     _commentController.dispose();
+    _commentFocusNode.dispose();
     super.dispose();
   }
 
   void _postComment() {
-    if (_commentController.text.trim().isEmpty) return;
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
 
     HapticFeedback.lightImpact();
+
+    // Dispatch to BLoC to create post remotely
+    context.read<CommunityBloc>().add(
+      CommentOnCommunityPost(widget.postId, text),
+    );
+
+    // Optimistic UI update
     setState(() {
-      _comments.insert(0, {
-        "author": "You",
-        "avatar":
-            "https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png",
-        "avatarLabel": "Your profile photo",
-        "comment": _commentController.text.trim(),
-        "timestamp": "Just now",
+      _comments.add({
+        "user_name": "You",
+        "avatar_url": "https://ui-avatars.com/api/?name=You&background=random",
+        "content": text,
+        "created_at": DateTime.now().toIso8601String(),
+        "unit": "N/A",
       });
       _commentController.clear();
     });
@@ -701,153 +704,339 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mq = MediaQuery.of(context);
+    final keyboardHeight = mq.viewInsets.bottom;
+    final maxSheetHeight = mq.size.height * 0.94;
 
-    return Container(
-      height: 70.h,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 1.h),
-            width: 12.w,
-            height: 0.5.h,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2.r),
-            ),
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: keyboardHeight),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Comments',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                _buildDragHandle(theme),
+                _buildHeader(theme),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.close,
-                    color: theme.colorScheme.onSurface,
-                    size: 24,
-                  ),
-                  onPressed: () => Navigator.pop(context),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error != null
+                      ? Center(child: Text('Error: $_error'))
+                      : _comments.isEmpty
+                      ? _buildEmptyState(theme)
+                      : _buildCommentsList(theme),
                 ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                _buildComposer(theme),
               ],
             ),
           ),
-          Divider(height: 0.1.h),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-              itemCount: _comments.length,
-              itemBuilder: (context, index) {
-                final comment = _comments[index];
-                return Container(
-                  margin: EdgeInsets.only(bottom: 2.h),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20.r),
-                        child: Image.network(
-                          comment["avatar"],
-                          width: 10.w,
-                          height: 10.w,
-                          fit: BoxFit.cover,
-                          semanticLabel: comment["avatarLabel"],
-                        ),
-                      ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              comment["author"],
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: 0.5.h),
-                            Text(
-                              comment["comment"],
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                            SizedBox(height: 0.5.h),
-                            Text(
-                              comment["timestamp"],
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+        ),
+      ),
+    );
+  }
+
+  // ─── Drag handle ────────────────────────────────────────────────────────
+
+  Widget _buildDragHandle(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.only(top: 10.h, bottom: 4.h),
+      child: Container(
+        width: 32.w,
+        height: 4.h,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(2.r),
+        ),
+      ),
+    );
+  }
+
+  // ─── Header — text-led, count as quiet secondary info ──────────────────
+
+  Widget _buildHeader(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 12.w, 12.h),
+      child: Row(
+        children: [
+          Text(
+            'Comments',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              letterSpacing: -0.2,
             ),
           ),
-          Container(
-            padding: EdgeInsets.all(4.w),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              border: Border(
-                top: BorderSide(
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.5,
-                  ),
-                  width: 1,
-                ),
+          SizedBox(width: 8.w),
+          if (_comments.isNotEmpty)
+            Text(
+              '${_comments.length}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
               ),
             ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      decoration: InputDecoration(
-                        hintText: 'Write a comment...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24.r),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
-                          vertical: 1.5.h,
-                        ),
-                      ),
-                      maxLines: null,
-                    ),
-                  ),
-                  SizedBox(width: 2.w),
-                  IconButton(
-                    icon: Container(
-                      padding: EdgeInsets.all(2.w),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.send,
-                        color: theme.colorScheme.onPrimary,
-                        size: 20,
-                      ),
-                    ),
-                    onPressed: _postComment,
-                  ),
-                ],
+          const Spacer(),
+          IconButton(
+            icon: Icon(
+              Icons.close_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+              size: 20.sp,
+            ),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Empty state ─────────────────────────────────────────────────────────
+
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.chat_bubble_outline_rounded,
+              size: 32.sp,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'No comments yet',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+                fontSize: 14.sp,
               ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Be the first to share your thoughts',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.7,
+                ),
+                fontSize: 12.sp,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Comments list — flat rows, hairline between each, no card chrome ──
+
+  Widget _buildCommentsList(ThemeData theme) {
+    // Helper to format time
+    String formatTime(String? dateStr) {
+      if (dateStr == null) return '';
+      final date = DateTime.tryParse(dateStr);
+      if (date == null) return '';
+      final diff = DateTime.now().difference(date);
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+      if (diff.inHours < 24) return '${diff.inHours}h';
+      return '${diff.inDays}d';
+    }
+
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 12.h),
+      itemCount: _comments.length,
+      separatorBuilder: (context, index) => Divider(
+        height: 1,
+        thickness: 1,
+        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+      ),
+      itemBuilder: (context, index) {
+        final comment = _comments[index];
+        final author = comment["user_name"] ?? "Unknown";
+        final avatar =
+            comment["avatar_url"] ?? "https://ui-avatars.com/api/?name=Unknown";
+        final text = comment["content"] ?? "";
+        final time = formatTime(comment["created_at"]);
+
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 14.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(15.r),
+                child: Image.network(
+                  avatar,
+                  width: 30.w,
+                  height: 30.w,
+                  fit: BoxFit.cover,
+                  semanticLabel: author,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 30.w,
+                      height: 30.w,
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.person_outline,
+                        size: 16.sp,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            author,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          time,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.7),
+                            fontSize: 11.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      text,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 13.5.sp,
+                        height: 1.4,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ─── Composer — borderless input, accent send affordance ───────────────
+
+  Widget _buildComposer(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(6.w, 8.h, 12.w, 8.h),
+      child: Row(
+        // spacing: 6.w,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Container(
+              constraints: BoxConstraints(maxHeight: 100.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                borderRadius: BorderRadius.circular(18.r),
+              ),
+              child: TextField(
+                controller: _commentController,
+                focusNode: _commentFocusNode,
+                maxLines: null,
+                textInputAction: TextInputAction.newline,
+                decoration: InputDecoration(
+                  hintText: 'Write a comment…',
+                  isCollapsed: true,
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.6,
+                    ),
+                    fontSize: 13.5.sp,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                    borderRadius: BorderRadius.circular(18.r),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                    ),
+                    borderRadius: BorderRadius.circular(18.r),
+                  ),
+                ),
+                style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13.5.sp),
+              ),
+            ),
+          ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 40.w,
+            height: 40.w,
+            padding: EdgeInsets.all(4.w),
+            decoration: BoxDecoration(
+              color: _hasText
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+              ),
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                Icons.arrow_upward_rounded,
+                color: _hasText
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                size: 20.sp,
+              ),
+              onPressed: _hasText ? _postComment : null,
             ),
           ),
         ],
@@ -864,6 +1053,8 @@ class CreatePostBottomSheet extends StatefulWidget {
   State<CreatePostBottomSheet> createState() => _CreatePostBottomSheetState();
 }
 
+enum _PostMode { text, poll }
+
 class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final TextEditingController _contentController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
@@ -871,12 +1062,14 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final List<String> _uploadedImageUrls = [];
   bool _isUploadingImages = false;
   String _privacySetting = 'public'; // public, residents_only
-  bool _isCreatingPoll = false;
+  _PostMode _mode = _PostMode.text;
   final List<TextEditingController> _pollOptions = [
     TextEditingController(),
     TextEditingController(),
   ];
   final _s3 = S3UploadService();
+
+  bool get _isCreatingPoll => _mode == _PostMode.poll;
 
   @override
   void dispose() {
@@ -896,7 +1089,6 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
       HapticFeedback.lightImpact();
 
-      // Cap at 4 images total
       final toAdd = images.take(4 - _selectedImages.length).toList();
       if (toAdd.isEmpty) return;
 
@@ -915,12 +1107,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Image upload failed: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          _showSnack('Image upload failed', isError: true);
         }
       } finally {
         if (mounted) setState(() => _isUploadingImages = false);
@@ -940,22 +1127,22 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     });
   }
 
-  void _togglePollCreation() {
-    HapticFeedback.mediumImpact();
+  void _setMode(_PostMode mode) {
+    if (mode == _mode) return;
+    HapticFeedback.selectionClick();
     setState(() {
-      _isCreatingPoll = !_isCreatingPoll;
-      if (_isCreatingPoll) {
+      _mode = mode;
+      if (mode == _PostMode.poll) {
         _selectedImages.clear();
-      } else {}
+        _uploadedImageUrls.clear();
+      }
     });
   }
 
   void _addPollOption() {
     if (_pollOptions.length < 6) {
       HapticFeedback.lightImpact();
-      setState(() {
-        _pollOptions.add(TextEditingController());
-      });
+      setState(() => _pollOptions.add(TextEditingController()));
     }
   }
 
@@ -971,49 +1158,52 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
   void _createPost() {
     if (_contentController.text.trim().isEmpty) {
-      final theme = Theme.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please write something to post',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onInverseSurface,
-            ),
-          ),
-          backgroundColor: theme.colorScheme.inverseSurface,
-          behavior: SnackBarBehavior.floating,
-        ),
+      _showSnack(
+        _isCreatingPoll ? 'Write a poll question' : 'Write something to post',
       );
       return;
     }
 
+    if (_isCreatingPoll) {
+      final filled = _pollOptions.where((c) => c.text.trim().isNotEmpty).length;
+      if (filled < 2) {
+        _showSnack('Add at least 2 poll options');
+        return;
+      }
+    }
+
     if (_isUploadingImages) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please wait, images are still uploading...'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showSnack('Images are still uploading');
       return;
     }
 
     HapticFeedback.mediumImpact();
-    // _uploadedImageUrls now contains the S3 public URLs ready to send to backend
-    Navigator.pop(context);
 
+    context.read<CommunityBloc>().add(
+      CreateCommunityPost(
+        content: _contentController.text.trim(),
+        image: _uploadedImageUrls.isNotEmpty ? _uploadedImageUrls.first : null,
+      ),
+    );
+
+    Navigator.pop(context);
+    _showSnack(_isCreatingPoll ? 'Poll posted' : 'Post created');
+  }
+
+  void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _isCreatingPoll
-              ? 'Poll created successfully!'
-              : 'Post created successfully!',
+          message,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onInverseSurface,
+            fontSize: 13.sp,
           ),
         ),
         backgroundColor: theme.colorScheme.inverseSurface,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -1021,82 +1211,136 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mq = MediaQuery.of(context);
+    final keyboardHeight = mq.viewInsets.bottom;
+    final maxSheetHeight = mq.size.height * 0.94;
 
-    return Container(
-      height: 85.h,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          _buildHeader(theme),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(4.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildContentInput(theme),
-                  if (!_isCreatingPoll && _selectedImages.isNotEmpty) ...[
-                    SizedBox(height: 2.h),
-                    _buildImagePreview(theme),
-                  ],
-                  if (_isCreatingPoll) ...[
-                    SizedBox(height: 2.h),
-                    _buildPollOptions(theme),
-                  ],
-                  SizedBox(height: 2.h),
-                  _buildPrivacySelector(theme),
-                ],
-              ),
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: keyboardHeight),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDragHandle(theme),
+                _buildHeader(theme),
+                _buildModeSwitch(theme),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 8.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildIdentityRow(theme),
+                        SizedBox(height: 18.h),
+                        _buildContentInput(theme),
+                        if (_isUploadingImages) ...[
+                          SizedBox(height: 14.h),
+                          _buildUploadingIndicator(theme),
+                        ],
+                        if (!_isCreatingPoll && _selectedImages.isNotEmpty) ...[
+                          SizedBox(height: 16.h),
+                          _buildImagePreview(theme),
+                        ],
+                        if (_isCreatingPoll) ...[
+                          SizedBox(height: 16.h),
+                          _buildPollOptions(theme),
+                        ],
+                        SizedBox(height: 8.h),
+                      ],
+                    ),
+                  ),
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+                _buildFooterActions(theme),
+              ],
             ),
           ),
-          _buildBottomActions(theme),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-            width: 1,
-          ),
+  // ─── Drag handle ────────────────────────────────────────────────────────
+
+  Widget _buildDragHandle(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.only(top: 10.h, bottom: 4.h),
+      child: Container(
+        width: 32.w,
+        height: 4.h,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(2.r),
         ),
       ),
+    );
+  }
+
+  // ─── Header — flat, text-led, no button chrome ─────────────────────────
+
+  Widget _buildHeader(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 12.w, 8.h),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: Icon(
-              Icons.close,
-              color: theme.colorScheme.onSurface,
-              size: 24,
+          Expanded(
+            child: Text(
+              'New post',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 16.sp,
+                letterSpacing: -0.2,
+              ),
             ),
+          ),
+          TextButton(
             onPressed: () {
               HapticFeedback.lightImpact();
               Navigator.pop(context);
             },
-          ),
-          Text(
-            _isCreatingPoll ? 'Create Poll' : 'Create Post',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.onSurfaceVariant,
+              minimumSize: Size(0, 36.h),
+              padding: EdgeInsets.symmetric(horizontal: 10.w),
             ),
+            child: Text('Cancel', style: TextStyle(fontSize: 13.sp)),
           ),
-          TextButton(
+          SizedBox(width: 4.w),
+          FilledButton(
             onPressed: _createPost,
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              minimumSize: Size(0, 36.h),
+              padding: EdgeInsets.symmetric(horizontal: 18.w),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
             child: Text(
               'Post',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1104,264 +1348,39 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     );
   }
 
-  Widget _buildContentInput(ThemeData theme) {
-    return TextField(
-      controller: _contentController,
-      maxLines: _isCreatingPoll ? 3 : 6,
-      decoration: InputDecoration(
-        hintText: _isCreatingPoll
-            ? 'Ask a question...'
-            : 'What\'s on your mind?',
-        border: InputBorder.none,
-        hintStyle: theme.textTheme.bodyLarge?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
+  // ─── Segmented mode switch — iOS-native style ──────────────────────────
+
+  Widget _buildModeSwitch(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 12.h),
+      child: Container(
+        height: 36.h,
+        padding: EdgeInsets.all(3.w),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
+          borderRadius: BorderRadius.circular(10.r),
         ),
-      ),
-      style: theme.textTheme.bodyLarge,
-    );
-  }
-
-  Widget _buildImagePreview(ThemeData theme) {
-    return SizedBox(
-      height: 20.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _selectedImages.length,
-        itemBuilder: (context, index) {
-          return Stack(
-            children: [
-              Container(
-                margin: EdgeInsets.only(right: 2.w),
-                width: 35.w,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12.r),
-                  color: theme.colorScheme.surfaceContainerHighest,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: Image.network(
-                    _selectedImages[index].path,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Center(
-                        child: Icon(
-                          Icons.image,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          size: 40,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 1.h,
-                right: 3.w,
-                child: GestureDetector(
-                  onTap: () => _removeImage(index),
-                  child: Container(
-                    padding: EdgeInsets.all(1.w),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.onSurface,
-                      size: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildPollOptions(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Poll Options',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        SizedBox(height: 1.h),
-        ...List.generate(_pollOptions.length, (index) {
-          return Container(
-            margin: EdgeInsets.only(bottom: 1.5.h),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _pollOptions[index],
-                    decoration: InputDecoration(
-                      hintText: 'Option ${index + 1}',
-                      prefixIcon: Padding(
-                        padding: EdgeInsets.all(3.w),
-                        child: Icon(
-                          Icons.radio_button_unchecked,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          size: 20,
-                        ),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.outlineVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (_pollOptions.length > 2) ...[
-                  SizedBox(width: 2.w),
-                  IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.error,
-                      size: 20,
-                    ),
-                    onPressed: () => _removePollOption(index),
-                  ),
-                ],
-              ],
-            ),
-          );
-        }),
-        if (_pollOptions.length < 6)
-          TextButton.icon(
-            onPressed: _addPollOption,
-            icon: Icon(Icons.add, color: theme.colorScheme.primary, size: 20),
-            label: Text(
-              'Add Option',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildPrivacySelector(ThemeData theme) {
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            _privacySetting == 'public' ? Icons.public : Icons.people,
-            color: theme.colorScheme.onSurfaceVariant,
-            size: 20,
-          ),
-          SizedBox(width: 3.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Privacy',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  _privacySetting == 'public' ? 'Public' : 'Residents Only',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              HapticFeedback.lightImpact();
-              setState(() => _privacySetting = value);
-            },
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'public',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.public,
-                      color: theme.colorScheme.onSurface,
-                      size: 20,
-                    ),
-                    SizedBox(width: 3.w),
-                    Text('Public', style: theme.textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'residents_only',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.people,
-                      color: theme.colorScheme.onSurface,
-                      size: 20,
-                    ),
-                    SizedBox(width: 3.w),
-                    Text('Residents Only', style: theme.textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-            ],
-            child: Icon(
-              Icons.arrow_drop_down,
-              color: theme.colorScheme.onSurfaceVariant,
-              size: 24,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomActions(ThemeData theme) {
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
         child: Row(
           children: [
-            _buildActionButton(
-              Icon(
-                Icons.photo_library,
-                color: theme.colorScheme.primary,
-                size: 24,
+            Expanded(
+              child: _SegmentButton(
+                label: 'Post',
+                icon: Icons.article_outlined,
+                selected: _mode == _PostMode.text,
+                onTap: () => _setMode(_PostMode.text),
+                theme: theme,
               ),
-              'Photos',
-              _isCreatingPoll ? null : _pickImages,
-              theme,
             ),
-            SizedBox(width: 2.w),
-            _buildActionButton(
-              Icon(Icons.poll, color: theme.colorScheme.secondary, size: 24),
-              'Poll',
-              _togglePollCreation,
-              theme,
+            Expanded(
+              child: _SegmentButton(
+                label: 'Poll',
+                icon: Icons.bar_chart_rounded,
+                selected: _mode == _PostMode.poll,
+                onTap: () => _setMode(_PostMode.poll),
+                theme: theme,
+              ),
             ),
           ],
         ),
@@ -1369,43 +1388,599 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     );
   }
 
-  Widget _buildActionButton(
-    Widget icon,
-    String label,
-    VoidCallback? onTap,
-    ThemeData theme,
-  ) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 1.5.h),
-          decoration: BoxDecoration(
-            color: onTap == null
-                ? theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  )
-                : theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12.r),
+  // ─── Identity row — name + inline privacy pill ─────────────────────────
+
+  Widget _buildIdentityRow(ThemeData theme) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 16.r,
+          backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          child: Icon(
+            Icons.person_outline,
+            color: theme.colorScheme.onSurfaceVariant,
+            size: 18.sp,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              icon,
-              SizedBox(width: 2.w),
-              Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: onTap == null
-                      ? theme.colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.5,
-                        )
-                      : theme.colorScheme.onSurface,
+        ),
+        SizedBox(width: 10.w),
+        Text(
+          'You',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14.sp,
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Expanded(child: _buildPrivacyPill(theme)),
+      ],
+    );
+  }
+
+  Widget _buildPrivacyPill(ThemeData theme) {
+    return GestureDetector(
+      onTap: () => _showPrivacyPicker(theme),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _privacySetting == 'public' ? Icons.public : Icons.people_outline,
+              size: 12.sp,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            SizedBox(width: 4.w),
+            Flexible(
+              child: Text(
+                _privacySetting == 'public' ? 'Public' : 'Residents only',
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11.sp,
                 ),
               ),
+            ),
+            SizedBox(width: 2.w),
+            Icon(
+              Icons.unfold_more_rounded,
+              size: 12.sp,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Content input — borderless, large, airy ───────────────────────────
+
+  Widget _buildContentInput(ThemeData theme) {
+    return TextField(
+      controller: _contentController,
+      maxLines: _isCreatingPoll ? 3 : 8,
+      minLines: 2,
+      textInputAction: TextInputAction.newline,
+      decoration: InputDecoration(
+        hintText: _isCreatingPoll ? 'Ask a question…' : "What's on your mind?",
+        border: InputBorder.none,
+        isCollapsed: true,
+        contentPadding: EdgeInsets.zero,
+        hintStyle: theme.textTheme.bodyLarge?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16.sp, height: 1.5),
+    );
+  }
+
+  // ─── Uploading indicator — quiet text row, no boxed container ──────────
+
+  Widget _buildUploadingIndicator(ThemeData theme) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 14.w,
+          height: 14.w,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.6,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        SizedBox(width: 10.w),
+        Text(
+          'Uploading images…',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 12.sp,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── Image preview ───────────────────────────────────────────────────────
+
+  Widget _buildImagePreview(ThemeData theme) {
+    final imageHeight = 96.h;
+    final isSingle = _selectedImages.length == 1;
+
+    return SizedBox(
+      height: imageHeight,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _selectedImages.length,
+        padding: EdgeInsets.zero,
+        itemBuilder: (context, index) {
+          final width = isSingle ? 180.w : 112.w;
+          return Padding(
+            padding: EdgeInsets.only(right: 8.w),
+            child: Stack(
+              children: [
+                Container(
+                  width: width,
+                  height: imageHeight,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.r),
+                    color: theme.colorScheme.surfaceContainerHighest,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: _uploadedImageUrls.length > index
+                        ? Image.network(
+                            _uploadedImageUrls[index],
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildImageErrorPlaceholder(theme);
+                            },
+                          )
+                        : Image.file(
+                            File(_selectedImages[index].path),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildImageErrorPlaceholder(theme);
+                            },
+                          ),
+                  ),
+                ),
+                Positioned(
+                  top: 5.h,
+                  right: 5.w,
+                  child: GestureDetector(
+                    onTap: () => _removeImage(index),
+                    child: Container(
+                      padding: EdgeInsets.all(3.w),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 12.sp,
+                      ),
+                    ),
+                  ),
+                ),
+                if (_uploadedImageUrls.length <= index)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Center(
+                        child: SizedBox(
+                          width: 18.w,
+                          height: 18.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 1.8,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildImageErrorPlaceholder(ThemeData theme) {
+    return Container(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Center(
+        child: Icon(
+          Icons.broken_image_outlined,
+          color: theme.colorScheme.onSurfaceVariant,
+          size: 22.sp,
+        ),
+      ),
+    );
+  }
+
+  // ─── Poll options — flat rows, hairline dividers, no boxed card ────────
+
+  Widget _buildPollOptions(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...List.generate(_pollOptions.length, (index) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: Row(
+              children: [
+                Container(
+                  width: 26.w,
+                  height: 26.w,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.6,
+                      ),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(7.r),
+                  ),
+                  child: Text(
+                    '${index + 1}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: TextField(
+                    controller: _pollOptions[index],
+                    decoration: InputDecoration(
+                      hintText: 'Option ${index + 1}',
+                      isDense: true,
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.4),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 10.h,
+                      ),
+                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                ),
+                if (_pollOptions.length > 2)
+                  SizedBox(
+                    width: 30.w,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.close,
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
+                        size: 16.sp,
+                      ),
+                      onPressed: () => _removePollOption(index),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }),
+        if (_pollOptions.length < 6)
+          GestureDetector(
+            onTap: _addPollOption,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.h),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.add,
+                    color: theme.colorScheme.primary,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    'Add option',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ─── Privacy picker — inline modal, consistent flat style ──────────────
+
+  void _showPrivacyPicker(ThemeData theme) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 12.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 32.w,
+                  height: 4.h,
+                  margin: EdgeInsets.only(bottom: 16.h),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.25,
+                    ),
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+              ),
+              Text(
+                'Who can see this?',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15.sp,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              _buildPrivacyOption(
+                theme,
+                'public',
+                Icons.public,
+                'Public',
+                'Anyone can see this post',
+              ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+              ),
+              _buildPrivacyOption(
+                theme,
+                'residents_only',
+                Icons.people_outline,
+                'Residents only',
+                'Only residents of this society can see',
+              ),
+              SizedBox(height: 4.h),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrivacyOption(
+    ThemeData theme,
+    String value,
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
+    final isSelected = _privacySetting == value;
+
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() => _privacySetting = value);
+        Navigator.pop(context);
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+              size: 19.sp,
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                      color: isSelected ? theme.colorScheme.primary : null,
+                    ),
+                  ),
+                  SizedBox(height: 1.h),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 11.5.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check, color: theme.colorScheme.primary, size: 18.sp),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Footer — single photo action only (poll handled by segment switch) ─
+
+  Widget _buildFooterActions(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h),
+      child: Row(
+        children: [
+          _FooterIconAction(
+            icon: Icons.image_outlined,
+            label: 'Photo',
+            enabled: !_isCreatingPoll,
+            onTap: _isCreatingPoll ? null : _pickImages,
+            theme: theme,
+          ),
+          const Spacer(),
+          if (!_isCreatingPoll && _selectedImages.isNotEmpty)
+            Text(
+              '${_selectedImages.length}/4',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 11.sp,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Supporting widgets ────────────────────────────────────────────────────
+
+class _SegmentButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  final ThemeData theme;
+
+  const _SegmentButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: selected ? theme.colorScheme.surface : Colors.transparent,
+          borderRadius: BorderRadius.circular(8.r),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 14.sp,
+              color: selected
+                  ? theme.colorScheme.onSurface
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5.sp,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FooterIconAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool enabled;
+  final VoidCallback? onTap;
+  final ThemeData theme;
+
+  const _FooterIconAction({
+    required this.icon,
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = enabled
+        ? theme.colorScheme.onSurfaceVariant
+        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.35);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8.r),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 19.sp, color: color),
+            SizedBox(width: 7.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );

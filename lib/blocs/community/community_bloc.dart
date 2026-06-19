@@ -27,6 +27,13 @@ class DeleteCommunityPost extends CommunityEvent {
   DeleteCommunityPost(this.postId);
 }
 
+class CommentOnCommunityPost extends CommunityEvent {
+  final int postId;
+  final String content;
+
+  CommentOnCommunityPost(this.postId, this.content);
+}
+
 // --- States ---
 abstract class CommunityState {}
 
@@ -66,6 +73,7 @@ class CommunityBloc extends Bloc<CommunityEvent, CommunityState> {
     on<CreateCommunityPost>(_onCreateCommunityPost);
     on<LikeCommunityPost>(_onLikeCommunityPost);
     on<DeleteCommunityPost>(_onDeleteCommunityPost);
+    on<CommentOnCommunityPost>(_onCommentOnCommunityPost);
   }
 
   Future<void> _onLoadCommunityData(LoadCommunityData event, Emitter<CommunityState> emit) async {
@@ -134,6 +142,39 @@ class CommunityBloc extends Bloc<CommunityEvent, CommunityState> {
         await _repository.deletePost(event.postId);
         
         final updatedPosts = currentState.posts.where((post) => post.id != event.postId).toList();
+        emit(currentState.copyWith(posts: updatedPosts));
+      } catch (e) {
+        emit(CommunityError(e.toString()));
+        emit(currentState);
+      }
+    }
+  }
+
+  Future<void> _onCommentOnCommunityPost(CommentOnCommunityPost event, Emitter<CommunityState> emit) async {
+    final currentState = state;
+    if (currentState is CommunityLoaded) {
+      try {
+        await _repository.commentOnPost(event.postId, event.content);
+        
+        final updatedPosts = currentState.posts.map((post) {
+          if (post.id == event.postId) {
+            return CommunityPost(
+              id: post.id,
+              userId: post.userId,
+              userName: post.userName,
+              content: post.content,
+              time: post.time,
+              userAvatar: post.userAvatar,
+              unit: post.unit,
+              image: post.image,
+              commentsCount: post.commentsCount + 1,
+              hasLiked: post.hasLiked,
+              likesCount: post.likesCount,
+            );
+          }
+          return post;
+        }).toList();
+        
         emit(currentState.copyWith(posts: updatedPosts));
       } catch (e) {
         emit(CommunityError(e.toString()));
