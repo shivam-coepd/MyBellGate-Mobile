@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:mygate_coepd/models/community_post.dart';
 import 'package:mygate_coepd/models/marketplace_item.dart';
@@ -23,7 +22,9 @@ class CommunityRepository {
       }
       throw Exception(response.data?['message'] ?? 'Failed to load posts');
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Network error',
+      );
     }
   }
 
@@ -31,16 +32,15 @@ class CommunityRepository {
     try {
       final response = await _apiService.dio.post(
         '/community/posts',
-        data: {
-          'content': content,
-          if (image != null) 'image': image,
-        },
+        data: {'content': content, if (image != null) 'image': image},
       );
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to create post');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Network error',
+      );
     }
   }
 
@@ -53,20 +53,22 @@ class CommunityRepository {
         throw Exception(response.data?['message'] ?? 'Failed to like post');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Network error',
+      );
     }
   }
 
   Future<void> deletePost(int postId) async {
     try {
-      final response = await _apiService.dio.delete(
-        '/community/posts/$postId',
-      );
+      final response = await _apiService.dio.delete('/community/posts/$postId');
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to delete post');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Network error',
+      );
     }
   }
 
@@ -74,24 +76,35 @@ class CommunityRepository {
     try {
       final response = await _apiService.dio.get('/marketplace/products');
       if (response.data != null && response.data['status'] == true) {
-        final List<dynamic> data = response.data['data'] is List ? response.data['data'] : [];
+        final List<dynamic> data = response.data['data'] is List
+            ? response.data['data']
+            : [];
         return data.map((e) => MarketplaceItem.fromJson(e)).toList();
       }
-      throw Exception(response.data?['message'] ?? 'Failed to load marketplace items');
+      throw Exception(
+        response.data?['message'] ?? 'Failed to load marketplace items',
+      );
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Network error',
+      );
     }
   }
+
   Future<List<Map<String, dynamic>>> getComments(int postId) async {
     try {
-      final response = await _apiService.dio.get('/community/posts/$postId/comments');
+      final response = await _apiService.dio.get(
+        '/community/posts/$postId/comments',
+      );
       if (response.data != null && response.data['status'] == true) {
         final List<dynamic> data = response.data['data']['comments'] ?? [];
         return List<Map<String, dynamic>>.from(data);
       }
       throw Exception(response.data?['message'] ?? 'Failed to load comments');
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Network error',
+      );
     }
   }
 
@@ -106,7 +119,9 @@ class CommunityRepository {
       }
       throw Exception(response.data?['message'] ?? 'Failed to add comment');
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Network error',
+      );
     }
   }
 }

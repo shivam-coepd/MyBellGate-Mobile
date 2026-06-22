@@ -8,6 +8,8 @@ import 'package:mygate_coepd/blocs/amenity/amenity_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/blocs/community/community_bloc.dart';
+import 'package:mygate_coepd/blocs/events/events_bloc.dart';
+import 'package:mygate_coepd/blocs/events/events_bloc.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
@@ -16,6 +18,7 @@ import 'package:mygate_coepd/repositories/accounting_repository.dart';
 import 'package:mygate_coepd/repositories/amenity_repository.dart';
 import 'package:mygate_coepd/repositories/communications_repository.dart';
 import 'package:mygate_coepd/repositories/community_repository.dart';
+import 'package:mygate_coepd/repositories/event_repository.dart';
 import 'package:mygate_coepd/repositories/guard_repository.dart';
 import 'package:mygate_coepd/repositories/helpdesk_repository.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
@@ -30,7 +33,6 @@ import 'package:mygate_coepd/screens/guard/guard_main_screen.dart';
 import 'package:mygate_coepd/screens/resident/amenity_booking_screen.dart';
 import 'package:mygate_coepd/screens/resident/announcements_screen.dart';
 import 'package:mygate_coepd/screens/resident/bills_payments_screen.dart';
-import 'package:mygate_coepd/screens/resident/community_screen.dart';
 import 'package:mygate_coepd/screens/society/events_and_community_screen.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_details_screen.dart';
@@ -109,6 +111,9 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
           RepositoryProvider<NotificationRepository>(
             create: (context) => NotificationRepository(),
           ),
+          RepositoryProvider<EventRepository>(
+            create: (context) => EventRepository(),
+          ),
         ],
         child: MultiBlocProvider(
           providers: [
@@ -152,6 +157,11 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
             BlocProvider<GuardBloc>(
               create: (context) =>
                   GuardBloc(repository: context.read<GuardRepository>()),
+            ),
+            BlocProvider<EventsBloc>(
+              create: (context) => EventsBloc(
+                context.read<EventRepository>(),
+              )..add(LoadEvents()),
             ),
             BlocProvider<ThemeCubit>(create: (context) => ThemeCubit()),
           ],
