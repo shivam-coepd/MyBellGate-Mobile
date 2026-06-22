@@ -66,6 +66,31 @@ class CommunicationsRepository {
     }
   }
 
+  Future<void> createPoll({
+    required String question,
+    required List<String> options,
+    required String endsAt,
+    String pollType = 'public',
+  }) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/communications/polls',
+        data: {
+          'question': question,
+          'options': options,
+          'ends_at': endsAt,
+          'poll_type': pollType,
+        },
+      );
+      log('Create Poll: ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to create poll');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+    }
+  }
+
   Future<void> voteOnPoll(String pollId, String optionId) async {
     try {
       final response = await _apiService.dio.post(
@@ -75,6 +100,35 @@ class CommunicationsRepository {
       log('Vote Poll: ${response.data}');
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to cast vote');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+    }
+  }
+
+  Future<void> updatePoll(String pollId, Map<String, dynamic> updates) async {
+    try {
+      final response = await _apiService.dio.put(
+        '/communications/polls/$pollId',
+        data: updates,
+      );
+      log('Update Poll: ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to update poll');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');
+    }
+  }
+
+  Future<void> deletePoll(String pollId) async {
+    try {
+      final response = await _apiService.dio.delete(
+        '/communications/polls/$pollId',
+      );
+      log('Delete Poll: ${response.data}');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to delete poll');
       }
     } on DioException catch (e) {
       throw Exception(e.response?.data?['message'] ?? e.message ?? 'Network error');

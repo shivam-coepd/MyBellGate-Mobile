@@ -95,6 +95,7 @@ class Poll extends Equatable {
   final String? societyId;
   final String? createdBy;
   final String? createdByName;
+  final String? createdByProfileImage;
   final String? startsAt;
   final String endsAt;
   final bool isActive;
@@ -109,6 +110,7 @@ class Poll extends Equatable {
     this.societyId,
     this.createdBy,
     this.createdByName,
+    this.createdByProfileImage,
     this.startsAt,
     required this.endsAt,
     this.isActive = true,
@@ -132,6 +134,7 @@ class Poll extends Equatable {
       societyId: json['society_id']?.toString(),
       createdBy: json['created_by']?.toString(),
       createdByName: json['created_by_name'],
+      createdByProfileImage: json['created_by_profile_image'],
       startsAt: json['starts_at'],
       endsAt: json['ends_at'] ?? '',
       isActive: json['is_active'] == 1 || json['is_active'] == true,

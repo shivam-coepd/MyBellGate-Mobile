@@ -13,6 +13,7 @@ import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:mygate_coepd/blocs/events/events_bloc.dart';
 
 class ResidentDashboardScreen extends StatefulWidget {
   const ResidentDashboardScreen({super.key});
@@ -25,22 +26,6 @@ class ResidentDashboardScreen extends StatefulWidget {
 class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final List<Map<String, dynamic>> _upcomingEvents = [
-    {
-      'title': 'Weekend Pool Party',
-      'date': 'Saturday, 4:00 PM',
-      'attendees': 24,
-      'image':
-          'https://plus.unsplash.com/premium_photo-1682681906293-2113d2e6cc82?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cG9vbCUyMHBhcnR5fGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
-    },
-    {
-      'title': 'Yoga in the Park',
-      'date': 'Sunday, 7:00 AM',
-      'attendees': 12,
-      'image':
-          'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=400&h=300',
-    },
-  ];
 
   final List<Map<String, dynamic>> _quickActions = [
     {
@@ -123,6 +108,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     );
     context.read<AccountingBloc>().add(const LoadInvoices());
     context.read<HelpdeskBloc>().add(const LoadTickets());
+    context.read<EventsBloc>().add(LoadEvents());
     _fetchVisitorsCount();
   }
 
@@ -850,39 +836,72 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
           _buildHeader(),
           SizedBox(height: 12.h),
 
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _upcomingEvents.length,
-            separatorBuilder: (_, __) => SizedBox(height: 14.h),
-            itemBuilder: (context, index) {
-              final count = _upcomingEvents.length;
-
-              final animation = Tween<double>(begin: 0, end: 1).animate(
-                CurvedAnimation(
-                  parent: _animationController,
-                  curve: Interval(
-                    (1 / count) * index,
-                    1,
-                    curve: Curves.easeOutCubic,
-                  ),
-                ),
-              );
-
-              final event = _upcomingEvents[index];
-
-              return AnimatedBuilder(
-                animation: animation,
-                builder: (_, __) {
-                  return Opacity(
-                    opacity: animation.value,
-                    child: Transform.translate(
-                      offset: Offset(0, 30 * (1 - animation.value)),
-                      child: _buildEventCard(event),
+          BlocBuilder<EventsBloc, EventsState>(
+            builder: (context, state) {
+              if (state is EventsLoading) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 2,
+                  itemBuilder: (_, __) => _buildEventShimmer(),
+                );
+              }
+              if (state is EventsError) {
+                return Center(child: Text(state.message));
+              }
+              if (state is EventsLoaded) {
+                final events = state.events.take(3).toList();
+                if (events.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20.h),
+                    child: Center(
+                      child: Text(
+                        "No upcoming events.",
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                      ),
                     ),
                   );
-                },
-              );
+                }
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: events.length,
+                  separatorBuilder: (_, __) => SizedBox(height: 14.h),
+                  itemBuilder: (context, index) {
+                    final count = events.length;
+
+                    final animation = Tween<double>(begin: 0, end: 1).animate(
+                      CurvedAnimation(
+                        parent: _animationController,
+                        curve: Interval(
+                          (1 / count) * index,
+                          1,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                    );
+
+                    final event = events[index];
+
+                    return AnimatedBuilder(
+                      animation: animation,
+                      builder: (_, __) {
+                        return Opacity(
+                          opacity: animation.value,
+                          child: Transform.translate(
+                            offset: Offset(0, 30 * (1 - animation.value)),
+                            child: _buildEventCard(event),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              }
+              return const SizedBox();
             },
           ),
         ],
@@ -937,7 +956,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14.r),
                   child: CachedNetworkImage(
-                    imageUrl: event['image'],
+                    imageUrl: event['cover_image']?.isNotEmpty == true
+                        ? event['cover_image']
+                        : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678',
                     width: 90.w,
                     height: 90.w,
                     fit: BoxFit.cover,
@@ -961,7 +982,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                     children: [
                       /// TITLE
                       Text(
-                        event['title'],
+                        event['title'] ?? 'Untitled Event',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -990,7 +1011,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                             Icon(Icons.calendar_today, size: 12.sp),
                             SizedBox(width: 4.w),
                             Text(
-                              event['date'],
+                              '${event["event_date"] ?? ""} • ${event["event_time"] ?? ""}',
                               style: TextStyle(fontSize: 11.sp),
                             ),
                           ],
@@ -1060,7 +1081,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
               ),
               alignment: Alignment.center,
               child: Text(
-                '+${event['attendees']}',
+                '+${event['attendees'] ?? 0}',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 10.sp,
@@ -1085,6 +1106,70 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
         elevation: 0,
       ),
       child: Text('RSVP', style: TextStyle(fontSize: 12.sp)),
+    );
+  }
+
+  Widget _buildEventShimmer() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
+    final highlightColor = isDark ? Colors.grey.shade700 : Colors.grey.shade100;
+
+    Widget shimmerBox(double width, double height, [double radius = 4]) {
+      return Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(radius.r),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 14.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18.r),
+        color: Theme.of(context).cardColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(12.w),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            shimmerBox(90.w, 90.w, 14),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  shimmerBox(double.infinity, 16.h),
+                  SizedBox(height: 6.h),
+                  shimmerBox(120.w, 24.h, 8),
+                  SizedBox(height: 10.h),
+                  Row(
+                    children: [
+                      shimmerBox(60.w, 24.h, 12),
+                      const Spacer(),
+                      shimmerBox(60.w, 24.h, 8),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

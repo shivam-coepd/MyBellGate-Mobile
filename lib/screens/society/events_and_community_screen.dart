@@ -15,8 +15,11 @@ import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/blocs/community/community_bloc.dart';
 import 'package:mygate_coepd/blocs/events/events_bloc.dart';
+import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
+import 'package:mygate_coepd/models/announcement.dart'; // for Poll
 import 'package:mygate_coepd/models/community_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 class EventsAndCommunityScreen extends StatefulWidget {
   const EventsAndCommunityScreen({super.key});
@@ -68,11 +71,20 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
 
   void _showCreatePostSheet() {
     HapticFeedback.mediumImpact();
+    final communityBloc = context.read<CommunityBloc>();
+    final commsBloc = context.read<CommunicationsBloc>();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const CreatePostBottomSheet(),
+      builder: (context) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: communityBloc),
+          BlocProvider.value(value: commsBloc),
+        ],
+        child: const CreatePostBottomSheet(),
+      ),
     );
   }
 
@@ -90,29 +102,21 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          HapticFeedback.mediumImpact();
-          await Future.delayed(const Duration(seconds: 1));
-        },
-        child: Column(
-          children: [
-            _buildSegmentedControl(theme),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  EventsSectionWidget(scrollController: _scrollController),
-                  CommunityFeedSectionWidget(
-                    scrollController: _scrollController,
-                  ),
-                  PollsSectionWidget(scrollController: _scrollController),
-                ],
-              ),
+      body: Column(
+        children: [
+          _buildSegmentedControl(theme),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              physics: const BouncingScrollPhysics(),
+              children: [
+                EventsSectionWidget(scrollController: _scrollController),
+                CommunityFeedSectionWidget(scrollController: _scrollController),
+                PollsSectionWidget(scrollController: _scrollController),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: _selectedSegment == 1 && _showFab
           ? _buildFloatingActionButton(theme)
@@ -205,6 +209,495 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
           ),
         );
       },
+    );
+  }
+}
+
+/// Events section displaying upcoming activities with RSVP functionality
+class EventsSectionWidget extends StatefulWidget {
+  final ScrollController scrollController;
+
+  const EventsSectionWidget({super.key, required this.scrollController});
+
+  @override
+  State<EventsSectionWidget> createState() => _EventsSectionWidgetState();
+}
+
+class _EventsSectionWidgetState extends State<EventsSectionWidget> {
+  void _handleShare(Map<String, dynamic> event) {
+    HapticFeedback.mediumImpact();
+    // ignore: deprecated_member_use
+    Share.share(
+      'Join me at ${event["title"] ?? "this event"} on ${event["event_date"] ?? "upcoming date"} at ${event["event_time"] ?? ""}. Location: ${event["location"] ?? "TBA"}',
+      subject: event["title"] ?? "Event",
+    );
+  }
+
+  void _handleAddToCalendar(Map<String, dynamic> event, BuildContext context) {
+    HapticFeedback.lightImpact();
+    final theme = Theme.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Event added to calendar',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onInverseSurface,
+          ),
+        ),
+        backgroundColor: theme.colorScheme.inverseSurface,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleGetDirections(Map<String, dynamic> event) {
+    HapticFeedback.lightImpact();
+    final theme = Theme.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Opening directions to ${event["location"] ?? "Unknown location"}',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onInverseSurface,
+          ),
+        ),
+        backgroundColor: theme.colorScheme.inverseSurface,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showEventDetails(Map<String, dynamic> event) {
+    HapticFeedback.mediumImpact();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EventDetailScreen(event: event)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return BlocBuilder<EventsBloc, EventsState>(
+      builder: (context, state) {
+        if (state is EventsLoading) {
+          return ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            itemCount: 4,
+            itemBuilder: (_, __) => buildEventCardShimmer(theme),
+          );
+        }
+        if (state is EventsError) {
+          return Padding(
+            padding: EdgeInsets.only(left: 24.w, right: 24.w, top: 100.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 72.sp,
+                  color: theme.colorScheme.primary.withOpacity(0.8),
+                ),
+
+                SizedBox(height: 20.h),
+
+                Text(
+                  "Unable to Load Community Events",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+
+                SizedBox(height: 8.h),
+
+                Text(
+                  "Something went wrong while fetching the latest community events.\nPlease try again.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+
+                SizedBox(height: 24.h),
+
+                ElevatedButton.icon(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.read<EventsBloc>().add(LoadEvents());
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text("Retry"),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        if (state is EventsLoaded) {
+          final events = state.events;
+          if (events.isEmpty) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<EventsBloc>().add(LoadEvents());
+                await Future.delayed(const Duration(seconds: 1));
+                HapticFeedback.lightImpact();
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: const Center(child: Text("No events found.")),
+                  ),
+                ],
+              ),
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<EventsBloc>().add(LoadEvents());
+              await Future.delayed(const Duration(seconds: 1));
+              HapticFeedback.lightImpact();
+            },
+            child: ListView.builder(
+              controller: widget.scrollController,
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                return _buildEventCard(event, theme, context);
+              },
+            ),
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildEventCard(
+    Map<String, dynamic> event,
+    ThemeData theme,
+    BuildContext context,
+  ) {
+    return Slidable(
+      key: ValueKey(event["id"]),
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (_) => _handleShare(event),
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            icon: Icons.share,
+            label: 'Share',
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          SlidableAction(
+            onPressed: (_) => _handleAddToCalendar(event, context),
+            backgroundColor: theme.colorScheme.secondary,
+            foregroundColor: theme.colorScheme.onSecondary,
+            icon: Icons.calendar_today,
+            label: 'Calendar',
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: () => _showEventDetails(event),
+        child: Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildEventImage(event, theme),
+              Padding(
+                padding: EdgeInsets.all(14.w),
+                child: Column(
+                  spacing: 6.h,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildEventHeader(event, theme),
+                    _buildEventDetails(event, theme),
+                    _buildEventFooter(event, theme),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventImage(Map<String, dynamic> event, ThemeData theme) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: Image.network(
+            event["cover_image"]?.isNotEmpty == true
+                ? event["cover_image"]
+                : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678',
+            width: double.infinity,
+            height: 140.h,
+            fit: BoxFit.cover,
+            semanticLabel: event["semanticLabel"],
+          ),
+        ),
+        Positioned(
+          top: 10.w,
+          right: 10.w,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: Text(
+              event["category"] ?? "General",
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEventHeader(Map<String, dynamic> event, ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            event["title"] ?? "Untitled Event",
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEventDetails(Map<String, dynamic> event, ThemeData theme) {
+    return Column(
+      spacing: 6.h,
+      children: [
+        _buildDetailRow(
+          Icon(
+            Icons.calendar_today,
+            color: theme.colorScheme.onSurfaceVariant,
+            size: 16,
+          ),
+          '${event["event_date"] ?? ""} • ${event["event_time"] ?? ""}',
+          theme,
+        ),
+        _buildDetailRow(
+          Icon(
+            Icons.location_on,
+            color: theme.colorScheme.onSurfaceVariant,
+            size: 16,
+          ),
+          event["location"] ?? "TBA",
+          theme,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(Widget icon, String text, ThemeData theme) {
+    return Row(
+      children: [
+        icon,
+        SizedBox(width: 2.w),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEventFooter(Map<String, dynamic> event, ThemeData theme) {
+    return Row(
+      spacing: 10.w,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20.r),
+          child: Image.network(
+            event["organizerAvatar"] ??
+                'https://ui-avatars.com/api/?name=${Uri.encodeComponent(event["organizer"] ?? "Admin")}&background=random',
+            width: 32.w,
+            height: 32.w,
+            fit: BoxFit.cover,
+            semanticLabel: event["organizerAvatarLabel"],
+          ),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event["organizer"] ?? "Society Admin",
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                '${event["attendees"] ?? 0} attending',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.directions,
+            color: theme.colorScheme.primary,
+            size: 20,
+          ),
+          onPressed: () => _handleGetDirections(event),
+          tooltip: 'Get Directions',
+        ),
+      ],
+    );
+  }
+
+  Widget buildEventCardShimmer(ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Event Image
+          Stack(
+            children: [
+              _shimmerBox(width: double.infinity, height: 140.h, radius: 16.r),
+
+              Positioned(
+                top: 12.h,
+                right: 12.w,
+                child: _shimmerBox(width: 70.w, height: 24.h, radius: 20.r),
+              ),
+            ],
+          ),
+
+          Padding(
+            padding: EdgeInsets.all(14.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                /// Title
+                _shimmerBox(width: 180.w, height: 16.h),
+
+                SizedBox(height: 14.h),
+
+                /// Date Time
+                Row(
+                  children: [
+                    _shimmerBox(width: 16.w, height: 16.w, radius: 8.r),
+                    SizedBox(width: 8.w),
+                    _shimmerBox(width: 180.w, height: 12.h),
+                  ],
+                ),
+
+                SizedBox(height: 10.h),
+
+                /// Location
+                Row(
+                  children: [
+                    _shimmerBox(width: 16.w, height: 16.w, radius: 8.r),
+                    SizedBox(width: 8.w),
+                    _shimmerBox(width: 140.w, height: 12.h),
+                  ],
+                ),
+
+                SizedBox(height: 16.h),
+
+                /// Footer
+                Row(
+                  children: [
+                    _shimmerBox(width: 32.w, height: 32.w, radius: 16.r),
+
+                    SizedBox(width: 10.w),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _shimmerBox(width: 100.w, height: 12.h),
+
+                          SizedBox(height: 6.h),
+
+                          _shimmerBox(width: 70.w, height: 10.h),
+                        ],
+                      ),
+                    ),
+
+                    _shimmerBox(width: 36.w, height: 36.w, radius: 18.r),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -332,9 +825,69 @@ class _CommunityFeedSectionWidgetState
     return BlocBuilder<CommunityBloc, CommunityState>(
       builder: (context, state) {
         if (state is CommunityLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            itemCount: 3,
+            itemBuilder: (_, __) => buildCommunityPostShimmer(theme),
+          );
         } else if (state is CommunityError) {
-          return Center(child: Text(state.message));
+          return Padding(
+            padding: EdgeInsets.only(left: 24.w, right: 24.w, top: 100.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 72.sp,
+                  color: theme.colorScheme.primary.withOpacity(0.8),
+                ),
+
+                SizedBox(height: 20.h),
+
+                Text(
+                  "Unable to Load Community Feed",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+
+                SizedBox(height: 8.h),
+
+                Text(
+                  "Something went wrong while fetching the latest community updates.\nPlease try again.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+
+                SizedBox(height: 24.h),
+
+                ElevatedButton.icon(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.read<CommunityBloc>().add(LoadCommunityData());
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text("Retry"),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
         } else if (state is CommunityLoaded) {
           final posts = state.posts;
 
@@ -344,10 +897,25 @@ class _CommunityFeedSectionWidgetState
               : null;
 
           if (posts.isEmpty) {
-            return Center(
-              child: Text(
-                'No community posts yet.',
-                style: theme.textTheme.bodyMedium,
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<CommunityBloc>().add(LoadCommunityData());
+                await Future.delayed(const Duration(seconds: 1));
+                HapticFeedback.lightImpact();
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: Center(
+                      child: Text(
+                        'No community posts yet.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           }
@@ -360,7 +928,9 @@ class _CommunityFeedSectionWidgetState
             },
             child: ListView.builder(
               controller: widget.scrollController,
-              physics: const BouncingScrollPhysics(),
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
               itemCount: posts.length,
               itemBuilder: (context, index) {
@@ -618,6 +1188,77 @@ class _CommunityFeedSectionWidgetState
           ],
         ),
       ),
+    );
+  }
+
+  Widget buildCommunityPostShimmer(ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Header
+          Row(
+            children: [
+              _shimmerBox(width: 36.w, height: 36.w, radius: 18.r),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _shimmerBox(width: 120.w, height: 12.h),
+                    SizedBox(height: 8.h),
+                    _shimmerBox(width: 70.w, height: 10.h),
+                  ],
+                ),
+              ),
+              _shimmerBox(width: 20.w, height: 20.w, radius: 10.r),
+            ],
+          ),
+
+          SizedBox(height: 14.h),
+
+          /// Content
+          _shimmerBox(width: double.infinity, height: 12.h),
+
+          SizedBox(height: 8.h),
+
+          _shimmerBox(width: 250.w, height: 12.h),
+
+          SizedBox(height: 14.h),
+
+          /// Image Placeholder
+          _shimmerBox(width: double.infinity, height: 130.h, radius: 12.r),
+
+          SizedBox(height: 14.h),
+
+          /// Actions
+          Row(
+            children: [
+              _actionShimmer(),
+              SizedBox(width: 20.w),
+              _actionShimmer(),
+              SizedBox(width: 20.w),
+              _actionShimmer(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionShimmer() {
+    return Row(
+      children: [
+        _shimmerBox(width: 18.w, height: 18.w, radius: 9.r),
+        SizedBox(width: 6.w),
+        _shimmerBox(width: 20.w, height: 10.h),
+      ],
     );
   }
 }
@@ -1184,12 +1825,29 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
     HapticFeedback.mediumImpact();
 
-    context.read<CommunityBloc>().add(
-      CreateCommunityPost(
-        content: _contentController.text.trim(),
-        image: _uploadedImageUrls.isNotEmpty ? _uploadedImageUrls.first : null,
-      ),
-    );
+    if (_isCreatingPoll) {
+      final options = _pollOptions
+          .map((e) => e.text.trim())
+          .where((t) => t.isNotEmpty)
+          .toList();
+      context.read<CommunicationsBloc>().add(
+        CreatePoll(
+          question: _contentController.text.trim(),
+          options: options,
+          endsAt: DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+          pollType: _privacySetting,
+        ),
+      );
+    } else {
+      context.read<CommunityBloc>().add(
+        CreateCommunityPost(
+          content: _contentController.text.trim(),
+          image: _uploadedImageUrls.isNotEmpty
+              ? _uploadedImageUrls.first
+              : null,
+        ),
+      );
+    }
 
     Navigator.pop(context);
     _showSnack(_isCreatingPoll ? 'Poll posted' : 'Post created');
@@ -1315,7 +1973,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               'New post',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 16.sp,
+                fontSize: 20.sp,
                 letterSpacing: -0.2,
               ),
             ),
@@ -1330,7 +1988,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
               minimumSize: Size(0, 36.h),
               padding: EdgeInsets.symmetric(horizontal: 10.w),
             ),
-            child: Text('Cancel', style: TextStyle(fontSize: 13.sp)),
+            child: Text('Cancel', style: TextStyle(fontSize: 15.sp)),
           ),
           SizedBox(width: 4.w),
           FilledButton(
@@ -1345,7 +2003,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
             ),
             child: Text(
               'Post',
-              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1357,38 +2015,28 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
   Widget _buildModeSwitch(ThemeData theme) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 12.h),
-      child: Container(
-        height: 36.h,
-        padding: EdgeInsets.all(3.w),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.5,
+      padding: EdgeInsetsGeometry.fromLTRB(16.w, 4.h, 16.w, 16.h),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SegmentButton(
+              label: 'Post',
+              icon: Icons.article_outlined,
+              selected: _mode == _PostMode.text,
+              onTap: () => _setMode(_PostMode.text),
+              theme: theme,
+            ),
           ),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _SegmentButton(
-                label: 'Post',
-                icon: Icons.article_outlined,
-                selected: _mode == _PostMode.text,
-                onTap: () => _setMode(_PostMode.text),
-                theme: theme,
-              ),
+          Expanded(
+            child: _SegmentButton(
+              label: 'Poll',
+              icon: Icons.bar_chart_rounded,
+              selected: _mode == _PostMode.poll,
+              onTap: () => _setMode(_PostMode.poll),
+              theme: theme,
             ),
-            Expanded(
-              child: _SegmentButton(
-                label: 'Poll',
-                icon: Icons.bar_chart_rounded,
-                selected: _mode == _PostMode.poll,
-                onTap: () => _setMode(_PostMode.poll),
-                theme: theme,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1903,6 +2551,7 @@ class _SegmentButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
+        padding: EdgeInsets.all(16.w),
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
@@ -1911,7 +2560,7 @@ class _SegmentButton extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 3,
                     offset: const Offset(0, 1),
                   ),
@@ -1923,7 +2572,7 @@ class _SegmentButton extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 14.sp,
+              size: 16.sp,
               color: selected
                   ? theme.colorScheme.onSurface
                   : theme.colorScheme.onSurfaceVariant,
@@ -1932,7 +2581,7 @@ class _SegmentButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12.5.sp,
+                fontSize: 14.5.sp,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 color: selected
                     ? theme.colorScheme.onSurface
@@ -1992,327 +2641,6 @@ class _FooterIconAction extends StatelessWidget {
   }
 }
 
-/// Events section displaying upcoming activities with RSVP functionality
-class EventsSectionWidget extends StatefulWidget {
-  final ScrollController scrollController;
-
-  const EventsSectionWidget({super.key, required this.scrollController});
-
-  @override
-  State<EventsSectionWidget> createState() => _EventsSectionWidgetState();
-}
-
-class _EventsSectionWidgetState extends State<EventsSectionWidget> {
-  void _handleShare(Map<String, dynamic> event) {
-    HapticFeedback.mediumImpact();
-    // ignore: deprecated_member_use
-    Share.share(
-      'Join me at ${event["title"] ?? "this event"} on ${event["event_date"] ?? "upcoming date"} at ${event["event_time"] ?? ""}. Location: ${event["location"] ?? "TBA"}',
-      subject: event["title"] ?? "Event",
-    );
-  }
-
-  void _handleAddToCalendar(Map<String, dynamic> event, BuildContext context) {
-    HapticFeedback.lightImpact();
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Event added to calendar',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onInverseSurface,
-          ),
-        ),
-        backgroundColor: theme.colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _handleGetDirections(Map<String, dynamic> event) {
-    HapticFeedback.lightImpact();
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Opening directions to ${event["location"] ?? "Unknown location"}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onInverseSurface,
-          ),
-        ),
-        backgroundColor: theme.colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _showEventDetails(Map<String, dynamic> event) {
-    HapticFeedback.mediumImpact();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => EventDetailScreen(event: event)),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return BlocBuilder<EventsBloc, EventsState>(
-      builder: (context, state) {
-        if (state is EventsLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (state is EventsError) {
-          return Center(child: Text(state.message));
-        }
-        if (state is EventsLoaded) {
-          final events = state.events;
-          if (events.isEmpty) {
-            return const Center(child: Text("No events found."));
-          }
-          return RefreshIndicator(
-            onRefresh: () async {
-              context.read<EventsBloc>().add(LoadEvents());
-              await Future.delayed(const Duration(seconds: 1));
-              HapticFeedback.lightImpact();
-            },
-            child: ListView.builder(
-              controller: widget.scrollController,
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return _buildEventCard(event, theme, context);
-              },
-            ),
-          );
-        }
-        return const SizedBox();
-      },
-    );
-  }
-
-  Widget _buildEventCard(
-    Map<String, dynamic> event,
-    ThemeData theme,
-    BuildContext context,
-  ) {
-    return Slidable(
-      key: ValueKey(event["id"]),
-      endActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        children: [
-          SlidableAction(
-            onPressed: (_) => _handleShare(event),
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
-            icon: Icons.share,
-            label: 'Share',
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          SlidableAction(
-            onPressed: (_) => _handleAddToCalendar(event, context),
-            backgroundColor: theme.colorScheme.secondary,
-            foregroundColor: theme.colorScheme.onSecondary,
-            icon: Icons.calendar_today,
-            label: 'Calendar',
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-        ],
-      ),
-      child: GestureDetector(
-        onTap: () => _showEventDetails(event),
-        child: Container(
-          margin: EdgeInsets.only(bottom: 16.h),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildEventImage(event, theme),
-              Padding(
-                padding: EdgeInsets.all(14.w),
-                child: Column(
-                  spacing: 6.h,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildEventHeader(event, theme),
-                    _buildEventDetails(event, theme),
-                    _buildEventFooter(event, theme),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEventImage(Map<String, dynamic> event, ThemeData theme) {
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          child: Image.network(
-            event["cover_image"]?.isNotEmpty == true
-                ? event["cover_image"]
-                : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678',
-            width: double.infinity,
-            height: 140.h,
-            fit: BoxFit.cover,
-            semanticLabel: event["semanticLabel"],
-          ),
-        ),
-        Positioned(
-          top: 10.w,
-          right: 10.w,
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            child: Text(
-              event["category"] ?? "General",
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEventHeader(Map<String, dynamic> event, ThemeData theme) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            event["title"] ?? "Untitled Event",
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEventDetails(Map<String, dynamic> event, ThemeData theme) {
-    return Column(
-      spacing: 6.h,
-      children: [
-        _buildDetailRow(
-          Icon(
-            Icons.calendar_today,
-            color: theme.colorScheme.onSurfaceVariant,
-            size: 16,
-          ),
-          '${event["event_date"] ?? ""} • ${event["event_time"] ?? ""}',
-          theme,
-        ),
-        _buildDetailRow(
-          Icon(
-            Icons.location_on,
-            color: theme.colorScheme.onSurfaceVariant,
-            size: 16,
-          ),
-          event["location"] ?? "TBA",
-          theme,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailRow(Widget icon, String text, ThemeData theme) {
-    return Row(
-      children: [
-        icon,
-        SizedBox(width: 2.w),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEventFooter(Map<String, dynamic> event, ThemeData theme) {
-    return Row(
-      spacing: 10.w,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20.r),
-          child: Image.network(
-            event["organizerAvatar"] ??
-                'https://ui-avatars.com/api/?name=${Uri.encodeComponent(event["organizer"] ?? "Admin")}&background=random',
-            width: 32.w,
-            height: 32.w,
-            fit: BoxFit.cover,
-            semanticLabel: event["organizerAvatarLabel"],
-          ),
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                event["organizer"] ?? "Society Admin",
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                '${event["attendees"] ?? 0} attending',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          icon: Icon(
-            Icons.directions,
-            color: theme.colorScheme.primary,
-            size: 20,
-          ),
-          onPressed: () => _handleGetDirections(event),
-          tooltip: 'Get Directions',
-        ),
-      ],
-    );
-  }
-}
-
 /// Polls section with voting functionality and results visualization
 class PollsSectionWidget extends StatefulWidget {
   final ScrollController scrollController;
@@ -2324,87 +2652,15 @@ class PollsSectionWidget extends StatefulWidget {
 }
 
 class _PollsSectionWidgetState extends State<PollsSectionWidget> {
-  final List<Map<String, dynamic>> _polls = [
-    {
-      "id": 1,
-      "question": "What time should the gym be open on weekends?",
-      "author": "Fitness Committee",
-      "authorAvatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_19254133b-1765314260906.png",
-      "authorAvatarLabel": "Man in fitness attire with short hair",
-      "timestamp": "2 days ago",
-      "totalVotes": 234,
-      "hasVoted": false,
-      "selectedOption": null,
-      "options": [
-        {"text": "6 AM - 10 PM", "votes": 89},
-        {"text": "7 AM - 9 PM", "votes": 78},
-        {"text": "8 AM - 8 PM", "votes": 45},
-        {"text": "Keep current timings", "votes": 22},
-      ],
-      "endsIn": "2 days",
-      "status": "active",
-    },
-    {
-      "id": 2,
-      "question": "Should we organize a monthly movie night?",
-      "author": "Entertainment Committee",
-      "authorAvatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_12fd58c5c-1765764673574.png",
-      "authorAvatarLabel": "Woman with curly hair wearing casual attire",
-      "timestamp": "1 week ago",
-      "totalVotes": 312,
-      "hasVoted": true,
-      "selectedOption": 0,
-      "options": [
-        {"text": "Yes, every month", "votes": 198},
-        {"text": "Yes, but quarterly", "votes": 76},
-        {"text": "No, not interested", "votes": 38},
-      ],
-      "endsIn": "5 days",
-      "status": "active",
-    },
-    {
-      "id": 3,
-      "question": "Preferred timing for society meetings?",
-      "author": "Society Committee",
-      "authorAvatar":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_18365d8c3-1765084089359.png",
-      "authorAvatarLabel": "Elderly man in formal attire with glasses",
-      "timestamp": "2 weeks ago",
-      "totalVotes": 456,
-      "hasVoted": true,
-      "selectedOption": 1,
-      "options": [
-        {"text": "Weekday evenings (7-9 PM)", "votes": 156},
-        {"text": "Weekend mornings (10 AM-12 PM)", "votes": 189},
-        {"text": "Weekend evenings (6-8 PM)", "votes": 111},
-      ],
-      "endsIn": "Ended",
-      "status": "closed",
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    context.read<CommunicationsBloc>().add(const LoadPolls(isActive: true));
+  }
 
-  void _handleVote(int pollId, int optionIndex) {
+  void _handleVote(String pollId, String optionId) {
     HapticFeedback.mediumImpact();
-    setState(() {
-      final poll = _polls.firstWhere((p) => p["id"] == pollId);
-
-      if (poll["hasVoted"]) {
-        // Remove previous vote
-        final previousOption = poll["selectedOption"];
-        if (previousOption != null) {
-          (poll["options"] as List)[previousOption]["votes"]--;
-          poll["totalVotes"]--;
-        }
-      }
-
-      // Add new vote
-      (poll["options"] as List)[optionIndex]["votes"]++;
-      poll["totalVotes"]++;
-      poll["hasVoted"] = true;
-      poll["selectedOption"] = optionIndex;
-    });
+    context.read<CommunicationsBloc>().add(VoteOnPoll(pollId, optionId));
 
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -2426,25 +2682,148 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        await Future.delayed(const Duration(seconds: 1));
-        HapticFeedback.lightImpact();
+    return BlocConsumer<CommunicationsBloc, CommunicationsState>(
+      listener: (context, state) {
+        if (state is VoteCast ||
+            state is PollCreated ||
+            state is PollUpdated ||
+            state is PollDeleted) {
+          context.read<CommunicationsBloc>().add(
+            const LoadPolls(isActive: true),
+          );
+        }
       },
-      child: ListView.builder(
-        controller: widget.scrollController,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        itemCount: _polls.length,
-        itemBuilder: (context, index) {
-          final poll = _polls[index];
-          return _buildPollCard(poll, theme);
-        },
-      ),
+      buildWhen: (previous, current) =>
+          current is PollsLoaded ||
+          current is CommunicationsLoading ||
+          current is CommunicationsError,
+      builder: (context, state) {
+        if (state is CommunicationsLoading) {
+          return ListView.builder(
+            itemCount: 4,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            itemBuilder: (_, __) => buildPollCardShimmer(theme),
+          );
+        }
+        if (state is CommunicationsError) {
+          return Padding(
+            padding: EdgeInsets.only(left: 24.w, right: 24.w, top: 100.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 72.sp,
+                  color: theme.colorScheme.primary.withOpacity(0.8),
+                ),
+
+                SizedBox(height: 20.h),
+
+                Text(
+                  "Unable to Load Community Polls",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+
+                SizedBox(height: 8.h),
+
+                Text(
+                  "Something went wrong while fetching the latest community polls.\nPlease try again.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+
+                SizedBox(height: 24.h),
+
+                ElevatedButton.icon(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.read<CommunicationsBloc>().add(
+                      const LoadPolls(isActive: true),
+                    );
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text("Retry"),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        List<Poll> polls = [];
+        if (state is PollsLoaded) {
+          polls = state.polls;
+        }
+
+        if (polls.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<CommunicationsBloc>().add(
+                const LoadPolls(isActive: true),
+              );
+              await Future.delayed(const Duration(seconds: 1));
+              HapticFeedback.lightImpact();
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: Center(
+                    child: Text(
+                      'No active polls.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<CommunicationsBloc>().add(
+              const LoadPolls(isActive: true),
+            );
+            await Future.delayed(const Duration(seconds: 1));
+            HapticFeedback.lightImpact();
+          },
+          child: ListView.builder(
+            controller: widget.scrollController,
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            itemCount: polls.length,
+            itemBuilder: (context, index) {
+              final poll = polls[index];
+              return _buildPollCard(poll, theme);
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildPollCard(Map<String, dynamic> poll, ThemeData theme) {
+  Widget _buildPollCard(Poll poll, ThemeData theme) {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(14.w),
@@ -2472,18 +2851,21 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
     );
   }
 
-  Widget _buildPollHeader(Map<String, dynamic> poll, ThemeData theme) {
+  Widget _buildPollHeader(Poll poll, ThemeData theme) {
     return Row(
       spacing: 10.w,
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(20.r),
-          child: Image.network(
-            poll["authorAvatar"],
-            width: 36.w,
-            height: 36.w,
-            fit: BoxFit.cover,
-            semanticLabel: poll["authorAvatarLabel"],
+          child: CircleAvatar(
+            radius: 18.w,
+            backgroundImage:
+                poll.createdByProfileImage != null &&
+                    poll.createdByProfileImage!.isNotEmpty
+                ? CachedNetworkImageProvider(poll.createdByProfileImage!)
+                : CachedNetworkImageProvider(
+                    'https://ui-avatars.com/api/?name=${Uri.encodeComponent(poll.createdByName ?? "Admin")}&background=random',
+                  ),
           ),
         ),
         Expanded(
@@ -2491,7 +2873,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                poll["author"],
+                poll.createdByName ?? 'Admin',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -2500,7 +2882,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
               ),
               SizedBox(height: 0.3.h),
               Text(
-                poll["timestamp"],
+                poll.createdAt != null ? poll.createdAt!.split(' ').first : '',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -2511,7 +2893,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
           decoration: BoxDecoration(
-            color: poll["status"] == "active"
+            color: poll.isActive
                 ? theme.colorScheme.primary.withValues(alpha: 0.12)
                 : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(20.r),
@@ -2521,18 +2903,16 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                poll["status"] == "active"
-                    ? Icons.access_time
-                    : Icons.check_circle,
-                color: poll["status"] == "active"
+                poll.isActive ? Icons.access_time : Icons.check_circle,
+                color: poll.isActive
                     ? theme.colorScheme.primary
                     : theme.colorScheme.onSurfaceVariant,
                 size: 14,
               ),
               Text(
-                poll["endsIn"],
+                poll.isActive ? 'Active' : 'Closed',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: poll["status"] == "active"
+                  color: poll.isActive
                       ? theme.colorScheme.primary
                       : theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
@@ -2541,33 +2921,92 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
             ],
           ),
         ),
+        BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            bool canEdit = false;
+            if (authState is Authenticated) {
+              final String uid = authState.user.id.toString();
+              final String role = authState.user.role;
+              canEdit =
+                  uid == poll.createdBy.toString() ||
+                  role == 'admin' ||
+                  role == 'super_admin';
+            }
+            if (!canEdit) return const SizedBox.shrink();
+
+            return PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              padding: EdgeInsets.zero,
+              onSelected: (value) {
+                if (value == 'close') {
+                  context.read<CommunicationsBloc>().add(
+                    UpdatePoll(poll.id, const {'is_active': false}),
+                  );
+                } else if (value == 'delete') {
+                  context.read<CommunicationsBloc>().add(DeletePoll(poll.id));
+                }
+              },
+              itemBuilder: (context) => [
+                if (poll.isActive)
+                  PopupMenuItem(
+                    value: 'close',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.lock,
+                          size: 18,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        SizedBox(width: 8.w),
+                        const Text('Close Poll'),
+                      ],
+                    ),
+                  ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 18, color: Colors.red),
+                      SizedBox(width: 8.w),
+                      Text('Delete', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildPollQuestion(Map<String, dynamic> poll, ThemeData theme) {
+  Widget _buildPollQuestion(Poll poll, ThemeData theme) {
     return Text(
-      poll["question"],
+      poll.question,
       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 
-  Widget _buildPollOptions(Map<String, dynamic> poll, ThemeData theme) {
-    final options = poll["options"] as List;
-    final totalVotes = poll["totalVotes"] as int;
-    final hasVoted = poll["hasVoted"] as bool;
-    final selectedOption = poll["selectedOption"];
+  Widget _buildPollOptions(Poll poll, ThemeData theme) {
+    final options = poll.options;
+    final totalVotes = poll.totalVotes;
+    final hasVoted = poll.hasVoted;
 
     return Column(
       children: List.generate(options.length, (index) {
         final option = options[index];
-        final votes = option["votes"] as int;
+        final votes = option.voteCount;
         final percentage = totalVotes > 0 ? (votes / totalVotes * 100) : 0.0;
-        final isSelected = hasVoted && selectedOption == index;
+        final isSelected =
+            false; // We don't get selectedOption from API easily unless we join, maybe visually it's fine just to show votes
 
         return GestureDetector(
-          onTap: poll["status"] == "active"
-              ? () => _handleVote(poll["id"], index)
+          onTap: (poll.isActive && !hasVoted)
+              ? () => _handleVote(poll.id, option.id)
               : null,
           child: Container(
             margin: EdgeInsets.only(bottom: 2.h),
@@ -2579,7 +3018,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
                   children: [
                     Expanded(
                       child: Text(
-                        option["text"],
+                        option.optionText,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: isSelected
                               ? FontWeight.w600
@@ -2617,7 +3056,13 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
                       duration: const Duration(milliseconds: 500),
                       curve: Curves.easeOut,
                       height: 5.h,
-                      width: hasVoted ? (percentage / 100 * 100).w : 0,
+                      width: hasVoted
+                          ? (percentage /
+                                    100 *
+                                    MediaQuery.of(context).size.width *
+                                    0.8)
+                                .w
+                          : 0,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: isSelected
@@ -2658,7 +3103,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
     );
   }
 
-  Widget _buildPollFooter(Map<String, dynamic> poll, ThemeData theme) {
+  Widget _buildPollFooter(Poll poll, ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
@@ -2676,14 +3121,14 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
               ),
               SizedBox(width: 2.w),
               Text(
-                '${poll["totalVotes"]} votes',
+                '${poll.totalVotes} votes',
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
-          if (poll["hasVoted"])
+          if (poll.hasVoted)
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
@@ -2710,4 +3155,117 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
       ),
     );
   }
+
+  Widget buildPollCardShimmer(ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Header
+          Row(
+            children: [
+              _shimmerBox(width: 36.w, height: 36.w, radius: 18.r),
+
+              SizedBox(width: 10.w),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _shimmerBox(width: 120.w, height: 12.h),
+                    SizedBox(height: 6.h),
+                    _shimmerBox(width: 70.w, height: 10.h),
+                  ],
+                ),
+              ),
+
+              _shimmerBox(width: 70.w, height: 26.h, radius: 20.r),
+            ],
+          ),
+
+          SizedBox(height: 16.h),
+
+          /// Question
+          _shimmerBox(width: double.infinity, height: 16.h),
+
+          SizedBox(height: 8.h),
+
+          _shimmerBox(width: 220.w, height: 16.h),
+
+          SizedBox(height: 16.h),
+
+          /// Poll Options
+          ...List.generate(
+            2,
+            (index) => Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _shimmerBox(width: 160.w + (index * 15).w, height: 12.h),
+
+                  SizedBox(height: 8.h),
+
+                  _shimmerBox(width: double.infinity, height: 5.h, radius: 6.r),
+                ],
+              ),
+            ),
+          ),
+
+          SizedBox(height: 6.h),
+
+          /// Footer
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    _shimmerBox(width: 18.w, height: 18.w, radius: 9.r),
+                    SizedBox(width: 8.w),
+                    _shimmerBox(width: 70.w, height: 12.h),
+                  ],
+                ),
+
+                _shimmerBox(width: 60.w, height: 24.h, radius: 20.r),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Widget _shimmerBox({double? width, double? height, double radius = 6}) {
+  return Shimmer.fromColors(
+    baseColor: Colors.grey.shade300,
+    highlightColor: Colors.grey.shade100,
+    child: Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    ),
+  );
 }

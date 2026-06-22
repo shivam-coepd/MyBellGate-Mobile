@@ -25,6 +25,23 @@ class LoadPolls extends CommunicationsEvent {
   List<Object?> get props => [isActive];
 }
 
+class CreatePoll extends CommunicationsEvent {
+  final String question;
+  final List<String> options;
+  final String endsAt;
+  final String pollType;
+
+  const CreatePoll({
+    required this.question,
+    required this.options,
+    required this.endsAt,
+    this.pollType = 'public',
+  });
+
+  @override
+  List<Object?> get props => [question, options, endsAt, pollType];
+}
+
 class VoteOnPoll extends CommunicationsEvent {
   final String pollId;
   final String optionId;
@@ -45,6 +62,21 @@ class LeaveGroup extends CommunicationsEvent {
   const LeaveGroup(this.groupId);
   @override
   List<Object?> get props => [groupId];
+}
+
+class UpdatePoll extends CommunicationsEvent {
+  final String pollId;
+  final Map<String, dynamic> updates;
+  const UpdatePoll(this.pollId, this.updates);
+  @override
+  List<Object?> get props => [pollId, updates];
+}
+
+class DeletePoll extends CommunicationsEvent {
+  final String pollId;
+  const DeletePoll(this.pollId);
+  @override
+  List<Object?> get props => [pollId];
 }
 
 // ── States ────────────────────────────────────────────────────────────────────
@@ -73,6 +105,12 @@ class PollsLoaded extends CommunicationsState {
   List<Object?> get props => [polls];
 }
 
+class PollCreated extends CommunicationsState {}
+
+class PollUpdated extends CommunicationsState {}
+
+class PollDeleted extends CommunicationsState {}
+
 class VoteCast extends CommunicationsState {}
 
 class GroupJoined extends CommunicationsState {}
@@ -97,7 +135,10 @@ class CommunicationsBloc
         super(CommunicationsInitial()) {
     on<LoadAnnouncements>(_onLoadAnnouncements);
     on<LoadPolls>(_onLoadPolls);
+    on<CreatePoll>(_onCreatePoll);
     on<VoteOnPoll>(_onVoteOnPoll);
+    on<UpdatePoll>(_onUpdatePoll);
+    on<DeletePoll>(_onDeletePoll);
     on<JoinGroup>(_onJoinGroup);
     on<LeaveGroup>(_onLeaveGroup);
   }
@@ -119,6 +160,44 @@ class CommunicationsBloc
     try {
       final items = await _repository.getPolls(isActive: event.isActive);
       emit(PollsLoaded(items));
+    } catch (e) {
+      emit(CommunicationsError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onCreatePoll(
+      CreatePoll event, Emitter<CommunicationsState> emit) async {
+    emit(CommunicationsLoading());
+    try {
+      await _repository.createPoll(
+        question: event.question,
+        options: event.options,
+        endsAt: event.endsAt,
+        pollType: event.pollType,
+      );
+      emit(PollCreated());
+    } catch (e) {
+      emit(CommunicationsError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onUpdatePoll(
+      UpdatePoll event, Emitter<CommunicationsState> emit) async {
+    emit(CommunicationsLoading());
+    try {
+      await _repository.updatePoll(event.pollId, event.updates);
+      emit(PollUpdated());
+    } catch (e) {
+      emit(CommunicationsError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onDeletePoll(
+      DeletePoll event, Emitter<CommunicationsState> emit) async {
+    emit(CommunicationsLoading());
+    try {
+      await _repository.deletePoll(event.pollId);
+      emit(PollDeleted());
     } catch (e) {
       emit(CommunicationsError(e.toString().replaceFirst('Exception: ', '')));
     }
