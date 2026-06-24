@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,8 +66,8 @@ void main() async {
   try {
     await FcmService().init();
   } catch (e) {
-    print('Failed to initialize FCM: $e');
-    print('Failed to initialize FCM: ${e.toString()}');
+    log('Failed to initialize FCM: $e');
+    log('Failed to initialize FCM: ${e.toString()}');
   }
 
   // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE

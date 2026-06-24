@@ -9,7 +9,6 @@ import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
 import 'package:mygate_coepd/blocs/community/community_bloc.dart';
 import 'package:mygate_coepd/blocs/events/events_bloc.dart';
-import 'package:mygate_coepd/blocs/events/events_bloc.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/blocs/profile/profile_bloc.dart';
@@ -159,9 +158,9 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
                   GuardBloc(repository: context.read<GuardRepository>()),
             ),
             BlocProvider<EventsBloc>(
-              create: (context) => EventsBloc(
-                context.read<EventRepository>(),
-              )..add(LoadEvents()),
+              create: (context) =>
+                  EventsBloc(context.read<EventRepository>())
+                    ..add(LoadEvents()),
             ),
             BlocProvider<ThemeCubit>(create: (context) => ThemeCubit()),
           ],

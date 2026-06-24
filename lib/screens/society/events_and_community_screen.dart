@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -3001,8 +3000,6 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
         final option = options[index];
         final votes = option.voteCount;
         final percentage = totalVotes > 0 ? (votes / totalVotes * 100) : 0.0;
-        final isSelected =
-            false; // We don't get selectedOption from API easily unless we join, maybe visually it's fine just to show votes
 
         return GestureDetector(
           onTap: (poll.isActive && !hasVoted)
@@ -3020,9 +3017,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
                       child: Text(
                         option.optionText,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
+                          fontWeight: FontWeight.w400,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -3033,9 +3028,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
                       Text(
                         '${percentage.toStringAsFixed(1)}%',
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: isSelected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -3065,34 +3058,14 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
                           : 0,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: isSelected
-                              ? [
-                                  theme.colorScheme.primary,
-                                  theme.colorScheme.secondary,
-                                ]
-                              : [
-                                  theme.colorScheme.primary.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  theme.colorScheme.secondary.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                ],
+                          colors: [
+                            theme.colorScheme.primary.withValues(alpha: 0.5),
+                            theme.colorScheme.secondary.withValues(alpha: 0.5),
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                     ),
-                    if (isSelected)
-                      Positioned(
-                        right: 2.w,
-                        top: 0,
-                        bottom: 0,
-                        child: Icon(
-                          Icons.check_circle,
-                          color: theme.colorScheme.onPrimary,
-                          size: 16,
-                        ),
-                      ),
                   ],
                 ),
               ],

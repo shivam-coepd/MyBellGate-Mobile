@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -240,12 +241,16 @@ class _GuardAddVisitorBottomSheetState
 
       try {
         await _cameraController!.setFocusMode(FocusMode.auto);
-      } catch (e) {}
+      } catch (e) {
+        log('Failed to set focus mode: $e');
+      }
 
       if (!kIsWeb) {
         try {
           await _cameraController!.setFlashMode(FlashMode.auto);
-        } catch (e) {}
+        } catch (e) {
+          log('Failed to set flash mode: $e');
+        }
       }
 
       if (mounted) {

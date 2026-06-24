@@ -28,8 +28,8 @@ class ApiService {
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 20),
-        receiveTimeout: const Duration(seconds: 20),
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -111,6 +111,26 @@ class ApiService {
             await _logout();
           }
 
+          // ── Timeout Retry Logic ──
+          final isTimeout = e.type == DioExceptionType.connectionTimeout || 
+                            e.type == DioExceptionType.receiveTimeout || 
+                            e.type == DioExceptionType.sendTimeout;
+
+          int retries = e.requestOptions.extra['retries'] as int? ?? 0;
+          if (isTimeout && retries < 2) {
+            log('[ApiService] Timeout on ${e.requestOptions.path}. Retrying (${retries + 1}/2)...');
+            e.requestOptions.extra['retries'] = retries + 1;
+            try {
+              await Future.delayed(const Duration(seconds: 1));
+              final retryResp = await dio.fetch(e.requestOptions);
+              return handler.resolve(retryResp);
+            } on DioException catch (retryErr) {
+              return handler.next(retryErr);
+            } catch (_) {
+              return handler.next(e);
+            }
+          }
+
           return handler.next(e);
         },
       ),
@@ -141,8 +161,8 @@ class ApiService {
       final refreshDio = Dio(
         BaseOptions(
           baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 20),
+          connectTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

@@ -892,7 +892,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                         try {
                           final url = await s3.uploadImage(
                             File(image.path),
-                            folder: S3UploadService.folderPets ?? 'pets',
+                            folder: S3UploadService.folderPets,
                           );
                           setSheetState(() => uploadedImageUrl = url);
                         } catch (e) {
@@ -994,14 +994,15 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     ],
                   ),
                   _buildDropdownField<String>(
-                    value: const [
-                      'pending',
-                      'up_to_date',
-                      'not_vaccinated',
-                      'partial',
-                      'complete',
-                      'not_required',
-                    ].contains(vaccinationStatus)
+                    value:
+                        const [
+                          'pending',
+                          'up_to_date',
+                          'not_vaccinated',
+                          'partial',
+                          'complete',
+                          'not_required',
+                        ].contains(vaccinationStatus)
                         ? vaccinationStatus
                         : 'pending',
                     label: 'Vaccination Status',

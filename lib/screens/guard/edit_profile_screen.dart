@@ -83,6 +83,7 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
 
     try {
       String? uploadedProfileUrl;
+      // ignore: unused_local_variable
       String? uploadedCoverUrl;
 
       if (_pickedProfileImage != null) {

@@ -66,17 +66,6 @@ class _NotificationSettingsScreenState
     'delivery_otp': 'Package delivery OTP and courier updates',
   };
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
   Future<void> _pickQuietStartTime() async {
     final picked = await showTimePicker(
       context: context,

@@ -59,7 +59,7 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
   }
 
   void _showPaymentOptions(Invoice invoice) {
-    String method = 'UPI';
+    String method = 'upi';
     final txnCtrl = TextEditingController();
     showModalBottomSheet(
       context: context,
@@ -134,18 +134,16 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                 ),
-                items:
-                    [
-                          'UPI',
-                          'Credit Card',
-                          'Debit Card',
-                          'Net Banking',
-                          'Cash',
-                          'Cheque',
-                        ]
-                        .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                        .toList(),
-                onChanged: (v) => sSet(() => method = v ?? 'UPI'),
+                items: const [
+                  DropdownMenuItem(value: 'upi', child: Text('UPI')),
+                  DropdownMenuItem(value: 'net_banking', child: Text('Net Banking')),
+                  DropdownMenuItem(value: 'credit_card', child: Text('Credit Card')),
+                  DropdownMenuItem(value: 'debit_card', child: Text('Debit Card')),
+                  DropdownMenuItem(value: 'bank_transfer', child: Text('Bank Transfer')),
+                  DropdownMenuItem(value: 'cash', child: Text('Cash')),
+                  DropdownMenuItem(value: 'cheque', child: Text('Cheque')),
+                ],
+                onChanged: (v) => sSet(() => method = v ?? 'upi'),
               ),
               SizedBox(height: 12.h),
               TextField(
@@ -210,6 +208,9 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
               backgroundColor: Colors.green,
             ),
           );
+          setState(() {
+            _selectedTab = 'history';
+          });
           context.read<AccountingBloc>().add(const LoadInvoices());
         } else if (state is AccountingError) {
           log('error in bills payment:${state.message}');

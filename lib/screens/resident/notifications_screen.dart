@@ -5,7 +5,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/notification/notification_bloc.dart';
 import 'package:mygate_coepd/blocs/notification/notification_event.dart';
 import 'package:mygate_coepd/blocs/notification/notification_state.dart';
-import 'package:mygate_coepd/models/notification_model.dart';
 import 'package:shimmer/shimmer.dart';
 
 class NotificationsScreen extends StatefulWidget {

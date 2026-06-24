@@ -39,7 +39,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        versionCode = 2
+        versionCode = 3
         versionName = "0.1.0"
     }
 
