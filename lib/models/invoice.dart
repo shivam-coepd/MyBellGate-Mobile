@@ -35,22 +35,24 @@ class InvoiceItem extends Equatable {
       chargeHeadId: json['charge_head_id']?.toString(),
       chargeHeadName: json['charge_head_name'],
       description: json['description'],
-      quantity:
-          double.tryParse(json['quantity']?.toString() ?? '1') ?? 1,
-      unitPrice:
-          double.tryParse(json['unit_price']?.toString() ?? '0') ?? 0,
-      gstRate:
-          double.tryParse(json['gst_rate']?.toString() ?? '0') ?? 0,
-      gstAmount:
-          double.tryParse(json['gst_amount']?.toString() ?? '0') ?? 0,
+      quantity: double.tryParse(json['quantity']?.toString() ?? '1') ?? 1,
+      unitPrice: double.tryParse(json['unit_price']?.toString() ?? '0') ?? 0,
+      gstRate: double.tryParse(json['gst_rate']?.toString() ?? '0') ?? 0,
+      gstAmount: double.tryParse(json['gst_amount']?.toString() ?? '0') ?? 0,
       totalAmount:
           double.tryParse(json['total_amount']?.toString() ?? '0') ?? 0,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [id, invoiceId, chargeHeadId, quantity, unitPrice, totalAmount];
+  List<Object?> get props => [
+    id,
+    invoiceId,
+    chargeHeadId,
+    quantity,
+    unitPrice,
+    totalAmount,
+  ];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,10 +73,13 @@ class Invoice extends Equatable {
   final double totalDiscount;
   final double arrearsAmount;
   final double fineAmount;
-  final String status; // draft | sent | partially_paid | paid | overdue | cancelled
+  final String
+  status; // draft | sent | partially_paid | paid | overdue | cancelled
   final String? notes;
   final List<InvoiceItem> items;
   final String? createdAt;
+  final String? paymentMethod;
+  final String? paidDate;
 
   const Invoice({
     required this.id,
@@ -95,6 +100,8 @@ class Invoice extends Equatable {
     this.notes,
     this.items = const [],
     this.createdAt,
+    this.paymentMethod,
+    this.paidDate,
   });
 
   factory Invoice.fromJson(Map<String, dynamic> json) {
@@ -117,15 +124,15 @@ class Invoice extends Equatable {
       dueDate: json['due_date'],
       totalAmount:
           double.tryParse(json['total_amount']?.toString() ?? '0') ?? 0,
-      totalGst:
-          double.tryParse(json['total_gst']?.toString() ?? '0') ?? 0,
+      totalGst: double.tryParse(json['total_gst']?.toString() ?? '0') ?? 0,
       totalDiscount:
           double.tryParse(json['total_discount']?.toString() ?? '0') ?? 0,
       arrearsAmount:
           double.tryParse(json['arrears_amount']?.toString() ?? '0') ?? 0,
-      fineAmount:
-          double.tryParse(json['fine_amount']?.toString() ?? '0') ?? 0,
+      fineAmount: double.tryParse(json['fine_amount']?.toString() ?? '0') ?? 0,
       status: json['status'] ?? 'draft',
+      paymentMethod: json['payment_method'],
+      paidDate: json['paid_date'],
       notes: json['notes'],
       items: parsedItems,
       createdAt: json['created_at'],
@@ -154,6 +161,12 @@ class Invoice extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, invoiceNumber, flatId, residentId, invoiceDate, status, totalAmount
-      ];
+    id,
+    invoiceNumber,
+    flatId,
+    residentId,
+    invoiceDate,
+    status,
+    totalAmount,
+  ];
 }

@@ -58,6 +58,27 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
     }
   }
 
+  Map<String, dynamic> _paymentMethodType(String? s) {
+    switch (s) {
+      case 'upi':
+        return {'name': 'UPI', 'color': Colors.blue};
+      case 'net_banking':
+        return {'name': 'Net Banking', 'color': Colors.purple};
+      case 'credit_card':
+        return {'name': 'Credit Card', 'color': Colors.orange};
+      case 'debit_card':
+        return {'name': 'Debit Card', 'color': Colors.red};
+      case 'bank_transfer':
+        return {'name': 'Bank Transfer', 'color': Colors.green};
+      case 'cash':
+        return {'name': 'Cash', 'color': Colors.grey};
+      case 'cheque':
+        return {'name': 'Cheque', 'color': Colors.grey};
+      default:
+        return {'name': 'Other', 'color': Colors.grey};
+    }
+  }
+
   void _showPaymentOptions(Invoice invoice) {
     String method = 'upi';
     final txnCtrl = TextEditingController();
@@ -136,10 +157,22 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
                 ),
                 items: const [
                   DropdownMenuItem(value: 'upi', child: Text('UPI')),
-                  DropdownMenuItem(value: 'net_banking', child: Text('Net Banking')),
-                  DropdownMenuItem(value: 'credit_card', child: Text('Credit Card')),
-                  DropdownMenuItem(value: 'debit_card', child: Text('Debit Card')),
-                  DropdownMenuItem(value: 'bank_transfer', child: Text('Bank Transfer')),
+                  DropdownMenuItem(
+                    value: 'net_banking',
+                    child: Text('Net Banking'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'credit_card',
+                    child: Text('Credit Card'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'debit_card',
+                    child: Text('Debit Card'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'bank_transfer',
+                    child: Text('Bank Transfer'),
+                  ),
                   DropdownMenuItem(value: 'cash', child: Text('Cash')),
                   DropdownMenuItem(value: 'cheque', child: Text('Cheque')),
                 ],
@@ -455,6 +488,7 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
 
   Widget _invoiceCard(Invoice inv, {required bool showPayButton}) {
     final sc = _statusColor(inv.status);
+    final pm = _paymentMethodType(inv.paymentMethod);
     return Card(
       margin: EdgeInsets.only(bottom: 14.h),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
@@ -554,24 +588,15 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
                     child: Text('Pay Now', style: TextStyle(fontSize: 13.sp)),
                   ),
                 if (!showPayButton)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        size: 16.sp,
-                        color: Colors.green,
+                  if (inv.paymentMethod != null)
+                    Text(
+                      'Paid via ${pm['name']}',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: pm['color'],
+                        fontWeight: FontWeight.bold,
                       ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'Paid',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
               ],
             ),
           ],
