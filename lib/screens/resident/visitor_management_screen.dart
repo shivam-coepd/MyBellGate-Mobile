@@ -12,6 +12,8 @@ import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:camera/camera.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:mygate_coepd/repositories/visitor_repository.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 
@@ -85,6 +87,22 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     return "$formattedDate $formattedTime";
   }
 
+  Map<String, dynamic> _adaptVisitor(Map<String, dynamic> visitor) {
+    final Map<String, dynamic> adapted = Map<String, dynamic>.from(visitor);
+
+    final rawId = visitor['id'];
+    adapted['id'] = rawId is int
+        ? rawId
+        : int.tryParse(rawId?.toString() ?? '') ?? 0;
+    adapted['photo'] =
+        visitor['image_url'] ??
+        'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png';
+    adapted['expectedTime'] = _formatVisitTime(visitor);
+    adapted['phone'] = visitor['phone']?.toString(); // Ensure phone is string
+
+    return adapted;
+  }
+
   Future<void> _fetchVisitors() async {
     if (_isLoading) return;
     setState(() {
@@ -95,20 +113,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     try {
       final list = await _visitorRepository.getVisitors();
 
-      final adaptedList = list.map((visitor) {
-        final Map<String, dynamic> adapted = Map<String, dynamic>.from(visitor);
-
-        final rawId = visitor['id'];
-        adapted['id'] = rawId is int
-            ? rawId
-            : int.tryParse(rawId?.toString() ?? '') ?? 0;
-        adapted['photo'] =
-            visitor['image_url'] ??
-            'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png';
-        adapted['expectedTime'] = _formatVisitTime(visitor);
-
-        return adapted;
-      }).toList();
+      final adaptedList = list.map((v) => _adaptVisitor(v)).toList();
 
       setState(() {
         _allVisitors = adaptedList;
@@ -236,20 +241,101 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     _showSuccessMessage('Only administrators can delete visitor log entries.');
   }
 
-  void _callVisitor(String phone) {
-    _showSuccessMessage('Calling $phone...');
+  Future<void> _callVisitor(String phone) async {
+    final Uri launchUri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      _showSuccessMessage('Could not launch dialer for $phone');
+    }
   }
 
   void _shareVisitorDetails(Map<String, dynamic> visitor) {
-    _showSuccessMessage('Sharing details for ${visitor['name']}');
+    final name = visitor['name'] ?? 'Unknown';
+    final phone = visitor['phone'] ?? 'N/A';
+    final purpose = visitor['purpose'] ?? 'N/A';
+    final visitTime = _formatVisitTime(visitor);
+    
+    final text = 'Visitor Details:\nName: $name\nPhone: $phone\nPurpose: $purpose\nExpected Time: $visitTime';
+    Share.share(text, subject: 'Visitor Details: $name');
   }
 
-  void _editVisitor(int visitorId) {
-    _showSuccessMessage('Edit functionality coming soon');
+  Future<void> _editVisitor(int visitorId) async {
+    final visitor = _allVisitors.firstWhere((v) => v['id'] == visitorId);
+    final updatedVisitor = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+         padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+         ),
+         child: AddVisitorBottomSheet(
+            existingVisitor: visitor,
+            onVisitorAdded: (_) {}, 
+         ),
+      ),
+    );
+    
+    if (updatedVisitor != null) {
+       setState(() {
+          _isLoading = true;
+       });
+       try {
+          final result = await _visitorRepository.updateVisitor(visitorId, updatedVisitor);
+          final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
+          if (index != -1) {
+             setState(() {
+                _allVisitors[index] = _adaptVisitor(result);
+             });
+             _filterVisitors();
+          }
+          _showSuccessMessage('Visitor updated successfully');
+       } catch (e) {
+          _showSuccessMessage('Failed to update visitor: ${e.toString().replaceAll('Exception: ', '')}');
+       } finally {
+          setState(() {
+             _isLoading = false;
+          });
+       }
+    }
   }
 
-  void _extendTime(int visitorId) {
-    _showSuccessMessage('Time extended successfully');
+  Future<void> _extendTime(int visitorId) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime != null) {
+      final formattedTime = '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}:00';
+      setState(() {
+         _isLoading = true;
+      });
+      try {
+         final updatedVisitor = await _visitorRepository.updateVisitor(visitorId, {'expected_exit_time': formattedTime});
+         final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
+         if (index != -1) {
+            setState(() {
+               _allVisitors[index] = _adaptVisitor(updatedVisitor);
+            });
+            _filterVisitors();
+         }
+         _showSuccessMessage('Time extended successfully');
+      } catch (e) {
+         _showSuccessMessage('Failed to extend time: ${e.toString()}');
+      } finally {
+         setState(() {
+            _isLoading = false;
+         });
+      }
+    }
   }
 
   void _toggleBulkMode() {
@@ -261,23 +347,51 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     });
   }
 
-  void _bulkApprove() {
+  Future<void> _bulkApprove() async {
     setState(() {
+      _isLoading = true;
+    });
+    int successCount = 0;
+    try {
       for (final id in _selectedVisitors) {
-        final index = _allVisitors.indexWhere((v) => v['id'] == id);
-        if (index != -1) {
-          _allVisitors[index]['status'] = 'Approved';
+        try {
+           await _visitorRepository.updateVisitorStatus(id, 'approved');
+           final index = _allVisitors.indexWhere((v) => v['id'] == id);
+           if (index != -1) {
+             _allVisitors[index]['status'] = 'approved';
+           }
+           successCount++;
+        } catch (e) {
+           log("Bulk approve failed for $id: $e");
         }
       }
       _selectedVisitors.clear();
       _isBulkMode = false;
       _filterVisitors();
-    });
-    _showSuccessMessage('${_selectedVisitors.length} visitors approved');
+      
+      _showSuccessMessage('$successCount visitors approved successfully');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _handleVoiceSearch() {
-    _showSuccessMessage('Voice search activated');
+    // Basic mock since speech_to_text is not installed
+    showDialog(
+       context: context,
+       builder: (context) => AlertDialog(
+          title: const Text('Voice Search'),
+          content: const Text('Listening... Please speak now.\n(Speech-to-text integration required)'),
+          actions: [
+             TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+             )
+          ],
+       )
+    );
   }
 
   @override
@@ -496,19 +610,8 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
           );
 
           if (visitor != null && mounted) {
-            final rawId = visitor['id'];
-            final adapted = Map<String, dynamic>.from(visitor);
-            adapted['id'] = rawId is int
-                ? rawId
-                : int.tryParse(rawId?.toString() ?? '') ?? 0;
-            adapted['photo'] =
-                visitor['image_url'] ??
-                'https://cdn.pixabay.com/photo/2015/03/04/22/35/avatar-659652_640.png';
-            adapted['expectedTime'] = visitor['visit_date'] != null
-                ? '${visitor['visit_date']} ${visitor['visit_time'] ?? ''}'
-                : 'Not specified';
             setState(() {
-              _allVisitors.insert(0, adapted);
+              _allVisitors.insert(0, _adaptVisitor(visitor));
               _filterVisitors();
             });
             _showSuccessMessage('Visitor pre-approved successfully');
@@ -631,8 +734,9 @@ class VisitorListShimmer extends StatelessWidget {
 /// Bottom sheet for adding new visitor with camera integration
 class AddVisitorBottomSheet extends StatefulWidget {
   final Function(Map<String, dynamic>) onVisitorAdded;
+  final Map<String, dynamic>? existingVisitor;
 
-  const AddVisitorBottomSheet({super.key, required this.onVisitorAdded});
+  const AddVisitorBottomSheet({super.key, required this.onVisitorAdded, this.existingVisitor});
 
   @override
   State<AddVisitorBottomSheet> createState() => _AddVisitorBottomSheetState();
@@ -670,6 +774,27 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
   @override
   void initState() {
     super.initState();
+    if (widget.existingVisitor != null) {
+      final visitor = widget.existingVisitor!;
+      _nameController.text = visitor['name'] ?? '';
+      _phoneController.text = visitor['phone'] ?? '';
+      _purposeController.text = visitor['purpose'] ?? '';
+      _selectedVisitorType = visitor['visitor_type'] ?? 'guest';
+      _uploadedPhotoUrl = visitor['image_url'];
+      if (visitor['visit_date'] != null) {
+        try {
+          _selectedDate = DateTime.parse(visitor['visit_date']);
+        } catch (_) {}
+      }
+      if (visitor['visit_time'] != null) {
+        try {
+          final parts = visitor['visit_time'].toString().split(':');
+          if (parts.length >= 2) {
+            _selectedTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+          }
+        } catch (_) {}
+      }
+    }
     _initializeCamera();
   }
 
@@ -853,35 +978,36 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
         visitTime =
             '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00';
       }
-
-      final result = await _visitorRepository.addVisitor(
-        name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        purpose: _purposeController.text.trim(),
-        visitDate: visitDate,
-        visitTime: visitTime,
-        visitorType: _selectedVisitorType,
-        imageUrl: _uploadedPhotoUrl,
-      );
-
-      // result contains { visitor_id: X } from backend
-      final createdVisitor = {
-        'id': result['visitor_id'],
+      
+      Map<String, dynamic> resultData = {
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'purpose': _purposeController.text.trim(),
         'visitor_type': _selectedVisitorType,
         'visit_date': visitDate,
         'visit_time': visitTime,
-        'status': 'pending',
         'image_url': _uploadedPhotoUrl,
       };
 
+      if (widget.existingVisitor == null) {
+        final result = await _visitorRepository.addVisitor(
+          name: resultData['name'],
+          phone: resultData['phone'],
+          purpose: resultData['purpose'],
+          visitDate: resultData['visit_date'],
+          visitTime: resultData['visit_time'],
+          visitorType: resultData['visitor_type'],
+          imageUrl: resultData['image_url'],
+        );
+        resultData['id'] = result['visitor_id'];
+        resultData['status'] = 'pending';
+      } else {
+        resultData['id'] = widget.existingVisitor!['id'];
+        resultData['status'] = widget.existingVisitor!['status'];
+      }
+
       if (mounted) {
-        // Pop the bottom sheet and pass the new visitor back as the result.
-        // This avoids calling setState on the parent while the navigator is
-        // still processing the pop (which causes the !_debugLocked assertion).
-        Navigator.of(context).pop(createdVisitor);
+        Navigator.of(context).pop(resultData);
       }
     } catch (e) {
       if (mounted) {

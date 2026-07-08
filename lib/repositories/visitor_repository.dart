@@ -110,6 +110,26 @@ class VisitorRepository {
     }
   }
 
+  /// Update visitor details
+  Future<Map<String, dynamic>> updateVisitor(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _apiService.dio.put(
+        '/visitors/$id',
+        data: data,
+      );
+      log("Update Visitor ($id) Response: ${response.data}");
+
+      if (response.data != null && response.data['status'] == true) {
+        return Map<String, dynamic>.from(response.data['data']['visitor'] ?? {});
+      } else {
+        throw Exception(response.data?['message'] ?? 'Failed to update visitor');
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(message);
+    }
+  }
+
   /// Update visitor status (approve/reject for resident, or enter/exit for guard)
   Future<Map<String, dynamic>> updateVisitorStatus(int id, String status) async {
     try {
