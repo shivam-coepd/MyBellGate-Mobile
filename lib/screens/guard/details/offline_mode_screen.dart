@@ -47,11 +47,10 @@ class _OfflineModeScreenState extends State<OfflineModeScreen> {
   ];
 
   void _syncData() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Syncing data with server...'),
-        backgroundColor: AppTheme.primary,
-      ),
+    AppSnackbar.show(
+      context: context,
+      message: 'Syncing data with server...',
+      type: SnackBarType.info,
     );
 
     // Simulate sync process
@@ -59,11 +58,10 @@ class _OfflineModeScreenState extends State<OfflineModeScreen> {
       setState(() {
         _pendingSync = 0;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Data synced successfully!'),
-          backgroundColor: AppTheme.success,
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Data synced successfully!',
+        type: SnackBarType.success,
       );
     });
   }

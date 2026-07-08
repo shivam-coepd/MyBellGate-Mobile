@@ -5,6 +5,7 @@ import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/models/ticket.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupportFeedbackScreen extends StatefulWidget {
@@ -31,18 +32,6 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
   void dispose() {
     _tabCtrl.dispose();
     super.dispose();
-  }
-
-  void _showSnackBar(String msg, {Color? bg}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: bg,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   void _openCall() async {
@@ -206,9 +195,10 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                             ),
                           );
                           Navigator.pop(ctx);
-                          _showSnackBar(
-                            'Ticket raised successfully!',
-                            bg: Colors.green,
+                          AppSnackbar.show(
+                            context: context,
+                            message: 'Ticket raised successfully!',
+                            type: SnackBarType.success,
                           );
                         }
                       },
@@ -708,9 +698,10 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
                 onPressed: rating == 0
                     ? null
                     : () {
-                        _showSnackBar(
-                          'Thank you for your feedback!',
-                          bg: Colors.green,
+                        AppSnackbar.show(
+                          context: context,
+                          message: 'Thank you for your feedback!',
+                          type: SnackBarType.success,
                         );
                         sSet(() {
                           rating = 0;
@@ -723,7 +714,11 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             SizedBox(height: 24.h),
             Center(
               child: TextButton.icon(
-                onPressed: () => _showSnackBar('Thank you for rating us!'),
+                onPressed: () => AppSnackbar.show(
+                  context: context,
+                  message: 'Thank you for rating us!',
+                  type: SnackBarType.success,
+                ),
                 icon: Icon(Icons.star_border, color: theme.colorScheme.primary),
                 label: Text(
                   'Rate us on Play Store',

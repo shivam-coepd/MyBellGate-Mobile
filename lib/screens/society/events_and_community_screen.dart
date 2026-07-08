@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:mygate_coepd/repositories/community_repository.dart';
 import 'package:mygate_coepd/screens/society/event_details_screen.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
@@ -15,7 +15,7 @@ import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/blocs/community/community_bloc.dart';
 import 'package:mygate_coepd/blocs/events/events_bloc.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
-import 'package:mygate_coepd/models/announcement.dart'; // for Poll
+import 'package:mygate_coepd/models/announcement.dart';
 import 'package:mygate_coepd/models/community_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
@@ -32,14 +32,17 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
     with SingleTickerProviderStateMixin {
   int _selectedSegment = 0; // Community Feed selected by default
   late TabController _tabController;
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _eventsScrollController = ScrollController();
+  final ScrollController _feedScrollController = ScrollController();
+  final ScrollController _pollsScrollController = ScrollController();
   bool _showFab = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
-    _scrollController.addListener(_handleScroll);
+    _tabController.addListener(_handleTabSelection);
+    _feedScrollController.addListener(_handleScroll);
 
     // Load dynamic community data
     context.read<CommunityBloc>().add(LoadCommunityData());
@@ -48,17 +51,26 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    _scrollController.dispose();
+    _eventsScrollController.dispose();
+    _feedScrollController.dispose();
+    _pollsScrollController.dispose();
     super.dispose();
   }
 
   void _handleScroll() {
-    if (_scrollController.position.userScrollDirection ==
+    if (!_feedScrollController.hasClients) return;
+    if (_feedScrollController.position.userScrollDirection ==
         ScrollDirection.reverse) {
       if (_showFab) setState(() => _showFab = false);
-    } else if (_scrollController.position.userScrollDirection ==
+    } else if (_feedScrollController.position.userScrollDirection ==
         ScrollDirection.forward) {
       if (!_showFab) setState(() => _showFab = true);
+    }
+  }
+
+  void _handleTabSelection() {
+    if (_selectedSegment != _tabController.index) {
+      setState(() => _selectedSegment = _tabController.index);
     }
   }
 
@@ -109,9 +121,11 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
               controller: _tabController,
               physics: const BouncingScrollPhysics(),
               children: [
-                EventsSectionWidget(scrollController: _scrollController),
-                CommunityFeedSectionWidget(scrollController: _scrollController),
-                PollsSectionWidget(scrollController: _scrollController),
+                EventsSectionWidget(scrollController: _eventsScrollController),
+                CommunityFeedSectionWidget(
+                  scrollController: _feedScrollController,
+                ),
+                PollsSectionWidget(scrollController: _pollsScrollController),
               ],
             ),
           ),
@@ -232,39 +246,13 @@ class _EventsSectionWidgetState extends State<EventsSectionWidget> {
     );
   }
 
-  void _handleAddToCalendar(Map<String, dynamic> event, BuildContext context) {
-    HapticFeedback.lightImpact();
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Event added to calendar',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onInverseSurface,
-          ),
-        ),
-        backgroundColor: theme.colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
   void _handleGetDirections(Map<String, dynamic> event) {
     HapticFeedback.lightImpact();
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
+    AppSnackbar.show(
+      context: context,
+      message:
           'Opening directions to ${event["location"] ?? "Unknown location"}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onInverseSurface,
-          ),
-        ),
-        backgroundColor: theme.colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+      type: SnackBarType.info,
     );
   }
 
@@ -398,62 +386,38 @@ class _EventsSectionWidgetState extends State<EventsSectionWidget> {
     ThemeData theme,
     BuildContext context,
   ) {
-    return Slidable(
-      key: ValueKey(event["id"]),
-      endActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        children: [
-          SlidableAction(
-            onPressed: (_) => _handleShare(event),
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
-            icon: Icons.share,
-            label: 'Share',
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          SlidableAction(
-            onPressed: (_) => _handleAddToCalendar(event, context),
-            backgroundColor: theme.colorScheme.secondary,
-            foregroundColor: theme.colorScheme.onSecondary,
-            icon: Icons.calendar_today,
-            label: 'Calendar',
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-        ],
-      ),
-      child: GestureDetector(
-        onTap: () => _showEventDetails(event),
-        child: Container(
-          margin: EdgeInsets.only(bottom: 16.h),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () => _showEventDetails(event),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildEventImage(event, theme),
+            Padding(
+              padding: EdgeInsets.all(14.w),
+              child: Column(
+                spacing: 6.h,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildEventHeader(event, theme),
+                  _buildEventDetails(event, theme),
+                  _buildEventFooter(event, theme),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildEventImage(event, theme),
-              Padding(
-                padding: EdgeInsets.all(14.w),
-                child: Column(
-                  spacing: 6.h,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildEventHeader(event, theme),
-                    _buildEventDetails(event, theme),
-                    _buildEventFooter(event, theme),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -763,17 +727,10 @@ class _CommunityFeedSectionWidgetState
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Post reported. Our team will review it.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onInverseSurface,
-                    ),
-                  ),
-                  backgroundColor: theme.colorScheme.inverseSurface,
-                  behavior: SnackBarBehavior.floating,
-                ),
+              AppSnackbar.show(
+                context: context,
+                message: 'Post reported. Our team will review it.',
+                type: SnackBarType.info,
               );
             },
             child: Text(
@@ -1853,20 +1810,10 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   }
 
   void _showSnack(String message, {bool isError = false}) {
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onInverseSurface,
-            fontSize: 13.sp,
-          ),
-        ),
-        backgroundColor: theme.colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+    AppSnackbar.show(
+      context: context,
+      message: message,
+      type: isError ? SnackBarType.error : SnackBarType.info,
     );
   }
 
@@ -2660,20 +2607,10 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
   void _handleVote(String pollId, String optionId) {
     HapticFeedback.mediumImpact();
     context.read<CommunicationsBloc>().add(VoteOnPoll(pollId, optionId));
-
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Your vote has been recorded!',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onInverseSurface,
-          ),
-        ),
-        backgroundColor: theme.colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+    AppSnackbar.show(
+      context: context,
+      message: 'Your vote has been recorded!',
+      type: SnackBarType.info,
     );
   }
 

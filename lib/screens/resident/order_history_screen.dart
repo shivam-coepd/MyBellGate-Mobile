@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/models/invoice.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -53,7 +54,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
         return Colors.green;
       case 'overdue':
         return Colors.red;
-      case 'partially_paid':
+      case 'pending':
         return Colors.orange;
       case 'sent':
         return Colors.blue;
@@ -70,7 +71,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
         return Icons.check_circle_outline;
       case 'overdue':
         return Icons.error_outline;
-      case 'partially_paid':
+      case 'pending':
         return Icons.pending_outlined;
       case 'sent':
         return Icons.send_outlined;
@@ -420,15 +421,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                             : null,
                       ),
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Payment submitted successfully!'),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                    AppSnackbar.show(
+                      context: context,
+                      message: 'Payment submitted successfully!',
+                      type: SnackBarType.success,
                     );
                   },
                   child: const Text('Confirm Payment'),

@@ -19,18 +19,6 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
   bool _profileVisible = true;
   bool _activityVisible = true;
 
-  void _showSnackBar(String message, {Color? color}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 2),
-        backgroundColor: color,
-      ),
-    );
-  }
-
   void _showChangePasswordSheet() {
     final currentCtrl = TextEditingController();
     final newCtrl = TextEditingController();
@@ -372,78 +360,6 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
     );
   }
 
-  void _showActiveSessions() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Container(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              'Active Sessions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 16.h),
-            _buildSessionItem(
-              icon: Icons.phone_android,
-              label: 'This Device',
-              subtitle: 'Android · Active now',
-              isCurrent: true,
-              theme: Theme.of(ctx),
-            ),
-            Divider(height: 1),
-            _buildSessionItem(
-              icon: Icons.computer,
-              label: 'Chrome · Windows',
-              subtitle: 'Last active: 2 hours ago',
-              isCurrent: false,
-              theme: Theme.of(ctx),
-              onRevoke: () {
-                Navigator.pop(ctx);
-                _showSnackBar('Session revoked', color: Colors.green);
-              },
-            ),
-            SizedBox(height: 16.h),
-            if (!_pinLockEnabled)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _showSnackBar(
-                      'All other sessions revoked',
-                      color: Colors.green,
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: BorderSide(color: Colors.red),
-                  ),
-                  child: const Text('Revoke All Other Sessions'),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildSessionItem({
     required IconData icon,
     required String label,
@@ -547,29 +463,6 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                 ),
                 SwitchListTile(
                   secondary: Icon(
-                    Icons.fingerprint,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Biometric Login',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Use fingerprint or face ID to unlock',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: _biometricEnabled,
-                  activeThumbColor: theme.colorScheme.primary,
-                  onChanged: (v) => setState(() => _biometricEnabled = v),
-                ),
-                Divider(
-                  height: 0,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.3,
-                  ),
-                ),
-                SwitchListTile(
-                  secondary: Icon(
                     Icons.pin_outlined,
                     color: theme.colorScheme.primary,
                   ),
@@ -588,7 +481,11 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                       _showSetPinSheet();
                     } else {
                       setState(() => _pinLockEnabled = false);
-                      _showSnackBar('PIN lock removed');
+                      AppSnackbar.show(
+                        context: context,
+                        message: 'PIN lock removed',
+                        type: SnackBarType.info,
+                      );
                     }
                   },
                 ),
@@ -615,7 +512,11 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                   activeThumbColor: theme.colorScheme.primary,
                   onChanged: (v) {
                     setState(() => _twoFactorEnabled = v);
-                    _showSnackBar('2FA ${v ? "enabled" : "disabled"}');
+                    AppSnackbar.show(
+                      context: context,
+                      message: '2FA ${v ? "enabled" : "disabled"}',
+                      type: SnackBarType.warning,
+                    );
                   },
                 ),
               ],
@@ -714,8 +615,11 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                     Icons.chevron_right,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  onTap: () => _showSnackBar(
-                    'Data export request submitted. You will receive an email shortly.',
+                  onTap: () => AppSnackbar.show(
+                    context: context,
+                    message:
+                        'Data export request submitted. You will receive an email shortly.',
+                    type: SnackBarType.info,
                   ),
                 ),
                 Divider(

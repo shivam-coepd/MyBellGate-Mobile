@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class AddNewPropertyScreen extends StatefulWidget {
   const AddNewPropertyScreen({super.key});
@@ -22,17 +23,6 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
   bool _isSubmitting = false;
   int _currentStep = 0;
 
-  void _showSnackBar(String msg, {Color? bg}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: bg,
-      ),
-    );
-  }
-
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
@@ -40,7 +30,12 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
     // Simulate API call
     Future.delayed(const Duration(seconds: 2), () {
       setState(() => _isSubmitting = false);
-      _showSnackBar('Property added successfully! Awaiting admin verification.', bg: Colors.green);
+
+      AppSnackbar.show(
+        context: context,
+        message: 'Property added successfully! Awaiting admin verification.',
+        type: SnackBarType.success,
+      );
       Navigator.pop(context);
     });
   }
@@ -97,7 +92,9 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
               _sectionTitle(theme, Icons.business_outlined, 'Society Details'),
               SizedBox(height: 12.h),
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
                   padding: EdgeInsets.all(16.w),
                   child: Column(
@@ -107,9 +104,14 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                         decoration: InputDecoration(
                           labelText: 'Society Name / Code',
                           hintText: 'Enter society name or registration code',
-                          prefixIcon: Icon(Icons.apartment, color: theme.colorScheme.primary),
+                          prefixIcon: Icon(
+                            Icons.apartment,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Please enter society name' : null,
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? 'Please enter society name'
+                            : null,
                         onChanged: (_) => _updateStep(),
                       ),
                     ],
@@ -123,22 +125,39 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
               _sectionTitle(theme, Icons.home_outlined, 'Property Details'),
               SizedBox(height: 12.h),
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
                   padding: EdgeInsets.all(16.w),
                   child: Column(
                     children: [
                       // Property type
-                      Text('Property Type', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'Property Type',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       SizedBox(height: 8.h),
                       Wrap(
                         spacing: 8.w,
                         children: [
-                          for (final pt in ['apartment', 'villa', 'row house', 'plot'])
+                          for (final pt in [
+                            'apartment',
+                            'villa',
+                            'row house',
+                            'plot',
+                          ])
                             ChoiceChip(
-                              label: Text(pt[0].toUpperCase() + pt.substring(1)),
+                              label: Text(
+                                pt[0].toUpperCase() + pt.substring(1),
+                              ),
                               selected: _propertyType == pt,
-                              selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                              selectedColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.2),
                               onSelected: (v) {
                                 if (v) setState(() => _propertyType = pt);
                                 _updateStep();
@@ -153,9 +172,13 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                         decoration: InputDecoration(
                           labelText: 'Building / Wing Name',
                           hintText: 'e.g. A-Wing, Block B',
-                          prefixIcon: Icon(Icons.apartment_outlined, color: theme.colorScheme.primary),
+                          prefixIcon: Icon(
+                            Icons.apartment_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? 'Required' : null,
                         onChanged: (_) => _updateStep(),
                       ),
                       SizedBox(height: 12.h),
@@ -164,9 +187,13 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                         decoration: InputDecoration(
                           labelText: 'Flat / House Number',
                           hintText: 'e.g. 101, B-202',
-                          prefixIcon: Icon(Icons.door_front_door_outlined, color: theme.colorScheme.primary),
+                          prefixIcon: Icon(
+                            Icons.door_front_door_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? 'Required' : null,
                         onChanged: (_) => _updateStep(),
                       ),
                       SizedBox(height: 12.h),
@@ -179,7 +206,10 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Floor',
                                 hintText: 'e.g. 3',
-                                prefixIcon: Icon(Icons.layers_outlined, color: theme.colorScheme.primary),
+                                prefixIcon: Icon(
+                                  Icons.layers_outlined,
+                                  color: theme.colorScheme.primary,
+                                ),
                               ),
                             ),
                           ),
@@ -191,7 +221,10 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Area (sq.ft)',
                                 hintText: 'e.g. 1200',
-                                prefixIcon: Icon(Icons.square_foot_outlined, color: theme.colorScheme.primary),
+                                prefixIcon: Icon(
+                                  Icons.square_foot_outlined,
+                                  color: theme.colorScheme.primary,
+                                ),
                               ),
                             ),
                           ),
@@ -208,22 +241,34 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
               _sectionTitle(theme, Icons.info_outline, 'Additional Details'),
               SizedBox(height: 12.h),
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
                   padding: EdgeInsets.all(16.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ownership Type', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'Ownership Type',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       SizedBox(height: 8.h),
                       Wrap(
                         spacing: 8.w,
                         children: [
                           for (final ot in ['owner', 'tenant', 'family'])
                             ChoiceChip(
-                              label: Text(ot[0].toUpperCase() + ot.substring(1)),
+                              label: Text(
+                                ot[0].toUpperCase() + ot.substring(1),
+                              ),
                               selected: _ownershipType == ot,
-                              selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                              selectedColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.2),
                               onSelected: (v) {
                                 if (v) setState(() => _ownershipType = ot);
                                 _updateStep();
@@ -232,17 +277,28 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                         ],
                       ),
                       SizedBox(height: 16.h),
-                      Text('Parking Type', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'Parking Type',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       SizedBox(height: 8.h),
                       Wrap(
                         spacing: 8.w,
                         children: [
                           for (final pk in ['covered', 'open', 'none'])
                             ChoiceChip(
-                              label: Text(pk[0].toUpperCase() + pk.substring(1)),
+                              label: Text(
+                                pk[0].toUpperCase() + pk.substring(1),
+                              ),
                               selected: _parkingType == pk,
-                              selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                              onSelected: (v) => v ? setState(() => _parkingType = pk) : null,
+                              selectedColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.2),
+                              onSelected: (v) =>
+                                  v ? setState(() => _parkingType = pk) : null,
                             ),
                         ],
                       ),
@@ -252,17 +308,27 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                         decoration: BoxDecoration(
                           color: Colors.orange.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.info_outline, size: 18, color: Colors.orange[700]),
+                            Icon(
+                              Icons.info_outline,
+                              size: 18,
+                              color: Colors.orange[700],
+                            ),
                             SizedBox(width: 10.w),
                             Expanded(
                               child: Text(
                                 'Your property request will be verified by the society admin. You will receive a notification once approved.',
-                                style: TextStyle(fontSize: 12, color: Colors.orange[800], height: 1.4),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange[800],
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ],
@@ -281,12 +347,24 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isSubmitting ? null : _submit,
                   icon: _isSubmitting
-                      ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Icon(Icons.add_home_outlined, size: 20),
-                  label: Text(_isSubmitting ? 'Submitting...' : 'Add Property', style: const TextStyle(fontSize: 16)),
+                  label: Text(
+                    _isSubmitting ? 'Submitting...' : 'Add Property',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -310,20 +388,38 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
       child: Column(
         children: [
           Container(
-            width: 32.w, height: 32.w,
+            width: 32.w,
+            height: 32.w,
             decoration: BoxDecoration(
-              color: active ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.15),
+              color: active
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: active
                   ? Icon(Icons.check, size: 16, color: Colors.white)
-                  : Text('$num', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant)),
+                  : Text(
+                      '$num',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
             ),
           ),
           SizedBox(height: 4.h),
-          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500,
-              color: active ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: active
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
@@ -334,7 +430,9 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
       child: Container(
         height: 2,
         margin: EdgeInsets.only(bottom: 20.h),
-        color: active ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+        color: active
+            ? theme.colorScheme.primary
+            : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
       ),
     );
   }
@@ -351,7 +449,10 @@ class _AddNewPropertyScreenState extends State<AddNewPropertyScreen> {
           child: Icon(icon, size: 16, color: theme.colorScheme.primary),
         ),
         SizedBox(width: 10.w),
-        Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        Text(
+          title,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }

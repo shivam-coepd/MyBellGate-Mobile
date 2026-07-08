@@ -28,12 +28,18 @@ class PrivacyPolicyScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.privacy_tip_outlined, size: 20, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.privacy_tip_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
                 SizedBox(width: 10.w),
                 Expanded(
                   child: Column(
@@ -41,11 +47,19 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Your Privacy Matters',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                       Text(
                         'We are committed to protecting your personal information and being transparent about how we use it.',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant, height: 1.4),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.4,
+                        ),
                       ),
                     ],
                   ),
@@ -59,11 +73,18 @@ class PrivacyPolicyScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Row(
               children: [
-                Icon(Icons.update, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                Icon(
+                  Icons.update,
+                  size: 14,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 SizedBox(width: 6.w),
                 Text(
                   'Last updated: January 15, 2026',
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -74,7 +95,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
             child: ListView.builder(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               itemCount: sections.length,
-              itemBuilder: (ctx, i) => _sectionCard(theme, '${i + 1}', sections[i]),
+              itemBuilder: (ctx, i) =>
+                  _sectionCard(theme, '${i + 1}', sections[i]),
             ),
           ),
         ],
@@ -100,7 +122,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     color: theme.colorScheme.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(section.icon, size: 16, color: theme.colorScheme.primary),
+                  child: Icon(
+                    section.icon,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
@@ -109,11 +135,18 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     children: [
                       Text(
                         section.title,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
                       Text(
                         '$number of $_totalSections',
-                        style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -121,36 +154,59 @@ class PrivacyPolicyScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12.h),
-            ...section.paragraphs.map((p) => Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
-              child: Text(
-                p,
-                style: TextStyle(fontSize: 13.5, height: 1.65, color: theme.colorScheme.onSurfaceVariant),
+            ...section.paragraphs.map(
+              (p) => Padding(
+                padding: EdgeInsets.only(bottom: 8.h),
+                child: Text(
+                  p,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.65,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
-            )),
+            ),
             if (section.bullets.isNotEmpty) ...[
               SizedBox(height: 4.h),
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.05),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.05,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: section.bullets.map((b) => Padding(
-                    padding: EdgeInsets.only(bottom: 6.h),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.check_circle, size: 14, color: theme.colorScheme.primary),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Text(b, style: TextStyle(fontSize: 13, height: 1.5, color: theme.colorScheme.onSurfaceVariant)),
+                  children: section.bullets
+                      .map(
+                        (b) => Padding(
+                          padding: EdgeInsets.only(bottom: 6.h),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 14,
+                                color: theme.colorScheme.primary,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  b,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    height: 1.5,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  )).toList(),
+                      )
+                      .toList(),
                 ),
               ),
             ],
@@ -175,7 +231,6 @@ class PrivacyPolicyScreen extends StatelessWidget {
           'Residential details: Society name, building, flat number, ownership type',
           'Household data: Family members, vehicles, pets, domestic help',
           'Device information: Device ID, OS version, IP address, app usage data',
-          'Biometric data: Fingerprint or face data (only if you enable biometric login)',
           'Visitor data: Photos, phone numbers, and vehicle details captured at gate entry',
         ],
       ),
@@ -293,5 +348,10 @@ class _Section {
   final String title;
   final List<String> paragraphs;
   final List<String> bullets;
-  _Section({required this.icon, required this.title, required this.paragraphs, this.bullets = const []});
+  _Section({
+    required this.icon,
+    required this.title,
+    required this.paragraphs,
+    this.bullets = const [],
+  });
 }

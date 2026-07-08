@@ -22,6 +22,7 @@ import 'package:mygate_coepd/screens/resident/property_details_screen.dart';
 import 'package:mygate_coepd/screens/resident/saved_payments_screen.dart';
 import 'package:mygate_coepd/blocs/theme/theme_cubit.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -45,17 +46,6 @@ class ProfileScreenState extends State<ProfileScreen> {
     {'icon': Icons.directions_car_outlined, 'label': 'Vehicles'},
     {'icon': Icons.pets_outlined, 'label': 'Pets'},
   ];
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 
   void _showAddFamilySheet() {
     showModalBottomSheet(
@@ -257,7 +247,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                 onTap: () {
                   setState(() => _selectedLanguage = lang);
                   Navigator.pop(context);
-                  _showSnackBar('Language changed to $lang');
+                  AppSnackbar.show(
+                    context: context,
+                    message: 'Language changed to $lang',
+                    type: SnackBarType.success,
+                    position: SnackBarPosition.top,
+                  );
                 },
               ),
             ),
@@ -321,7 +316,12 @@ class ProfileScreenState extends State<ProfileScreen> {
               onTap: () {
                 context.read<ThemeCubit>().updateTheme(ThemeMode.light);
                 Navigator.pop(context);
-                _showSnackBar('Light mode enabled');
+                AppSnackbar.show(
+                  context: context,
+                  message: "Light mode enabled",
+                  type: SnackBarType.success,
+                  position: SnackBarPosition.top,
+                );
               },
             ),
             ListTile(
@@ -344,7 +344,12 @@ class ProfileScreenState extends State<ProfileScreen> {
               onTap: () {
                 context.read<ThemeCubit>().updateTheme(ThemeMode.dark);
                 Navigator.pop(context);
-                _showSnackBar('Dark mode enabled');
+                AppSnackbar.show(
+                  context: context,
+                  message: "Dark mode enabled",
+                  type: SnackBarType.success,
+                  position: SnackBarPosition.top,
+                );
               },
             ),
             ListTile(
@@ -367,7 +372,12 @@ class ProfileScreenState extends State<ProfileScreen> {
               onTap: () {
                 context.read<ThemeCubit>().updateTheme(ThemeMode.system);
                 Navigator.pop(context);
-                _showSnackBar('System default mode enabled');
+                AppSnackbar.show(
+                  context: context,
+                  message: "System default mode enabled",
+                  type: SnackBarType.success,
+                  position: SnackBarPosition.top,
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -471,12 +481,6 @@ class ProfileScreenState extends State<ProfileScreen> {
     //   MaterialPageRoute(builder: (context) => SubScreen(title: title)),
     // );
     switch (title) {
-      case 'Notification Settings':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const NotificationSettingsScreen()),
-        );
-        break;
       case 'Security & Privacy':
         Navigator.push(
           context,
@@ -556,15 +560,18 @@ class ProfileScreenState extends State<ProfileScreen> {
         if (state is ProfileLoaded) {
           _filterFamilyMembers();
         } else if (state is HouseholdUpdateSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: state.message,
+            type: SnackBarType.success,
+            position: SnackBarPosition.top,
           );
         } else if (state is HouseholdError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          AppSnackbar.show(
+            context: context,
+            message: state.message,
+            type: SnackBarType.error,
+            position: SnackBarPosition.top,
           );
         }
       },
@@ -644,18 +651,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                     value: _flashApprovalsEnabled,
                     onChanged: (value) {
                       setState(() => _flashApprovalsEnabled = value);
-                      _showSnackBar(
-                        'Flash Approvals ${value ? "enabled" : "disabled"}',
+                      AppSnackbar.show(
+                        context: context,
+                        message:
+                            "Flash Approvals ${value ? "enabled" : "disabled"}",
+                        type: SnackBarType.success,
+                        position: SnackBarPosition.top,
                       );
                     },
-                    theme: theme,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildNavItem(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notification Settings',
-                    onTap: () => _navigateTo('Notification Settings'),
                     theme: theme,
                   ),
                 ),
@@ -874,7 +877,12 @@ class ProfileScreenState extends State<ProfileScreen> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => _showSnackBar('Edit profile photo'),
+                onTap: () => AppSnackbar.show(
+                  context: context,
+                  message: "Edit profile photo",
+                  type: SnackBarType.success,
+                  position: SnackBarPosition.top,
+                ),
                 child: Container(
                   width: 80.w,
                   height: 80.w,
@@ -1483,16 +1491,22 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Contacts permission denied')),
+          AppSnackbar.show(
+            context: context,
+            message: "Contacts permission denied",
+            type: SnackBarType.error,
+            position: SnackBarPosition.top,
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error picking contact: $e')));
+        AppSnackbar.show(
+          context: context,
+          message: "Error picking contact: $e",
+          type: SnackBarType.error,
+          position: SnackBarPosition.top,
+        );
       }
     }
   }
@@ -1517,11 +1531,11 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
       if (mounted) setState(() => _uploadedImageUrl = url);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Image upload failed: $e'),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackbar.show(
+          context: context,
+          message: "Image upload failed: $e",
+          type: SnackBarType.error,
+          position: SnackBarPosition.top,
         );
       }
     } finally {
@@ -1532,25 +1546,30 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
   void _addFamily() {
     if (_nameController.text.trim().isEmpty ||
         _mobileController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      AppSnackbar.show(
+        context: context,
+        message: "Please fill all fields",
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
+      );
       return;
     }
     if (_isUploadingImage) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please wait for image to finish uploading'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: "Please wait for image to finish uploading",
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }
     final cleanPhone = _mobileController.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (cleanPhone.length != 10 && cleanPhone.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid 10-digit mobile number'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: "Please enter a valid 10-digit mobile number",
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }
@@ -1817,7 +1836,10 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 4.h,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(12),
@@ -2065,23 +2087,30 @@ class _AddDailyHelpBottomSheetState extends State<AddDailyHelpBottomSheet> {
   void _addDailyHelp() {
     if (_nameController.text.trim().isEmpty ||
         _mobileController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter name and mobile number')),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please enter name and mobile number',
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      AppSnackbar.show(
+        context: context,
+        message: 'Please select a category',
+        type: SnackBarType.info,
+        position: SnackBarPosition.top,
+      );
       return;
     }
     final cleanPhone = _mobileController.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (cleanPhone.length != 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid 10-digit mobile number'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please enter a valid 10-digit mobile number',
+        type: SnackBarType.warning,
+        position: SnackBarPosition.top,
       );
       return;
     }
@@ -2603,8 +2632,11 @@ class _AddVehicleBottomSheetState extends State<AddVehicleBottomSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingTypes = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load vehicle types: $e')),
+        AppSnackbar.show(
+          context: context,
+          message: 'Failed to load vehicle types: $e',
+          type: SnackBarType.error,
+          position: SnackBarPosition.top,
         );
       }
     }
@@ -2628,10 +2660,11 @@ class _AddVehicleBottomSheetState extends State<AddVehicleBottomSheet> {
 
   void _addVehicle() {
     if (_numberController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a vehicle registration number'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please enter a vehicle registration number',
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }
@@ -2640,16 +2673,20 @@ class _AddVehicleBottomSheetState extends State<AddVehicleBottomSheet> {
       '',
     );
     if (cleanNumber.length < 5 || cleanNumber.length > 15) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration must be 5-15 alphanumeric characters'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Registration number must be 5-15 alphanumeric characters',
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }
     if (_selectedVehicleTypeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a vehicle type')),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please select a vehicle type',
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }
@@ -3218,11 +3255,11 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
       if (mounted) setState(() => _uploadedImageUrl = url);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Image upload failed: $e'),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackbar.show(
+          context: context,
+          message: 'Image upload failed: $e',
+          type: SnackBarType.error,
+          position: SnackBarPosition.top,
         );
       }
     } finally {
@@ -3279,18 +3316,20 @@ class _AddPetBottomSheetState extends State<AddPetBottomSheet> {
 
   void _addPet() {
     if (_nameController.text.trim().isEmpty || _selectedPetTypeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill required fields (Name and Pet Type)'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please fill required fields (Name and Pet Type)',
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }
     if (_isUploadingImage) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please wait for image to finish uploading'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please wait for image to finish uploading',
+        type: SnackBarType.error,
+        position: SnackBarPosition.top,
       );
       return;
     }

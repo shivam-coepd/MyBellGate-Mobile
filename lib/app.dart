@@ -208,8 +208,7 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
       '/profile': (context) => const ProfileScreen(),
       '/profile-details': (context) => const ProfileDetailsScreen(),
       '/resident-notifications': (context) => const NotificationsScreen(),
-      '/security': (context) =>
-          const NotificationsScreen(), // Placeholder — swap for SecurityAlertsScreen when built
+      '/security': (context) => const NotificationsScreen(),
       '/otp-verification': (context) => throw UnimplementedError(
         'OTP Verification Screen requires parameters',
       ),

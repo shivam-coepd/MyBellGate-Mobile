@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 /// Vendor access is a "service" visitor type — integrates with the real visitors API.
 class VendorAccessScreen extends StatefulWidget {
@@ -17,9 +18,9 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
   @override
   void initState() {
     super.initState();
-    context
-        .read<GuardBloc>()
-        .add(const LoadVisitors(visitorType: 'service', limit: 50));
+    context.read<GuardBloc>().add(
+      const LoadVisitors(visitorType: 'service', limit: 50),
+    );
   }
 
   void _showAddVendorSheet() {
@@ -39,21 +40,19 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
         listener: (_, state) {
           if (state is VisitorAdded) {
             Navigator.pop(sheetCtx);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vendor added successfully'),
-                backgroundColor: AppTheme.success,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Vendor added successfully',
+              type: SnackBarType.success,
             );
-            context
-                .read<GuardBloc>()
-                .add(const LoadVisitors(visitorType: 'service', limit: 50));
+            context.read<GuardBloc>().add(
+              const LoadVisitors(visitorType: 'service', limit: 50),
+            );
           } else if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.error,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Failed to add vendor',
+              type: SnackBarType.error,
             );
           }
         },
@@ -96,10 +95,9 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.phone,
-                    validator: (v) =>
-                        (v == null || v.trim().length < 10)
-                            ? 'Enter valid phone'
-                            : null,
+                    validator: (v) => (v == null || v.trim().length < 10)
+                        ? 'Enter valid phone'
+                        : null,
                   ),
                   SizedBox(height: 12.h),
                   TextFormField(
@@ -120,10 +118,9 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty)
-                            ? 'Resident ID is required'
-                            : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Resident ID is required'
+                        : null,
                   ),
                   SizedBox(height: 20.h),
                   BlocBuilder<GuardBloc, GuardState>(
@@ -132,14 +129,17 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                           ? null
                           : () {
                               if (formKey.currentState!.validate()) {
-                                bbCtx.read<GuardBloc>().add(AddVisitor(
-                                      name: nameCtrl.text.trim(),
-                                      phone: phoneCtrl.text.trim(),
-                                      purpose: serviceCtrl.text.trim(),
-                                      visitorType: 'service',
-                                      residentId: int.tryParse(
-                                          residentIdCtrl.text.trim()),
-                                    ));
+                                bbCtx.read<GuardBloc>().add(
+                                  AddVisitor(
+                                    name: nameCtrl.text.trim(),
+                                    phone: phoneCtrl.text.trim(),
+                                    purpose: serviceCtrl.text.trim(),
+                                    visitorType: 'service',
+                                    residentId: int.tryParse(
+                                      residentIdCtrl.text.trim(),
+                                    ),
+                                  ),
+                                );
                               }
                             },
                       style: ElevatedButton.styleFrom(
@@ -217,35 +217,35 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context
-                .read<GuardBloc>()
-                .add(const LoadVisitors(visitorType: 'service', limit: 50)),
+            onPressed: () => context.read<GuardBloc>().add(
+              const LoadVisitors(visitorType: 'service', limit: 50),
+            ),
           ),
         ],
       ),
       body: BlocConsumer<GuardBloc, GuardState>(
         listener: (context, state) {
           if (state is VisitorStatusUpdated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Status updated to ${state.newStatus}'),
-                backgroundColor: AppTheme.success,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Status updated to ${state.newStatus}',
+              type: SnackBarType.success,
             );
-            context
-                .read<GuardBloc>()
-                .add(const LoadVisitors(visitorType: 'service', limit: 50));
+            context.read<GuardBloc>().add(
+              const LoadVisitors(visitorType: 'service', limit: 50),
+            );
           } else if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.error,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Failed to update status',
+              type: SnackBarType.error,
             );
           }
         },
         builder: (context, state) {
-          final vendors = state is VisitorsLoaded ? state.visitors : <Map<String, dynamic>>[];
+          final vendors = state is VisitorsLoaded
+              ? state.visitors
+              : <Map<String, dynamic>>[];
           final isLoading = state is GuardLoading;
 
           if (isLoading) {
@@ -257,7 +257,9 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
               onRefresh: () async {
                 if (await AppInternetCheck().hasInternetConnection()) {
                   if (context.mounted) {
-                    context.read<GuardBloc>().add(const LoadVisitors(visitorType: 'service', limit: 50));
+                    context.read<GuardBloc>().add(
+                      const LoadVisitors(visitorType: 'service', limit: 50),
+                    );
                   }
                 } else {
                   if (context.mounted) {
@@ -271,13 +273,15 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                   Center(
                     child: Column(
                       children: [
-                        Icon(Icons.build_outlined,
-                            size: 64.sp, color: Colors.grey),
+                        Icon(
+                          Icons.build_outlined,
+                          size: 64.sp,
+                          color: Colors.grey,
+                        ),
                         SizedBox(height: 16.h),
                         Text(
                           'No vendors found',
-                          style: TextStyle(
-                              color: Colors.grey, fontSize: 16.sp),
+                          style: TextStyle(color: Colors.grey, fontSize: 16.sp),
                         ),
                       ],
                     ),
@@ -291,7 +295,9 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
             onRefresh: () async {
               if (await AppInternetCheck().hasInternetConnection()) {
                 if (context.mounted) {
-                  context.read<GuardBloc>().add(const LoadVisitors(visitorType: 'service', limit: 50));
+                  context.read<GuardBloc>().add(
+                    const LoadVisitors(visitorType: 'service', limit: 50),
+                  );
                 }
               } else {
                 if (context.mounted) {
@@ -311,8 +317,7 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
         onPressed: _showAddVendorSheet,
         backgroundColor: AppTheme.success,
         icon: const Icon(Icons.add, color: Colors.white),
-        label:
-            const Text('Add Vendor', style: TextStyle(color: Colors.white)),
+        label: const Text('Add Vendor', style: TextStyle(color: Colors.white)),
       ),
     );
   }
@@ -337,7 +342,11 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                     color: AppTheme.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
-                  child: Icon(Icons.build, color: AppTheme.success, size: 24.sp),
+                  child: Icon(
+                    Icons.build,
+                    color: AppTheme.success,
+                    size: 24.sp,
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
@@ -355,35 +364,25 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                       SizedBox(height: 3.h),
                       Text(
                         vendor['purpose'] ?? '',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 13.sp, color: Colors.grey),
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (residentName.isNotEmpty)
                         Text(
                           'For: $residentName',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                           overflow: TextOverflow.ellipsis,
                         ),
                       if (vendor['phone'] != null)
                         Text(
                           vendor['phone'],
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                         ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 8.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10.r),

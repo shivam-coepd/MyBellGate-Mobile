@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:camera/camera.dart';
@@ -740,8 +741,10 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
       await _uploadFile(photo);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to capture photo')),
+        AppSnackbar.show(
+          context: context,
+          message: 'Failed to capture photo',
+          type: SnackBarType.error,
         );
       }
     }
@@ -788,18 +791,13 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _uploadFailed = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        AppSnackbar.show(
+          context: context,
+          message:
               'Photo upload failed: ${e.toString().replaceAll('Exception: ', '')}',
-            ),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: () => _uploadFile(image),
-            ),
-          ),
+          type: SnackBarType.error,
+          actionLabel: 'Retry',
+          onActionPressed: () => _uploadFile(image),
         );
       }
     } finally {
@@ -833,10 +831,10 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
     if (!_formKey.currentState!.validate()) return;
     if (_isSubmitting) return;
     if (_isUploadingPhoto) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please wait, photo is still uploading...'),
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please wait, photo is still uploading...',
+        type: SnackBarType.info,
       );
       return;
     }
@@ -887,15 +885,10 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString().replaceAll('Exception: ', ''),
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        AppSnackbar.show(
+          context: context,
+          message: e.toString().replaceAll('Exception: ', ''),
+          type: SnackBarType.error,
         );
       }
     } finally {

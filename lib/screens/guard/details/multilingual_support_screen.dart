@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class MultilingualSupportScreen extends StatefulWidget {
   const MultilingualSupportScreen({super.key});
 
   @override
-  State<MultilingualSupportScreen> createState() => _MultilingualSupportScreenState();
+  State<MultilingualSupportScreen> createState() =>
+      _MultilingualSupportScreenState();
 }
 
 class _MultilingualSupportScreenState extends State<MultilingualSupportScreen> {
@@ -16,80 +18,31 @@ class _MultilingualSupportScreenState extends State<MultilingualSupportScreen> {
   bool _voiceEnabled = true;
 
   final List<Map<String, dynamic>> _languages = [
-    {
-      'code': 'en',
-      'name': 'English',
-      'native': 'English',
-      'flag': '🇺🇸',
-    },
-    {
-      'code': 'hi',
-      'name': 'Hindi',
-      'native': 'हिंदी',
-      'flag': '🇮🇳',
-    },
-    {
-      'code': 'kn',
-      'name': 'Kannada',
-      'native': 'ಕನ್ನಡ',
-      'flag': '🇮🇳',
-    },
-    {
-      'code': 'gu',
-      'name': 'Gujarati',
-      'native': 'ગુજરાતી',
-      'flag': '🇮🇳',
-    },
-    {
-      'code': 'ta',
-      'name': 'Tamil',
-      'native': 'தமிழ்',
-      'flag': '🇮🇳',
-    },
-    {
-      'code': 'te',
-      'name': 'Telugu',
-      'native': 'తెలుగు',
-      'flag': '🇮🇳',
-    },
+    {'code': 'en', 'name': 'English', 'native': 'English', 'flag': '🇺🇸'},
+    {'code': 'hi', 'name': 'Hindi', 'native': 'हिंदी', 'flag': '🇮🇳'},
+    {'code': 'kn', 'name': 'Kannada', 'native': 'ಕನ್ನಡ', 'flag': '🇮🇳'},
+    {'code': 'gu', 'name': 'Gujarati', 'native': 'ગુજરાતી', 'flag': '🇮🇳'},
+    {'code': 'ta', 'name': 'Tamil', 'native': 'தமிழ்', 'flag': '🇮🇳'},
+    {'code': 'te', 'name': 'Telugu', 'native': 'తెలుగు', 'flag': '🇮🇳'},
   ];
 
   final List<Map<String, dynamic>> _commonPhrases = [
-    {
-      'english': 'Welcome',
-      'translation': '',
-    },
-    {
-      'english': 'Please wear a mask',
-      'translation': '',
-    },
-    {
-      'english': 'Please provide your ID',
-      'translation': '',
-    },
-    {
-      'english': 'Please wait for approval',
-      'translation': '',
-    },
-    {
-      'english': 'You may proceed',
-      'translation': '',
-    },
-    {
-      'english': 'Thank you, visit again',
-      'translation': '',
-    },
+    {'english': 'Welcome', 'translation': ''},
+    {'english': 'Please wear a mask', 'translation': ''},
+    {'english': 'Please provide your ID', 'translation': ''},
+    {'english': 'Please wait for approval', 'translation': ''},
+    {'english': 'You may proceed', 'translation': ''},
+    {'english': 'Thank you, visit again', 'translation': ''},
   ];
 
   void _changeLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Language changed to $language'),
-        backgroundColor: AppTheme.primary,
-      ),
+    AppSnackbar.show(
+      context: context,
+      message: 'Language changed to $language',
+      type: SnackBarType.info,
     );
   }
 
@@ -118,10 +71,7 @@ class _MultilingualSupportScreenState extends State<MultilingualSupportScreen> {
                   // Language Selection
                   const Text(
                     'Select Language',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 15),
                   Card(
@@ -137,9 +87,7 @@ class _MultilingualSupportScreenState extends State<MultilingualSupportScreen> {
                             children: [
                               const Text(
                                 'Voice Assistance',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                ),
+                                style: TextStyle(fontSize: 16),
                               ),
                               Switch(
                                 value: _voiceEnabled,
@@ -155,9 +103,7 @@ class _MultilingualSupportScreenState extends State<MultilingualSupportScreen> {
                           const SizedBox(height: 15),
                           const Text(
                             'Enable voice assistance for real-time translation',
-                            style: TextStyle(
-                              color: AppTheme.onBackgroundLight,
-                            ),
+                            style: TextStyle(color: AppTheme.onBackgroundLight),
                           ),
                         ],
                       ),
@@ -195,10 +141,7 @@ class _MultilingualSupportScreenState extends State<MultilingualSupportScreen> {
                   // Common Phrases
                   const Text(
                     'Common Security Phrases',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 15),
                   SizedBox(
@@ -291,11 +234,7 @@ class _MultilingualSupportScreenState extends State<MultilingualSupportScreen> {
             ),
           );
         }
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
     );
   }

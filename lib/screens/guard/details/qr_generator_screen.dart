@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class QRGeneratorScreen extends StatefulWidget {
@@ -16,16 +17,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   String _qrData = '';
 
   final List<Map<String, String>> _presetVisitors = [
-    {
-      'name': 'John Doe',
-      'phone': '+91 9876543210',
-      'purpose': 'Delivery',
-    },
-    {
-      'name': 'Jane Smith',
-      'phone': '+91 8765432109',
-      'purpose': 'Guest Visit',
-    },
+    {'name': 'John Doe', 'phone': '+91 9876543210', 'purpose': 'Delivery'},
+    {'name': 'Jane Smith', 'phone': '+91 8765432109', 'purpose': 'Guest Visit'},
     {
       'name': 'Mike Johnson',
       'phone': '+91 7654321098',
@@ -34,20 +27,19 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   ];
 
   void _generateQR() {
-    if (_nameController.text.isNotEmpty && 
-        _phoneController.text.isNotEmpty && 
+    if (_nameController.text.isNotEmpty &&
+        _phoneController.text.isNotEmpty &&
         _purposeController.text.isNotEmpty) {
-      
       final visitorId = DateTime.now().millisecondsSinceEpoch.toString();
       setState(() {
-        _qrData = '$visitorId:${_nameController.text}:${_phoneController.text}:${_purposeController.text}';
+        _qrData =
+            '$visitorId:${_nameController.text}:${_phoneController.text}:${_purposeController.text}';
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all fields'),
-          backgroundColor: AppTheme.error,
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Please fill all fields',
+        type: SnackBarType.error,
       );
     }
   }
@@ -112,8 +104,12 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                         return ElevatedButton(
                           onPressed: () => _usePreset(preset),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.secondary.withValues(alpha: 0.1),
-                            foregroundColor: AppTheme.secondary.withValues(alpha: 0.8),
+                            backgroundColor: AppTheme.secondary.withValues(
+                              alpha: 0.1,
+                            ),
+                            foregroundColor: AppTheme.secondary.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                           child: Text(preset['name']!),
                         );
@@ -124,7 +120,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Manual Entry Form
             Card(
               child: Padding(
@@ -188,7 +184,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // QR Code Display
             if (_qrData.isNotEmpty)
               Card(
@@ -209,7 +205,11 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                         decoration: BoxDecoration(
                           color: AppTheme.onPrimary,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppTheme.onBackgroundLight.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: AppTheme.onBackgroundLight.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
                         ),
                         child: QrImageView(
                           data: _qrData,
@@ -222,7 +222,9 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppTheme.onBackgroundLight.withValues(alpha: 0.1),
+                          color: AppTheme.onBackgroundLight.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(

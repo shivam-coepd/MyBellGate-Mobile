@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/models/invoice.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:shimmer/shimmer.dart';
 
 class BillsPaymentsScreen extends StatefulWidget {
@@ -47,7 +48,7 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
         return Colors.green;
       case 'overdue':
         return Colors.red;
-      case 'partially_paid':
+      case 'pending':
         return Colors.orange;
       case 'sent':
         return Colors.blue;
@@ -233,13 +234,10 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
     return BlocListener<AccountingBloc, AccountingState>(
       listener: (ctx, state) {
         if (state is PaymentSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '✅ Payment successful! Receipt: ${state.receiptNumber}',
-              ),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Payment successful! Receipt: ${state.receiptNumber}',
+            type: SnackBarType.success,
           );
           setState(() {
             _selectedTab = 'history';
@@ -247,11 +245,10 @@ class _BillsPaymentsScreenState extends State<BillsPaymentsScreen>
           context.read<AccountingBloc>().add(const LoadInvoices());
         } else if (state is AccountingError) {
           log('error in bills payment:${state.message}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ ${state.message}'),
-              backgroundColor: Colors.red,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Failed to pay invoice',
+            type: SnackBarType.error,
           );
         }
       },

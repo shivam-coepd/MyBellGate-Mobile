@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class GroupVisitorEntryScreen extends StatefulWidget {
   const GroupVisitorEntryScreen({super.key});
@@ -53,14 +54,17 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Add Group Member',
-                  style:
-                      TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+              Text(
+                'Add Group Member',
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 16.h),
               TextFormField(
                 controller: nameCtrl,
                 decoration: const InputDecoration(
-                    labelText: 'Name *', border: OutlineInputBorder()),
+                  labelText: 'Name *',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
@@ -68,10 +72,13 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
               TextFormField(
                 controller: phoneCtrl,
                 decoration: const InputDecoration(
-                    labelText: 'Phone *', border: OutlineInputBorder()),
+                  labelText: 'Phone *',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.phone,
-                validator: (v) =>
-                    (v == null || v.trim().length < 10) ? 'Enter valid phone' : null,
+                validator: (v) => (v == null || v.trim().length < 10)
+                    ? 'Enter valid phone'
+                    : null,
               ),
               SizedBox(height: 20.h),
               SizedBox(
@@ -92,8 +99,10 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                     backgroundColor: AppTheme.primary,
                     minimumSize: Size(double.infinity, 48.h),
                   ),
-                  child:
-                      const Text('Add', style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    'Add',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ],
@@ -106,20 +115,20 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
   Future<void> _submitGroup() async {
     if (!_purposeFormKey.currentState!.validate()) return;
     if (_members.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Add at least one group member'),
-            backgroundColor: AppTheme.warning),
+      AppSnackbar.show(
+        context: context,
+        message: 'Add at least one group member',
+        type: SnackBarType.warning,
       );
       return;
     }
 
     final residentId = int.tryParse(_residentIdCtrl.text.trim());
     if (residentId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Enter a valid Resident ID'),
-            backgroundColor: AppTheme.error),
+      AppSnackbar.show(
+        context: context,
+        message: 'Enter a valid Resident ID',
+        type: SnackBarType.error,
       );
       return;
     }
@@ -132,15 +141,19 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
     for (final member in _members) {
       try {
         if (!mounted) break;
-        context.read<GuardBloc>().add(AddVisitor(
-              name: member['name'],
-              phone: member['phone'],
-              purpose: _purposeCtrl.text.trim(),
-              visitorType: _visitorType,
-              residentId: residentId,
-            ));
+        context.read<GuardBloc>().add(
+          AddVisitor(
+            name: member['name'],
+            phone: member['phone'],
+            purpose: _purposeCtrl.text.trim(),
+            visitorType: _visitorType,
+            residentId: residentId,
+          ),
+        );
 
-        final result = await context.read<GuardBloc>().stream
+        final result = await context
+            .read<GuardBloc>()
+            .stream
             .firstWhere((s) => s is VisitorAdded || s is GuardError)
             .timeout(const Duration(seconds: 15));
 
@@ -156,13 +169,13 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(failCount == 0
+    AppSnackbar.show(
+      context: context,
+      message: failCount == 0
           ? '$successCount member(s) added successfully'
-          : '$successCount added, $failCount failed'),
-      backgroundColor: failCount == 0 ? AppTheme.success : AppTheme.warning,
-    ));
+          : '$successCount added, $failCount failed',
+      type: failCount == 0 ? SnackBarType.success : SnackBarType.warning,
+    );
 
     if (successCount > 0) Navigator.pop(context);
   }
@@ -180,10 +193,15 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                     width: 16.w,
                     height: 16.h,
                     child: const CircularProgressIndicator(
-                        strokeWidth: 2, color: AppTheme.primary))
+                      strokeWidth: 2,
+                      color: AppTheme.primary,
+                    ),
+                  )
                 : const Icon(Icons.check, color: AppTheme.primary),
-            label: Text('Submit',
-                style: TextStyle(color: AppTheme.primary, fontSize: 14.sp)),
+            label: Text(
+              'Submit',
+              style: TextStyle(color: AppTheme.primary, fontSize: 14.sp),
+            ),
           ),
         ],
       ),
@@ -201,25 +219,30 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Entry Details',
-                          style: TextStyle(
-                              fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Entry Details',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: 16.h),
                       TextFormField(
                         controller: _purposeCtrl,
                         decoration: const InputDecoration(
-                            labelText: 'Purpose of Visit *',
-                            border: OutlineInputBorder()),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Required'
-                            : null,
+                          labelText: 'Purpose of Visit *',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                       SizedBox(height: 12.h),
                       TextFormField(
                         controller: _residentIdCtrl,
                         decoration: const InputDecoration(
-                            labelText: 'Resident ID *',
-                            border: OutlineInputBorder()),
+                          labelText: 'Resident ID *',
+                          border: OutlineInputBorder(),
+                        ),
                         keyboardType: TextInputType.number,
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Required' : null,
@@ -228,15 +251,22 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: _visitorType,
                         decoration: const InputDecoration(
-                            labelText: 'Visitor Type',
-                            border: OutlineInputBorder()),
+                          labelText: 'Visitor Type',
+                          border: OutlineInputBorder(),
+                        ),
                         items: const [
                           DropdownMenuItem(
-                              value: 'other', child: Text('Group / Other')),
+                            value: 'other',
+                            child: Text('Group / Other'),
+                          ),
                           DropdownMenuItem(
-                              value: 'service', child: Text('Service Workers')),
+                            value: 'service',
+                            child: Text('Service Workers'),
+                          ),
                           DropdownMenuItem(
-                              value: 'guest', child: Text('Guests')),
+                            value: 'guest',
+                            child: Text('Guests'),
+                          ),
                         ],
                         onChanged: (v) =>
                             setState(() => _visitorType = v ?? 'other'),
@@ -253,18 +283,27 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Group Members (${_members.length})',
-                    style: TextStyle(
-                        fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                Text(
+                  'Group Members (${_members.length})',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 ElevatedButton.icon(
                   onPressed: _showAddMemberSheet,
                   icon: const Icon(Icons.add, color: Colors.white, size: 18),
-                  label: const Text('Add',
-                      style: TextStyle(color: Colors.white)),
+                  label: const Text(
+                    'Add',
+                    style: TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 12.w, vertical: 8.h)),
+                    backgroundColor: AppTheme.primary,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -277,12 +316,16 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                   child: Center(
                     child: Column(
                       children: [
-                        Icon(Icons.group_add_outlined,
-                            size: 48.sp, color: Colors.grey),
+                        Icon(
+                          Icons.group_add_outlined,
+                          size: 48.sp,
+                          color: Colors.grey,
+                        ),
                         SizedBox(height: 8.h),
-                        Text('No members added yet',
-                            style: TextStyle(
-                                color: Colors.grey, fontSize: 14.sp)),
+                        Text(
+                          'No members added yet',
+                          style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                        ),
                       ],
                     ),
                   ),
@@ -299,27 +342,38 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                     margin: EdgeInsets.only(bottom: 8.h),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                        backgroundColor: AppTheme.primary.withValues(
+                          alpha: 0.1,
+                        ),
                         child: Text(
                           '${i + 1}',
                           style: TextStyle(
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.sp),
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.sp,
+                          ),
                         ),
                       ),
-                      title: Text(m['name'],
-                          style:
-                              TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp)),
-                      subtitle: Text(m['phone'],
-                          style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppTheme.onBackgroundLight)),
+                      title: Text(
+                        m['name'],
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                      subtitle: Text(
+                        m['phone'],
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: AppTheme.onBackgroundLight,
+                        ),
+                      ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.remove_circle_outline,
-                            color: AppTheme.error),
-                        onPressed: () =>
-                            setState(() => _members.removeAt(i)),
+                        icon: const Icon(
+                          Icons.remove_circle_outline,
+                          color: AppTheme.error,
+                        ),
+                        onPressed: () => setState(() => _members.removeAt(i)),
                       ),
                     ),
                   );
@@ -343,7 +397,10 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                   width: 18.w,
                   height: 18.h,
                   child: const CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.how_to_reg, color: Colors.white),
           label: Text(
             _isSubmitting ? 'Submitting...' : 'Submit Group Entry',

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
 
@@ -35,20 +36,21 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
       await launchUrl(uri);
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Cannot call $name'),
-          backgroundColor: AppTheme.error,
-        ),
+      AppSnackbar.show(
+        context: context,
+        message: 'Cannot call $name',
+        type: SnackBarType.error,
       );
     }
   }
 
   void _search(String query) {
-    context.read<GuardBloc>().add(LoadResidents(
-          search: query.trim().isEmpty ? null : query.trim(),
-          limit: 100,
-        ));
+    context.read<GuardBloc>().add(
+      LoadResidents(
+        search: query.trim().isEmpty ? null : query.trim(),
+        limit: 100,
+      ),
+    );
   }
 
   @override
@@ -67,16 +69,17 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
       body: BlocConsumer<GuardBloc, GuardState>(
         listener: (context, state) {
           if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppTheme.error),
+            AppSnackbar.show(
+              context: context,
+              message: state.message,
+              type: SnackBarType.error,
             );
           }
         },
         builder: (context, state) {
-          final residents =
-              state is ResidentsLoaded ? state.residents : <Map<String, dynamic>>[];
+          final residents = state is ResidentsLoaded
+              ? state.residents
+              : <Map<String, dynamic>>[];
           final isLoading = state is GuardLoading;
 
           return Column(
@@ -112,14 +115,19 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
                     padding: EdgeInsets.all(12.w),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline,
-                            color: AppTheme.primary, size: 18.sp),
+                        Icon(
+                          Icons.info_outline,
+                          color: AppTheme.primary,
+                          size: 18.sp,
+                        ),
                         SizedBox(width: 8.w),
                         Flexible(
                           child: Text(
                             'Tap the call icon to ring a resident for visitor approval.',
                             style: TextStyle(
-                                fontSize: 12.sp, color: AppTheme.primary),
+                              fontSize: 12.sp,
+                              color: AppTheme.primary,
+                            ),
                           ),
                         ),
                       ],
@@ -133,58 +141,68 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : residents.isEmpty
-                        ? RefreshIndicator(
-                            onRefresh: () async {
-                              if (await AppInternetCheck().hasInternetConnection()) {
-                                if (context.mounted) {
-                                  context.read<GuardBloc>().add(const LoadResidents(limit: 100));
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  AppInternetCheck.checkInternet(context: context);
-                                }
-                              }
-                            },
-                            child: ListView(
-                              children: [
-                                SizedBox(height: 120.h),
-                                Center(
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.people_outline,
-                                          size: 64.sp, color: Colors.grey),
-                                      SizedBox(height: 16.h),
-                                      Text(
-                                        'No residents found',
-                                        style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 16.sp),
-                                      ),
-                                    ],
+                    ? RefreshIndicator(
+                        onRefresh: () async {
+                          if (await AppInternetCheck()
+                              .hasInternetConnection()) {
+                            if (context.mounted) {
+                              context.read<GuardBloc>().add(
+                                const LoadResidents(limit: 100),
+                              );
+                            }
+                          } else {
+                            if (context.mounted) {
+                              AppInternetCheck.checkInternet(context: context);
+                            }
+                          }
+                        },
+                        child: ListView(
+                          children: [
+                            SizedBox(height: 120.h),
+                            Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.people_outline,
+                                    size: 64.sp,
+                                    color: Colors.grey,
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    'No residents found',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 16.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () async {
-                              if (await AppInternetCheck().hasInternetConnection()) {
-                                if (context.mounted) {
-                                  context.read<GuardBloc>().add(const LoadResidents(limit: 100));
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  AppInternetCheck.checkInternet(context: context);
-                                }
-                              }
-                            },
-                            child: ListView.builder(
-                              padding: EdgeInsets.all(16.w),
-                              itemCount: residents.length,
-                              itemBuilder: (_, i) =>
-                                  _buildResidentCard(residents[i]),
-                            ),
-                          ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          if (await AppInternetCheck()
+                              .hasInternetConnection()) {
+                            if (context.mounted) {
+                              context.read<GuardBloc>().add(
+                                const LoadResidents(limit: 100),
+                              );
+                            }
+                          } else {
+                            if (context.mounted) {
+                              AppInternetCheck.checkInternet(context: context);
+                            }
+                          }
+                        },
+                        child: ListView.builder(
+                          padding: EdgeInsets.all(16.w),
+                          itemCount: residents.length,
+                          itemBuilder: (_, i) =>
+                              _buildResidentCard(residents[i]),
+                        ),
+                      ),
               ),
             ],
           );
@@ -208,8 +226,9 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
             CircleAvatar(
               radius: 24.r,
               backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              backgroundImage:
-                  imageUrl != null ? CachedNetworkImageProvider(imageUrl) : null,
+              backgroundImage: imageUrl != null
+                  ? CachedNetworkImageProvider(imageUrl)
+                  : null,
               child: imageUrl == null
                   ? Icon(Icons.person, color: AppTheme.primary, size: 24.sp)
                   : null,
@@ -221,21 +240,27 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
                 children: [
                   Text(
                     name,
-                    style:
-                        TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 2.h),
                   Text(
                     'Flat: $flatNumber',
                     style: TextStyle(
-                        fontSize: 12.sp, color: AppTheme.onBackgroundLight),
+                      fontSize: 12.sp,
+                      color: AppTheme.onBackgroundLight,
+                    ),
                   ),
                   if (phone.isNotEmpty)
                     Text(
                       phone,
                       style: TextStyle(
-                          fontSize: 12.sp, color: AppTheme.onBackgroundLight),
+                        fontSize: 12.sp,
+                        color: AppTheme.onBackgroundLight,
+                      ),
                     ),
                 ],
               ),

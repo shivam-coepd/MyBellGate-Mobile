@@ -85,8 +85,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ScreenUtil.init(context, designSize: const Size(375, 812));
-
     final selectedRole = AppConfig.selectedRole ?? 'resident';
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode
@@ -284,7 +282,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   }
                 },
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(24.w),
+                  padding: EdgeInsets.all(20.w),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -633,26 +631,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                         SizedBox(height: 20.h),
-                        if (selectedRole != 'resident')
-                          Center(
-                            child: TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isLogin = !_isLogin;
-                                });
-                              },
-                              child: Text(
-                                _isLogin
-                                    ? "Don't have an account? Sign up"
-                                    : 'Already have an account? Sign in',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  color: iconColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
                         Center(
                           child: TextButton(
                             onPressed: () {

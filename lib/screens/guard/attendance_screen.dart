@@ -67,15 +67,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     return BlocConsumer<GuardBloc, GuardState>(
       listener: (context, state) async {
         if (state is AttendanceMarked) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                state.type == 'in'
-                    ? 'Check-in marked successfully'
-                    : 'Check-out marked successfully',
-              ),
-              backgroundColor: AppTheme.success,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: state.type == 'in'
+                ? 'Check-in marked successfully'
+                : 'Check-out marked successfully',
+            type: SnackBarType.success,
           );
           context.read<GuardBloc>().add(const LoadGuardAttendance());
         } else if (state is GuardError) {
@@ -148,12 +145,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         icon: Icons.qr_code_scanner,
                         label: 'Scan QR',
                         color: AppTheme.success,
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Use Visitor Management > QR Scanner',
-                            ),
-                          ),
+                        onTap: () => AppSnackbar.show(
+                          context: context,
+                          message: 'Use Visitor Management > QR Scanner',
+                          type: SnackBarType.info,
                         ),
                       ),
                     ],

@@ -260,18 +260,15 @@ class _VisitorManagementScreenState
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: GuardAddVisitorBottomSheet(prefill: prefill),
       ),
     ).then((result) {
       if (result != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Visitor added successfully'),
-            backgroundColor: AppTheme.success,
-          ),
+        AppSnackbar.show(
+          context: context,
+          message: 'Visitor added successfully',
+          type: SnackBarType.success,
         );
         _loadVisitors();
       }

@@ -123,7 +123,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                 scale: 1.0 + (_pulseController.value * 0.05),
                 child: Container(
                   width: 300.w,
-                  height: 300.h,
+                  height: 300.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
@@ -150,7 +150,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                 scale: 1.0 + (_pulseController.value * 0.08),
                 child: Container(
                   width: 350.w,
-                  height: 350.h,
+                  height: 350.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
@@ -174,7 +174,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
             right: index.isOdd ? (30 + index * 10).w : null,
             child: Container(
               width: (4 + index % 3 * 2).w,
-              height: (4 + index % 3 * 2).h,
+              height: (4 + index % 3 * 2).w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isDarkMode
@@ -334,7 +334,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                           // Icon Container
                           Container(
                             width: 56.w,
-                            height: 56.h,
+                            height: 56.w,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: gradient,
@@ -404,7 +404,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                               ..translate(isHovered ? 4.0 : 0.0, 0.0, 0.0),
                             child: Container(
                               width: 36.w,
-                              height: 36.h,
+                              height: 36.w,
                               decoration: BoxDecoration(
                                 color: isHovered
                                     ? gradient[0].withValues(alpha: 0.1)
@@ -469,7 +469,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                               children: [
                                 Container(
                                   width: 6.w,
-                                  height: 6.h,
+                                  height: 6.w,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: gradient[0],

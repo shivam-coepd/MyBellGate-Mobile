@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/models/ticket.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ServiceRequestsScreen extends StatefulWidget {
@@ -297,52 +298,52 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
     return BlocListener<HelpdeskBloc, HelpdeskState>(
       listener: (ctx, state) {
         if (state is TicketCreated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Service request submitted!'),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Service request submitted!',
+            type: SnackBarType.success,
+            position: SnackBarPosition.top,
           );
           context.read<HelpdeskBloc>().add(const LoadTickets());
         } else if (state is TicketUpdated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Ticket updated!'),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Ticket updated!',
+            type: SnackBarType.success,
+            position: SnackBarPosition.top,
           );
           context.read<HelpdeskBloc>().add(const LoadTickets());
         } else if (state is TicketDeleted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🗑️ Ticket deleted.'),
-              backgroundColor: Colors.orange,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Ticket deleted!',
+            type: SnackBarType.error,
+            position: SnackBarPosition.top,
           );
           context.read<HelpdeskBloc>().add(const LoadTickets());
         } else if (state is TicketStatusUpdated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Status updated!'),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Status updated!',
+            type: SnackBarType.success,
+            position: SnackBarPosition.top,
           );
           context.read<HelpdeskBloc>().add(const LoadTickets());
         } else if (state is CommentAdded) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Comment added!'),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Comment added!',
+            type: SnackBarType.success,
+            position: SnackBarPosition.top,
           );
           context.read<HelpdeskBloc>().add(const LoadTickets());
         } else if (state is HelpdeskError) {
           log("HelpdeskError: ${state.message}");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ ${state.message}'),
-              backgroundColor: Colors.red,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: state.message,
+            type: SnackBarType.error,
+            position: SnackBarPosition.top,
           );
         }
       },

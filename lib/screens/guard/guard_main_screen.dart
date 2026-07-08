@@ -13,6 +13,7 @@ import 'package:mygate_coepd/screens/guard/profile_screen.dart';
 import 'package:mygate_coepd/screens/guard/visitor_management_screen.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class GuardMainScreen extends StatefulWidget {
   const GuardMainScreen({super.key});
@@ -222,11 +223,10 @@ class _GuardMainScreenState extends State<GuardMainScreen>
             title: const Text('Settings'),
             onTap: () {
               Navigator.pop(context);
-              // Navigate to settings screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Settings screen will be implemented'),
-                ),
+              AppSnackbar.show(
+                context: context,
+                message: 'Settings screen will be implemented',
+                type: SnackBarType.info,
               );
             },
           ),
@@ -1269,14 +1269,10 @@ class _GuardDrawerState extends State<GuardDrawer>
               title: 'Settings',
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Settings coming soon!'),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
+                AppSnackbar.show(
+                  context: context,
+                  message: 'Settings screen will be implemented',
+                  type: SnackBarType.info,
                 );
               },
             ),

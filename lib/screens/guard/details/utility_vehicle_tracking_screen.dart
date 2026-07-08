@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
 
@@ -48,19 +49,17 @@ class _UtilityVehicleTrackingScreenState
         listener: (_, state) {
           if (state is VehicleEntryAdded) {
             Navigator.pop(sheetCtx);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vehicle entry logged'),
-                backgroundColor: AppTheme.success,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Vehicle entry logged',
+              type: SnackBarType.success,
             );
             _load();
           } else if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.error,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Failed to log vehicle entry',
+              type: SnackBarType.error,
             );
           }
         },
@@ -235,19 +234,17 @@ class _UtilityVehicleTrackingScreenState
       body: BlocConsumer<GuardBloc, GuardState>(
         listener: (context, state) {
           if (state is VehicleEntryStatusUpdated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Vehicle marked as ${state.newStatus}'),
-                backgroundColor: AppTheme.success,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Vehicle marked as ${state.newStatus}',
+              type: SnackBarType.info,
             );
             _load();
           } else if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.error,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Failed to update vehicle status',
+              type: SnackBarType.error,
             );
           }
         },

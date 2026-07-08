@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,13 +29,16 @@ class ShareAppScreen extends StatelessWidget {
     final uri = Uri.parse(
       'https://wa.me/?text=${Uri.encodeComponent(_shareText)}',
     );
-    if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (await canLaunchUrl(uri)) {
+      launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _shareViaEmail() async {
     final uri = Uri(
       scheme: 'mailto',
-      query: 'subject=Check out MyGateBell App&body=${Uri.encodeComponent(_shareText)}',
+      query:
+          'subject=Check out MyGateBell App&body=${Uri.encodeComponent(_shareText)}',
     );
     if (await canLaunchUrl(uri)) launchUrl(uri);
   }
@@ -49,25 +53,19 @@ class ShareAppScreen extends StatelessWidget {
 
   void _copyLink(BuildContext context) {
     Clipboard.setData(const ClipboardData(text: _playStoreUrl));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Link copied to clipboard!'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: Colors.green,
-      ),
+    AppSnackbar.show(
+      context: context,
+      message: 'Link copied to clipboard!',
+      type: SnackBarType.info,
     );
   }
 
   void _copyReferral(BuildContext context) {
     Clipboard.setData(const ClipboardData(text: _referralCode));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Referral code copied!'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: Colors.green,
-      ),
+    AppSnackbar.show(
+      context: context,
+      message: 'Referral code copied!',
+      type: SnackBarType.info,
     );
   }
 
@@ -89,7 +87,9 @@ class ShareAppScreen extends StatelessWidget {
           children: [
             // ── QR Code Card ──────────────────────────────────────────────
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               elevation: 2,
               child: Padding(
                 padding: EdgeInsets.all(24.w),
@@ -118,13 +118,20 @@ class ShareAppScreen extends StatelessWidget {
                     SizedBox(height: 16.h),
                     Text(
                       'Scan to Download',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       'Point your camera at the QR code to download MyGateBell',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -134,7 +141,9 @@ class ShareAppScreen extends StatelessWidget {
             // ── Referral Code ────────────────────────────────────────────
             SizedBox(height: 12.h),
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
               child: Padding(
                 padding: EdgeInsets.all(20.w),
                 child: Column(
@@ -142,11 +151,18 @@ class ShareAppScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.card_giftcard, color: theme.colorScheme.primary, size: 20),
+                        Icon(
+                          Icons.card_giftcard,
+                          color: theme.colorScheme.primary,
+                          size: 20,
+                        ),
                         SizedBox(width: 8.w),
                         Text(
                           'Your Referral Code',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -157,10 +173,14 @@ class ShareAppScreen extends StatelessWidget {
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(vertical: 14.h),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.08,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
                             width: 1.5,
                           ),
                         ),
@@ -170,12 +190,18 @@ class ShareAppScreen extends StatelessWidget {
                             Text(
                               _referralCode,
                               style: TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.w700,
-                                letterSpacing: 4, color: theme.colorScheme.primary,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 4,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                             SizedBox(width: 12.w),
-                            Icon(Icons.copy, size: 18, color: theme.colorScheme.primary),
+                            Icon(
+                              Icons.copy,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
                           ],
                         ),
                       ),
@@ -184,7 +210,10 @@ class ShareAppScreen extends StatelessWidget {
                     Center(
                       child: Text(
                         'Tap to copy · Share with friends & earn rewards',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -195,7 +224,9 @@ class ShareAppScreen extends StatelessWidget {
             // ── Share Options ────────────────────────────────────────────
             SizedBox(height: 12.h),
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
               child: Padding(
                 padding: EdgeInsets.all(20.w),
                 child: Column(
@@ -203,27 +234,42 @@ class ShareAppScreen extends StatelessWidget {
                   children: [
                     Text(
                       'Share Via',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     SizedBox(height: 16.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _shareBtn(
-                          theme, Icons.message, 'WhatsApp',
-                          const Color(0xFF25D366), _shareViaWhatsApp,
+                          theme,
+                          Icons.message,
+                          'WhatsApp',
+                          const Color(0xFF25D366),
+                          _shareViaWhatsApp,
                         ),
                         _shareBtn(
-                          theme, Icons.email_outlined, 'Email',
-                          theme.colorScheme.primary, _shareViaEmail,
+                          theme,
+                          Icons.email_outlined,
+                          'Email',
+                          theme.colorScheme.primary,
+                          _shareViaEmail,
                         ),
                         _shareBtn(
-                          theme, Icons.sms_outlined, 'SMS',
-                          Colors.orange, _shareViaSms,
+                          theme,
+                          Icons.sms_outlined,
+                          'SMS',
+                          Colors.orange,
+                          _shareViaSms,
                         ),
                         _shareBtn(
-                          theme, Icons.link, 'Copy Link',
-                          Colors.purple, () => _copyLink(context),
+                          theme,
+                          Icons.link,
+                          'Copy Link',
+                          Colors.purple,
+                          () => _copyLink(context),
                         ),
                       ],
                     ),
@@ -239,10 +285,15 @@ class ShareAppScreen extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: _shareApp,
                 icon: const Icon(Icons.share, size: 20),
-                label: const Text('Share MyGateBell', style: TextStyle(fontSize: 16)),
+                label: const Text(
+                  'Share MyGateBell',
+                  style: TextStyle(fontSize: 16),
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
@@ -253,7 +304,10 @@ class ShareAppScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => launchUrl(Uri.parse(_playStoreUrl), mode: LaunchMode.externalApplication),
+                    onPressed: () => launchUrl(
+                      Uri.parse(_playStoreUrl),
+                      mode: LaunchMode.externalApplication,
+                    ),
                     icon: const Icon(Icons.android, size: 18),
                     label: const Text('Play Store'),
                     style: OutlinedButton.styleFrom(
@@ -264,7 +318,10 @@ class ShareAppScreen extends StatelessWidget {
                 SizedBox(width: 12.w),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => launchUrl(Uri.parse(_appStoreUrl), mode: LaunchMode.externalApplication),
+                    onPressed: () => launchUrl(
+                      Uri.parse(_appStoreUrl),
+                      mode: LaunchMode.externalApplication,
+                    ),
                     icon: const Icon(Icons.apple, size: 18),
                     label: const Text('App Store'),
                     style: OutlinedButton.styleFrom(
@@ -304,7 +361,11 @@ class ShareAppScreen extends StatelessWidget {
           SizedBox(height: 6.h),
           Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

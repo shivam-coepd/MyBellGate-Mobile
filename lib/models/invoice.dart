@@ -73,8 +73,7 @@ class Invoice extends Equatable {
   final double totalDiscount;
   final double arrearsAmount;
   final double fineAmount;
-  final String
-  status; // draft | sent | partially_paid | paid | overdue | cancelled
+  final String status; // draft | sent | pending | paid | overdue | cancelled
   final String? notes;
   final List<InvoiceItem> items;
   final String? createdAt;
@@ -130,7 +129,7 @@ class Invoice extends Equatable {
       arrearsAmount:
           double.tryParse(json['arrears_amount']?.toString() ?? '0') ?? 0,
       fineAmount: double.tryParse(json['fine_amount']?.toString() ?? '0') ?? 0,
-      status: json['status'] ?? 'draft',
+      status: json['status'] ?? 'pending',
       paymentMethod: json['payment_method'],
       paidDate: json['paid_date'],
       notes: json['notes'],
@@ -146,8 +145,8 @@ class Invoice extends Equatable {
     switch (status) {
       case 'sent':
         return 'Sent';
-      case 'partially_paid':
-        return 'Partially Paid';
+      case 'pending':
+        return 'Pending';
       case 'paid':
         return 'Paid';
       case 'overdue':

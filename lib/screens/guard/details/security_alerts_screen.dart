@@ -1,9 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class SecurityAlertsScreen extends StatefulWidget {
   const SecurityAlertsScreen({super.key});
@@ -25,8 +28,8 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
 
   void _loadAlerts() {
     context.read<GuardBloc>().add(
-          LoadSecurityAlerts(status: _statusValues[_selectedFilter], limit: 30),
-        );
+      LoadSecurityAlerts(status: _statusValues[_selectedFilter], limit: 30),
+    );
   }
 
   Color _severityColor(String severity) {
@@ -110,20 +113,19 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         listener: (sheetCtx, state) {
           if (state is SecurityAlertReported) {
             Navigator.pop(sheetCtx);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Security alert reported successfully'),
-                backgroundColor: AppTheme.success,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Security alert reported successfully',
+              type: SnackBarType.success,
             );
             _loadAlerts();
           } else if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.error,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Security alert reported failed',
+              type: SnackBarType.error,
             );
+            log(state.message);
           }
         },
         child: Padding(
@@ -157,15 +159,18 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                       ),
                       items: const [
                         DropdownMenuItem(
-                            value: 'suspicious_activity',
-                            child: Text('Suspicious Activity')),
+                          value: 'suspicious_activity',
+                          child: Text('Suspicious Activity'),
+                        ),
                         DropdownMenuItem(
-                            value: 'unauthorized_access',
-                            child: Text('Unauthorized Access')),
+                          value: 'unauthorized_access',
+                          child: Text('Unauthorized Access'),
+                        ),
                         DropdownMenuItem(
-                            value: 'emergency', child: Text('Emergency')),
-                        DropdownMenuItem(
-                            value: 'other', child: Text('Other')),
+                          value: 'emergency',
+                          child: Text('Emergency'),
+                        ),
+                        DropdownMenuItem(value: 'other', child: Text('Other')),
                       ],
                       onChanged: (v) => setSt(() => alertType = v ?? alertType),
                     ),
@@ -179,10 +184,14 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                       items: const [
                         DropdownMenuItem(value: 'low', child: Text('Low')),
                         DropdownMenuItem(
-                            value: 'medium', child: Text('Medium')),
+                          value: 'medium',
+                          child: Text('Medium'),
+                        ),
                         DropdownMenuItem(value: 'high', child: Text('High')),
                         DropdownMenuItem(
-                            value: 'critical', child: Text('Critical')),
+                          value: 'critical',
+                          child: Text('Critical'),
+                        ),
                       ],
                       onChanged: (v) => setSt(() => severity = v ?? severity),
                     ),
@@ -213,17 +222,15 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                             : () {
                                 if (formKey.currentState!.validate()) {
                                   bbCtx.read<GuardBloc>().add(
-                                        ReportSecurityAlert(
-                                          alertType: alertType,
-                                          description: descCtrl.text.trim(),
-                                          severity: severity,
-                                          location: locationCtrl.text
-                                                  .trim()
-                                                  .isEmpty
-                                              ? null
-                                              : locationCtrl.text.trim(),
-                                        ),
-                                      );
+                                    ReportSecurityAlert(
+                                      alertType: alertType,
+                                      description: descCtrl.text.trim(),
+                                      severity: severity,
+                                      location: locationCtrl.text.trim().isEmpty
+                                          ? null
+                                          : locationCtrl.text.trim(),
+                                    ),
+                                  );
                                 }
                               },
                         style: ElevatedButton.styleFrom(
@@ -267,8 +274,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
             children: ['open', 'in_progress', 'resolved', 'closed']
                 .map(
                   (s) => RadioListTile<String>(
-                    title: Text(
-                        s == 'in_progress' ? 'In Progress' : _cap(s)),
+                    title: Text(s == 'in_progress' ? 'In Progress' : _cap(s)),
                     value: s,
                     groupValue: selectedStatus,
                     activeColor: AppTheme.primary,
@@ -288,9 +294,9 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
               Navigator.pop(dlgCtx);
               final id = int.tryParse(alert['id']?.toString() ?? '');
               if (id != null) {
-                context
-                    .read<GuardBloc>()
-                    .add(UpdateAlertStatus(id, selectedStatus));
+                context.read<GuardBloc>().add(
+                  UpdateAlertStatus(id, selectedStatus),
+                );
               }
             },
             child: const Text('Update'),
@@ -315,24 +321,24 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
       body: BlocConsumer<GuardBloc, GuardState>(
         listener: (context, state) {
           if (state is AlertStatusUpdated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Status updated to ${state.newStatus}'),
-                backgroundColor: AppTheme.success,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Status updated to ${state.newStatus}',
+              type: SnackBarType.success,
             );
             _loadAlerts();
           } else if (state is GuardError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.error,
-              ),
+            AppSnackbar.show(
+              context: context,
+              message: 'Status update failed',
+              type: SnackBarType.error,
             );
           }
         },
         builder: (context, state) {
-          final alerts = state is SecurityAlertsLoaded ? state.alerts : <Map<String, dynamic>>[];
+          final alerts = state is SecurityAlertsLoaded
+              ? state.alerts
+              : <Map<String, dynamic>>[];
           final isLoading = state is GuardLoading;
 
           return Column(
@@ -367,55 +373,59 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : alerts.isEmpty
-                        ? RefreshIndicator(
-                            onRefresh: () async {
-                              if (await AppInternetCheck().hasInternetConnection()) {
-                                _loadAlerts();
-                              } else {
-                                if (mounted) {
-                                  AppInternetCheck.checkInternet(context: context);
-                                }
-                              }
-                            },
-                            child: ListView(
-                              children: [
-                                SizedBox(height: 120.h),
-                                Center(
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.shield,
-                                          size: 64.sp, color: Colors.grey),
-                                      SizedBox(height: 16.h),
-                                      Text(
-                                        'No alerts found',
-                                        style: TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 16.sp,
-                                        ),
-                                      ),
-                                    ],
+                    ? RefreshIndicator(
+                        onRefresh: () async {
+                          if (await AppInternetCheck()
+                              .hasInternetConnection()) {
+                            _loadAlerts();
+                          } else {
+                            if (mounted) {
+                              AppInternetCheck.checkInternet(context: context);
+                            }
+                          }
+                        },
+                        child: ListView(
+                          children: [
+                            SizedBox(height: 120.h),
+                            Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.shield,
+                                    size: 64.sp,
+                                    color: Colors.grey,
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    'No alerts found',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 16.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () async {
-                              if (await AppInternetCheck().hasInternetConnection()) {
-                                _loadAlerts();
-                              } else {
-                                if (mounted) {
-                                  AppInternetCheck.checkInternet(context: context);
-                                }
-                              }
-                            },
-                            child: ListView.builder(
-                              padding: EdgeInsets.all(16.w),
-                              itemCount: alerts.length,
-                              itemBuilder: (_, i) =>
-                                  _buildAlertCard(alerts[i]),
-                            ),
-                          ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          if (await AppInternetCheck()
+                              .hasInternetConnection()) {
+                            _loadAlerts();
+                          } else {
+                            if (mounted) {
+                              AppInternetCheck.checkInternet(context: context);
+                            }
+                          }
+                        },
+                        child: ListView.builder(
+                          padding: EdgeInsets.all(16.w),
+                          itemCount: alerts.length,
+                          itemBuilder: (_, i) => _buildAlertCard(alerts[i]),
+                        ),
+                      ),
               ),
             ],
           );
@@ -425,8 +435,10 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         onPressed: _showReportAlertSheet,
         backgroundColor: AppTheme.error,
         icon: const Icon(Icons.add_alert, color: Colors.white),
-        label:
-            const Text('Report Alert', style: TextStyle(color: Colors.white)),
+        label: const Text(
+          'Report Alert',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -541,18 +553,18 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
   }
 
   Widget _chip(String label, Color color) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 10.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
+    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(8.r),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        color: color,
+        fontSize: 10.sp,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 }

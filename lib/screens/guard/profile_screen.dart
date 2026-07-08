@@ -517,41 +517,6 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
                                       borderRadius: BorderRadius.circular(8.r),
                                     ),
                                     child: Icon(
-                                      Icons.fingerprint,
-                                      color: AppTheme.primary,
-                                      size: 24.sp,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    'Biometric Login',
-                                    style: TextStyle(fontSize: 16.sp),
-                                  ),
-                                  trailing: Switch(
-                                    value: _biometricEnabled,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _biometricEnabled = value;
-                                      });
-                                    },
-                                    activeThumbColor: AppTheme.primary,
-                                  ),
-                                ),
-                                Divider(
-                                  color: isDark
-                                      ? Colors.grey.shade800
-                                      : Colors.grey.shade200,
-                                ),
-                                ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: Container(
-                                    padding: EdgeInsets.all(10.r),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.primary.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                    child: Icon(
                                       Icons.dark_mode_outlined,
                                       color: AppTheme.primary,
                                       size: 24.sp,

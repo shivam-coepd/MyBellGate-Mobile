@@ -12,7 +12,9 @@ import 'package:mygate_coepd/config/app_config.dart';
 final GlobalKey<NavigatorState> apiNavigatorKey = GlobalKey<NavigatorState>();
 
 class ApiService {
-  static const String baseUrl = 'https://app.mygatebell.com/backend';
+  // static const String baseUrl = 'https://app.mygatebell.com/backend';
+  static const String baseUrl =
+      'https://magenta-grouse-563358.hostingersite.com/backend';
 
   /// The path segment that identifies the refresh endpoint.
   /// Used to prevent infinite refresh loops.
@@ -41,15 +43,35 @@ class ApiService {
       QueuedInterceptorsWrapper(
         // ── REQUEST ──────────────────────────────────────────────────────────
         onRequest: (options, handler) async {
-          final isRefreshCall =
-              options.uri.path.contains('/auth/refresh');
+          final isRefreshCall = options.uri.path.contains('/auth/refresh');
 
           String? token = AppConfig.token;
+
+          // Inject device real-time for POST/PUT/PATCH requests via Header
+          if (['POST', 'PUT', 'PATCH'].contains(options.method.toUpperCase())) {
+            final String deviceTime = DateTime.now().toLocal().toString().split('.')[0];
+            options.headers['X-Device-Time'] = deviceTime;
+            
+            // Still inject in body just in case some specific controllers look for it directly
+            if (options.data is Map<String, dynamic>) {
+              options.data['created_at'] = deviceTime;
+              options.data['createdAt'] = deviceTime;
+              options.data['updated_at'] = deviceTime;
+              options.data['updatedAt'] = deviceTime;
+            } else if (options.data is FormData) {
+              options.data.fields.add(MapEntry('created_at', deviceTime));
+              options.data.fields.add(MapEntry('createdAt', deviceTime));
+              options.data.fields.add(MapEntry('updated_at', deviceTime));
+              options.data.fields.add(MapEntry('updatedAt', deviceTime));
+            }
+          }
 
           if (token != null && !isRefreshCall) {
             // Preemptively refresh if the token is expired or about to expire
             if (_isTokenExpired(token)) {
-              log('[ApiService] Token expired/near-expiry — attempting proactive refresh');
+              log(
+                '[ApiService] Token expired/near-expiry — attempting proactive refresh',
+              );
               final refreshed = await _doRefresh(token);
               if (refreshed != null) {
                 token = refreshed;
@@ -79,8 +101,9 @@ class ApiService {
 
         // ── ERROR ─────────────────────────────────────────────────────────────
         onError: (DioException e, handler) async {
-          final isRefreshCall =
-              e.requestOptions.uri.path.contains('/auth/refresh');
+          final isRefreshCall = e.requestOptions.uri.path.contains(
+            '/auth/refresh',
+          );
 
           if (e.response?.statusCode == 401 && !isRefreshCall) {
             log('[ApiService] 401 received — attempting reactive refresh');
@@ -112,13 +135,16 @@ class ApiService {
           }
 
           // ── Timeout Retry Logic ──
-          final isTimeout = e.type == DioExceptionType.connectionTimeout || 
-                            e.type == DioExceptionType.receiveTimeout || 
-                            e.type == DioExceptionType.sendTimeout;
+          final isTimeout =
+              e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout;
 
           int retries = e.requestOptions.extra['retries'] as int? ?? 0;
           if (isTimeout && retries < 2) {
-            log('[ApiService] Timeout on ${e.requestOptions.path}. Retrying (${retries + 1}/2)...');
+            log(
+              '[ApiService] Timeout on ${e.requestOptions.path}. Retrying (${retries + 1}/2)...',
+            );
             e.requestOptions.extra['retries'] = retries + 1;
             try {
               await Future.delayed(const Duration(seconds: 1));
@@ -143,7 +169,9 @@ class ApiService {
   /// Returns the new token string on success, or null on failure.
   Future<String?> _doRefresh(String expiredToken) async {
     if (_activeRefresh != null) {
-      log('[ApiService] Refresh already in progress — awaiting existing global refresh');
+      log(
+        '[ApiService] Refresh already in progress — awaiting existing global refresh',
+      );
       return await _activeRefresh;
     }
 

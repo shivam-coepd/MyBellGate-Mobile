@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/amenity/amenity_bloc.dart';
 import 'package:mygate_coepd/models/amenity.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:shimmer/shimmer.dart';
 
 class AmenityBookingScreen extends StatefulWidget {
@@ -133,20 +134,18 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
     return BlocListener<AmenityBloc, AmenityState>(
       listener: (ctx, state) {
         if (state is AmenityBookingSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✅ Booking requested for ${_selected?.name}!'),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Booking requested for ${_selected?.name}!',
+            type: SnackBarType.success,
           );
           context.read<AmenityBloc>().add(const LoadMyBookings());
           _tabController.animateTo(1);
         } else if (state is AmenityError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ ${state.message}'),
-              backgroundColor: Colors.red,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Failed to book amenity',
+            type: SnackBarType.error,
           );
         }
       },

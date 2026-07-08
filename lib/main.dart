@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mygate_coepd/app.dart';
 import 'package:mygate_coepd/config/app_config.dart';
@@ -35,14 +36,17 @@ void main() async {
             children: [
               Text(
                 'An error has occurred',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 16),
-              Text(details.exceptionAsString(), style: TextStyle(fontSize: 16)),
-              SizedBox(height: 16),
+              SizedBox(height: 16.h),
+              Text(
+                details.exceptionAsString(),
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              SizedBox(height: 16.h),
               Text(
                 'Please restart the app and try again.',
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16.sp),
               ),
             ],
           ),

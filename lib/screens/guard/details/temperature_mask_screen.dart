@@ -4,6 +4,7 @@ import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class TemperatureMaskScreen extends StatefulWidget {
   const TemperatureMaskScreen({super.key});
@@ -22,7 +23,8 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
       'temperature': '36.8°C',
       'mask': true,
       'time': '10:15 AM',
-      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
+      'image':
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
     },
     {
       'id': 2,
@@ -32,7 +34,8 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
       'temperature': '37.2°C',
       'mask': true,
       'time': '10:05 AM',
-      'image': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
+      'image':
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100',
     },
     {
       'id': 3,
@@ -42,7 +45,8 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
       'temperature': '36.5°C',
       'mask': false,
       'time': '9:45 AM',
-      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
+      'image':
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100',
     },
   ];
 
@@ -60,9 +64,7 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Select Visitor',
-                ),
+                decoration: const InputDecoration(labelText: 'Select Visitor'),
                 items: _visitors.map((visitor) {
                   return DropdownMenuItem(
                     value: visitor['id'].toString(),
@@ -109,13 +111,14 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_selectedVisitor.isNotEmpty && _temperatureController.text.isNotEmpty) {
+                if (_selectedVisitor.isNotEmpty &&
+                    _temperatureController.text.isNotEmpty) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Temperature and mask status captured successfully!'),
-                      backgroundColor: AppTheme.success,
-                    ),
+                  AppSnackbar.show(
+                    context: context,
+                    message:
+                        'Temperature and mask status captured successfully!',
+                    type: SnackBarType.success,
                   );
                 }
               },
@@ -169,12 +172,15 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
                             Row(
                               children: [
                                 CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(visitor['image']),
+                                  backgroundImage: CachedNetworkImageProvider(
+                                    visitor['image'],
+                                  ),
                                 ),
                                 const SizedBox(width: 15),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         visitor['name'],
@@ -211,7 +217,8 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
                                 children: [
                                   Column(
                                     children: [
@@ -240,17 +247,25 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
                                   Column(
                                     children: [
                                       Icon(
-                                        visitor['mask'] ? Icons.masks : Icons.masks_outlined,
-                                        color: visitor['mask'] ? AppTheme.success : AppTheme.error,
+                                        visitor['mask']
+                                            ? Icons.masks
+                                            : Icons.masks_outlined,
+                                        color: visitor['mask']
+                                            ? AppTheme.success
+                                            : AppTheme.error,
                                         size: 30,
                                       ),
                                       const SizedBox(height: 5),
                                       Text(
-                                        visitor['mask'] ? 'Wearing Mask' : 'No Mask',
+                                        visitor['mask']
+                                            ? 'Wearing Mask'
+                                            : 'No Mask',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: visitor['mask'] ? AppTheme.success : AppTheme.error,
+                                          color: visitor['mask']
+                                              ? AppTheme.success
+                                              : AppTheme.error,
                                         ),
                                       ),
                                       const Text(
@@ -284,7 +299,9 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
                                     ),
                                     child: const Text(
                                       'Update',
-                                      style: TextStyle(color: AppTheme.onPrimary),
+                                      style: TextStyle(
+                                        color: AppTheme.onPrimary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -310,11 +327,7 @@ class _TemperatureMaskScreenState extends State<TemperatureMaskScreen> {
             ),
           );
         }
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
     );
   }

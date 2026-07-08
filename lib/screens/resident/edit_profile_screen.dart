@@ -9,6 +9,7 @@ import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class EditProfileDetailsScreen extends StatefulWidget {
   final User user;
@@ -131,11 +132,10 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Image upload failed: $e'),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackbar.show(
+          context: context,
+          message: 'Failed to update profile',
+          type: SnackBarType.error,
         );
         setState(() {
           _isUploadingProfile = false;
@@ -159,16 +159,17 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
     return BlocConsumer<ProfileBloc, ProfileState>(
       listener: (context, state) {
         if (state is ProfileUpdateSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully!'),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: 'Profile updated successfully!',
+            type: SnackBarType.success,
           );
           Navigator.of(context).pop(state.user);
         } else if (state is ProfileError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          AppSnackbar.show(
+            context: context,
+            message: 'Failed to update profile',
+            type: SnackBarType.error,
           );
         }
       },

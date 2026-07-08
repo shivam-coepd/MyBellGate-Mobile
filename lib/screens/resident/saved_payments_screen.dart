@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mygate_coepd/widgets/app_snackbar.dart';
 
 class SavedPaymentsScreen extends StatefulWidget {
   const SavedPaymentsScreen({super.key});
@@ -11,43 +12,51 @@ class SavedPaymentsScreen extends StatefulWidget {
 class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
   final List<_PaymentMethod> _methods = [
     _PaymentMethod(
-      id: '1', type: 'upi', label: 'Google Pay',
-      detail: 'user@okaxis', isDefault: true,
-      icon: Icons.g_mobiledata, color: const Color(0xFF4285F4),
+      id: '1',
+      type: 'upi',
+      label: 'Google Pay',
+      detail: 'user@okaxis',
+      isDefault: true,
+      icon: Icons.g_mobiledata,
+      color: const Color(0xFF4285F4),
     ),
     _PaymentMethod(
-      id: '2', type: 'upi', label: 'PhonePe',
-      detail: '9876543210@ybl', isDefault: false,
-      icon: Icons.phone_android, color: const Color(0xFF5F259F),
+      id: '2',
+      type: 'upi',
+      label: 'PhonePe',
+      detail: '9876543210@ybl',
+      isDefault: false,
+      icon: Icons.phone_android,
+      color: const Color(0xFF5F259F),
     ),
     _PaymentMethod(
-      id: '3', type: 'card', label: 'HDFC Debit Card',
-      detail: '•••• •••• •••• 4521', isDefault: false,
-      icon: Icons.credit_card, color: const Color(0xFF004C8F),
+      id: '3',
+      type: 'card',
+      label: 'HDFC Debit Card',
+      detail: '•••• •••• •••• 4521',
+      isDefault: false,
+      icon: Icons.credit_card,
+      color: const Color(0xFF004C8F),
     ),
     _PaymentMethod(
-      id: '4', type: 'card', label: 'SBI Credit Card',
-      detail: '•••• •••• •••• 8834', isDefault: false,
-      icon: Icons.credit_card, color: const Color(0xFF1A3E72),
+      id: '4',
+      type: 'card',
+      label: 'SBI Credit Card',
+      detail: '•••• •••• •••• 8834',
+      isDefault: false,
+      icon: Icons.credit_card,
+      color: const Color(0xFF1A3E72),
     ),
     _PaymentMethod(
-      id: '5', type: 'bank', label: 'Axis Bank Account',
-      detail: 'Savings •••• 6789', isDefault: false,
-      icon: Icons.account_balance, color: const Color(0xFF97144D),
+      id: '5',
+      type: 'bank',
+      label: 'Axis Bank Account',
+      detail: 'Savings •••• 6789',
+      isDefault: false,
+      icon: Icons.account_balance,
+      color: const Color(0xFF97144D),
     ),
   ];
-
-  void _showSnackBar(String msg, {Color? bg}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: bg,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 
   void _showAddPaymentSheet() {
     final theme = Theme.of(context);
@@ -62,7 +71,9 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (sCtx, sSet) => Container(
           padding: EdgeInsets.only(
-            left: 24.w, right: 24.w, top: 20.h,
+            left: 24.w,
+            right: 24.w,
+            top: 20.h,
             bottom: MediaQuery.of(sCtx).viewInsets.bottom + 24.h,
           ),
           decoration: BoxDecoration(
@@ -73,14 +84,30 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(
-                width: 40.w, height: 4.h,
-                decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
-              )),
+              Center(
+                child: Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
               SizedBox(height: 20.h),
-              Text('Add Payment Method', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              Text(
+                'Add Payment Method',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
               SizedBox(height: 20.h),
-              Text('Type', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant)),
+              Text(
+                'Type',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               SizedBox(height: 8.h),
               Row(
                 children: [
@@ -93,28 +120,45 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
                           padding: EdgeInsets.symmetric(vertical: 12.h),
                           decoration: BoxDecoration(
                             color: selectedType == t
-                                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.08),
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.15,
+                                  )
+                                : theme.colorScheme.onSurfaceVariant.withValues(
+                                    alpha: 0.08,
+                                  ),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: selectedType == t ? theme.colorScheme.primary : Colors.transparent,
+                              color: selectedType == t
+                                  ? theme.colorScheme.primary
+                                  : Colors.transparent,
                             ),
                           ),
                           child: Column(
                             children: [
                               Icon(
-                                t == 'upi' ? Icons.account_balance_wallet_outlined
-                                    : t == 'card' ? Icons.credit_card_outlined
+                                t == 'upi'
+                                    ? Icons.account_balance_wallet_outlined
+                                    : t == 'card'
+                                    ? Icons.credit_card_outlined
                                     : Icons.account_balance_outlined,
-                                color: selectedType == t ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                                color: selectedType == t
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
                                 size: 22,
                               ),
                               SizedBox(height: 4.h),
                               Text(
-                                t == 'upi' ? 'UPI' : t == 'card' ? 'Card' : 'Bank',
+                                t == 'upi'
+                                    ? 'UPI'
+                                    : t == 'card'
+                                    ? 'Card'
+                                    : 'Bank',
                                 style: TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w500,
-                                  color: selectedType == t ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: selectedType == t
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -128,11 +172,15 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
               TextField(
                 controller: labelCtrl,
                 decoration: InputDecoration(
-                  labelText: selectedType == 'upi' ? 'App Name'
-                      : selectedType == 'card' ? 'Card Name'
+                  labelText: selectedType == 'upi'
+                      ? 'App Name'
+                      : selectedType == 'card'
+                      ? 'Card Name'
                       : 'Bank Name',
-                  hintText: selectedType == 'upi' ? 'e.g. Google Pay, PhonePe'
-                      : selectedType == 'card' ? 'e.g. HDFC Debit Card'
+                  hintText: selectedType == 'upi'
+                      ? 'e.g. Google Pay, PhonePe'
+                      : selectedType == 'card'
+                      ? 'e.g. HDFC Debit Card'
                       : 'e.g. Axis Bank',
                 ),
               ),
@@ -140,12 +188,16 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
               TextField(
                 controller: detailCtrl,
                 decoration: InputDecoration(
-                  labelText: selectedType == 'upi' ? 'UPI ID'
-                      : selectedType == 'card' ? 'Card Number (last 4)'
+                  labelText: selectedType == 'upi'
+                      ? 'UPI ID'
+                      : selectedType == 'card'
+                      ? 'Card Number (last 4)'
                       : 'Account Number (last 4)',
                   hintText: selectedType == 'upi'
                       ? 'e.g. user@okaxis'
-                      : selectedType == 'card' ? 'e.g. 4521' : 'e.g. 6789',
+                      : selectedType == 'card'
+                      ? 'e.g. 4521'
+                      : 'e.g. 6789',
                 ),
               ),
               SizedBox(height: 24.h),
@@ -154,7 +206,11 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (labelCtrl.text.isEmpty || detailCtrl.text.isEmpty) {
-                      _showSnackBar('Please fill in all fields');
+                      AppSnackbar.show(
+                        context: context,
+                        message: 'Please fill in all fields',
+                        type: SnackBarType.error,
+                      );
                       return;
                     }
                     final display = selectedType == 'upi'
@@ -163,19 +219,28 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
                         ? '•••• •••• •••• ${detailCtrl.text}'
                         : 'Savings •••• ${detailCtrl.text}';
                     setState(() {
-                      _methods.add(_PaymentMethod(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        type: selectedType,
-                        label: labelCtrl.text,
-                        detail: display,
-                        isDefault: _methods.isEmpty,
-                        icon: selectedType == 'upi' ? Icons.account_balance_wallet_outlined
-                            : selectedType == 'card' ? Icons.credit_card : Icons.account_balance,
-                        color: theme.colorScheme.primary,
-                      ));
+                      _methods.add(
+                        _PaymentMethod(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          type: selectedType,
+                          label: labelCtrl.text,
+                          detail: display,
+                          isDefault: _methods.isEmpty,
+                          icon: selectedType == 'upi'
+                              ? Icons.account_balance_wallet_outlined
+                              : selectedType == 'card'
+                              ? Icons.credit_card
+                              : Icons.account_balance,
+                          color: theme.colorScheme.primary,
+                        ),
+                      );
                     });
                     Navigator.pop(ctx);
-                    _showSnackBar('Payment method added', bg: Colors.green);
+                    AppSnackbar.show(
+                      context: context,
+                      message: 'Payment method added',
+                      type: SnackBarType.success,
+                    );
                   },
                   child: const Text('Add Payment Method'),
                 ),
@@ -193,14 +258,23 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Text('Remove Payment Method'),
-        content: const Text('Are you sure you want to remove this payment method?'),
+        content: const Text(
+          'Are you sure you want to remove this payment method?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               setState(() => _methods.removeWhere((m) => m.id == id));
-              _showSnackBar('Payment method removed');
+              AppSnackbar.show(
+                context: context,
+                message: 'Payment method removed',
+                type: SnackBarType.success,
+              );
             },
             child: const Text('Remove', style: TextStyle(color: Colors.red)),
           ),
@@ -213,40 +287,66 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
     setState(() {
       for (var m in _methods) {
         m = _PaymentMethod(
-          id: m.id, type: m.type, label: m.label,
-          detail: m.detail, icon: m.icon, color: m.color,
+          id: m.id,
+          type: m.type,
+          label: m.label,
+          detail: m.detail,
+          icon: m.icon,
+          color: m.color,
           isDefault: m.id == id,
         );
         final idx = _methods.indexWhere((e) => e.id == m.id);
         _methods[idx] = m;
       }
     });
-    _showSnackBar('Default payment method updated', bg: Colors.green);
+    AppSnackbar.show(
+      context: context,
+      message: 'Default payment method updated',
+      type: SnackBarType.success,
+    );
   }
 
   void _showOptions(String id, bool isDefault) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Center(child: Container(
-              margin: EdgeInsets.only(top: 14.h), width: 40.w, height: 4.h,
-              decoration: BoxDecoration(color: Colors.grey[500], borderRadius: BorderRadius.circular(30)),
-            )),
+            Center(
+              child: Container(
+                margin: EdgeInsets.only(top: 14.h),
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey[500],
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
             SizedBox(height: 12.h),
             if (!isDefault)
               ListTile(
-                leading: Icon(Icons.star_outline, color: Theme.of(context).colorScheme.primary),
+                leading: Icon(
+                  Icons.star_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: const Text('Set as Default'),
-                onTap: () { Navigator.pop(ctx); _setDefault(id); },
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _setDefault(id);
+                },
               ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
               title: const Text('Remove', style: TextStyle(color: Colors.red)),
-              onTap: () { Navigator.pop(ctx); _showDeleteConfirm(id); },
+              onTap: () {
+                Navigator.pop(ctx);
+                _showDeleteConfirm(id);
+              },
             ),
             SizedBox(height: 8.h),
           ],
@@ -272,13 +372,26 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.credit_card_off_outlined, size: 64,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+                  Icon(
+                    Icons.credit_card_off_outlined,
+                    size: 64,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.4,
+                    ),
+                  ),
                   SizedBox(height: 16.h),
-                  Text('No payment methods', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                  Text(
+                    'No payment methods',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
                   SizedBox(height: 6.h),
-                  Text('Add a payment method for quick checkout',
-                      style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Add a payment method for quick checkout',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   SizedBox(height: 24.h),
                   ElevatedButton.icon(
                     onPressed: _showAddPaymentSheet,
@@ -305,18 +418,28 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.payment, color: theme.colorScheme.primary, size: 28),
+                      Icon(
+                        Icons.payment,
+                        color: theme.colorScheme.primary,
+                        size: 28,
+                      ),
                       SizedBox(width: 14.w),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '${_methods.length} payment method${_methods.length == 1 ? '' : 's'} saved',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           Text(
                             'Default: ${_methods.firstWhere((m) => m.isDefault, orElse: () => _methods.first).label}',
-                            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -326,22 +449,52 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
                 SizedBox(height: 16.h),
 
                 // Grouped by type
-                Text('UPI', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant, letterSpacing: 0.5)),
+                Text(
+                  'UPI',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 SizedBox(height: 8.h),
-                ..._methods.where((m) => m.type == 'upi').map((m) => _paymentCard(theme, m)),
+                ..._methods
+                    .where((m) => m.type == 'upi')
+                    .map((m) => _paymentCard(theme, m)),
 
                 if (_methods.any((m) => m.type == 'card')) ...[
                   SizedBox(height: 16.h),
-                  Text('CARDS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant, letterSpacing: 0.5)),
+                  Text(
+                    'CARDS',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                   SizedBox(height: 8.h),
-                  ..._methods.where((m) => m.type == 'card').map((m) => _paymentCard(theme, m)),
+                  ..._methods
+                      .where((m) => m.type == 'card')
+                      .map((m) => _paymentCard(theme, m)),
                 ],
 
                 if (_methods.any((m) => m.type == 'bank')) ...[
                   SizedBox(height: 16.h),
-                  Text('BANK ACCOUNTS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant, letterSpacing: 0.5)),
+                  Text(
+                    'BANK ACCOUNTS',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                   SizedBox(height: 8.h),
-                  ..._methods.where((m) => m.type == 'bank').map((m) => _paymentCard(theme, m)),
+                  ..._methods
+                      .where((m) => m.type == 'bank')
+                      .map((m) => _paymentCard(theme, m)),
                 ],
 
                 SizedBox(height: 24.h),
@@ -383,25 +536,51 @@ class _SavedPaymentsScreenState extends State<SavedPaymentsScreen> {
                   children: [
                     Row(
                       children: [
-                        Text(m.label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                        Text(
+                          m.label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         if (m.isDefault) ...[
                           SizedBox(width: 8.w),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 2.h,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: Text('Default', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.green)),
+                            child: Text(
+                              'Default',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green,
+                              ),
+                            ),
                           ),
                         ],
                       ],
                     ),
-                    Text(m.detail, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                    Text(
+                      m.detail,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.more_vert, color: theme.colorScheme.onSurfaceVariant, size: 20),
+              Icon(
+                Icons.more_vert,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
             ],
           ),
         ),

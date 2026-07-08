@@ -134,10 +134,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // ── Top Bar with Skip ──
-            // _buildTopBar(isDarkMode),
-
-            // ── Main Content Area ──
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -157,73 +153,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             _buildBottomSection(isDarkMode, currentPageData),
           ],
         ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // TOP BAR
-  // ═══════════════════════════════════════════════════════════════
-  Widget _buildTopBar(bool isDarkMode) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Logo / Brand
-          Row(
-            children: [
-              Container(
-                width: 40.w,
-                height: 40.h,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF4A44D6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  Icons.apartment_rounded,
-                  color: Colors.white,
-                  size: 22.sp,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                'MyGateBell',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Color(0xFF1A1A2E),
-                ),
-              ),
-            ],
-          ),
-
-          // Skip Button
-          AnimatedOpacity(
-            opacity: _isLastPage ? 0.0 : 1.0,
-            duration: const Duration(milliseconds: 300),
-            child: TextButton(
-              onPressed: _isLastPage ? null : _finishOnboarding,
-              style: TextButton.styleFrom(
-                foregroundColor: isDarkMode
-                    ? Colors.white.withValues(alpha: 0.6)
-                    : Colors.grey.shade600,
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-              ),
-              child: Text(
-                'Skip',
-                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -357,7 +286,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 right: 20.w + (index * 20),
                 child: Container(
                   width: (20 + index * 15).w,
-                  height: (20 + index * 15).h,
+                  height: (20 + index * 15).w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: gradient[0].withValues(alpha: 0.1 - (index * 0.02)),
@@ -377,18 +306,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(26.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: gradient[0].withValues(alpha: 0.4),
-                    blurRadius: 30,
-                    offset: Offset(0, 15),
-                  ),
-                  BoxShadow(
-                    color: gradient[1].withValues(alpha: 0.2),
-                    blurRadius: 60,
-                    offset: Offset(0, 30),
-                  ),
-                ],
               ),
               // child: Icon(icon, size: 60.sp, color: Colors.white),
               child: ClipRRect(
@@ -403,8 +320,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
             // Floating badge
             Positioned(
-              bottom: 30.h,
-              right: 30.w,
+              bottom: 35.h,
+              right: 35.w,
               child: Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
@@ -544,8 +461,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               boxShadow: [
                 BoxShadow(
                   color: gradient[0].withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: Offset(0, 10),
+                  blurRadius: 3,
+                  offset: Offset(0, 2),
                 ),
               ],
             ),

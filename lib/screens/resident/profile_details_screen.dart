@@ -465,11 +465,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     isEdit ? 'Update Member' : 'Add Member',
                     () {
                       if (nameCtrl.text.trim().isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Name is required'),
-                            backgroundColor: Colors.red,
-                          ),
+                        AppSnackbar.show(
+                          context: context,
+                          message: 'Name is required',
+                          type: SnackBarType.error,
+                          position: SnackBarPosition.top,
                         );
                         return;
                       }
@@ -607,8 +607,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                           setSheetState(() => uploadedImageUrl = url);
                         } catch (e) {
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed: $e')),
+                            AppSnackbar.show(
+                              context: context,
+                              message: 'Failed to upload image',
+                              type: SnackBarType.error,
+                              position: SnackBarPosition.top,
                             );
                           }
                         } finally {
@@ -737,11 +740,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     () {
                       final reg = regCtrl.text.trim().toUpperCase();
                       if (reg.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Registration number is required'),
-                            backgroundColor: Colors.red,
-                          ),
+                        AppSnackbar.show(
+                          context: context,
+                          message: 'Registration number is required',
+                          type: SnackBarType.error,
+                          position: SnackBarPosition.top,
                         );
                         return;
                       }
@@ -897,8 +900,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                           setSheetState(() => uploadedImageUrl = url);
                         } catch (e) {
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed: $e')),
+                            AppSnackbar.show(
+                              context: context,
+                              message: 'Failed to upload image',
+                              type: SnackBarType.error,
+                              position: SnackBarPosition.top,
                             );
                           }
                         } finally {
@@ -1046,11 +1052,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                   _buildPrimaryButton(isEdit ? 'Update Pet' : 'Add Pet', () {
                     final name = nameCtrl.text.trim();
                     if (name.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Pet name is required'),
-                          backgroundColor: Colors.red,
-                        ),
+                      AppSnackbar.show(
+                        context: context,
+                        message: 'Pet name is required',
+                        type: SnackBarType.error,
+                        position: SnackBarPosition.top,
                       );
                       return;
                     }
@@ -1201,8 +1207,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                           setSheetState(() => uploadedImageUrl = url);
                         } catch (e) {
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed: $e')),
+                            AppSnackbar.show(
+                              context: context,
+                              message: 'Failed to upload image',
+                              type: SnackBarType.error,
+                              position: SnackBarPosition.top,
                             );
                           }
                         } finally {
@@ -1315,13 +1324,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                       final phone = phoneCtrl.text.trim();
                       final purpose = purposeCtrl.text.trim();
                       if (name.isEmpty || phone.isEmpty || purpose.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Name, Phone and Service Type are required',
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
+                        AppSnackbar.show(
+                          context: context,
+                          message: 'Name, Phone and Service Type are required',
+                          type: SnackBarType.error,
+                          position: SnackBarPosition.top,
                         );
                         return;
                       }
@@ -1388,41 +1395,19 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
         if (state is ProfileLoaded) {
           _filterFamilyMembers();
         } else if (state is HouseholdUpdateSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: Colors.green.shade600,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              margin: EdgeInsets.all(16.w),
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: state.message,
+            type: SnackBarType.success,
+            position: SnackBarPosition.top,
           );
           _loadDailyHelpers();
         } else if (state is HouseholdError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: Colors.red.shade600,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              margin: EdgeInsets.all(16.w),
-            ),
+          AppSnackbar.show(
+            context: context,
+            message: state.message,
+            type: SnackBarType.error,
+            position: SnackBarPosition.top,
           );
         }
       },
@@ -1685,11 +1670,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                     SizedBox(height: 6.h),
                     Text(
                       user.bio ?? '',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        height: 1.4,
-                        color: Colors.grey.shade800,
-                      ),
+                      style: TextStyle(fontSize: 14.sp, height: 1.4),
                     ),
                   ],
                 ),
