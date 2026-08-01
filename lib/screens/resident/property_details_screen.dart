@@ -186,6 +186,10 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           final parts = (user.unit ?? '').split(' - ');
           final building = parts.isNotEmpty ? parts[0].trim() : 'N/A';
           final flat = parts.length > 1 ? parts[1].trim() : 'N/A';
+          final floorNumber = parts.length > 1
+              ? parts[1].trim()[0].toString()
+              : 'N/A';
+          final area = "${user.flats?.first.areaSqft.toString()} Sq.Ft";
 
           return SingleChildScrollView(
             padding: EdgeInsets.all(16.w),
@@ -388,19 +392,19 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                           alpha: 0.3,
                         ),
                       ),
-                      _infoRow(theme, Icons.layers_outlined, 'Floor', 'N/A'),
+                      _infoRow(
+                        theme,
+                        Icons.layers_outlined,
+                        'Floor',
+                        floorNumber,
+                      ),
                       Divider(
                         height: 0,
                         color: theme.colorScheme.outlineVariant.withValues(
                           alpha: 0.3,
                         ),
                       ),
-                      _infoRow(
-                        theme,
-                        Icons.square_foot_outlined,
-                        'Area',
-                        'N/A',
-                      ),
+                      _infoRow(theme, Icons.square_foot_outlined, 'Area', area),
                       Divider(
                         height: 0,
                         color: theme.colorScheme.outlineVariant.withValues(

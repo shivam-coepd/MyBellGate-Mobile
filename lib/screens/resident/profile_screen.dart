@@ -12,11 +12,9 @@ import 'package:mygate_coepd/blocs/profile/profile_state.dart';
 import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
-import 'package:mygate_coepd/screens/common/notification_settings_screen.dart';
 import 'package:mygate_coepd/screens/common/security_privacy_screen.dart';
 import 'package:mygate_coepd/screens/common/share_app_screen.dart';
 import 'package:mygate_coepd/screens/common/support_feedback_screen.dart';
-import 'package:mygate_coepd/screens/resident/add_new_property_screen.dart';
 import 'package:mygate_coepd/screens/resident/order_history_screen.dart';
 import 'package:mygate_coepd/screens/resident/property_details_screen.dart';
 import 'package:mygate_coepd/screens/resident/saved_payments_screen.dart';
@@ -505,12 +503,6 @@ class ProfileScreenState extends State<ProfileScreen> {
           MaterialPageRoute(builder: (_) => const PropertyDetailsScreen()),
         );
         break;
-      case 'Add New Property':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AddNewPropertyScreen()),
-        );
-        break;
       case 'Support and Feedback':
         Navigator.push(
           context,
@@ -690,7 +682,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _buildSectionHeader('Manage Flats', theme),
+                  child: _buildSectionHeader('Manage Flat', theme),
                 ),
                 SliverToBoxAdapter(
                   child: _buildNavItem(
@@ -698,14 +690,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                     title: user?.unit ?? 'Unit',
                     subtitle: 'PRIMARY ADDRESS',
                     onTap: () => _navigateTo('Unit'),
-                    theme: theme,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildNavItem(
-                    icon: Icons.domain_add_outlined,
-                    title: 'Add New Property',
-                    onTap: () => _navigateTo('Add New Property'),
                     theme: theme,
                   ),
                 ),
@@ -812,54 +796,13 @@ class ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             SizedBox(height: 16.h),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile completion label row shimmer
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 120.w,
-                        height: 14.h,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                      ),
-                      Container(
-                        width: 30.w,
-                        height: 14.h,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                // Progress bar shimmer
-                Container(
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                // View Details button shimmer
-                Container(
-                  width: 80.w,
-                  height: 20.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                ),
-              ],
+            Container(
+              width: 80.w,
+              height: 20.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
             ),
           ],
         ),
@@ -947,72 +890,19 @@ class ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Profile Completion',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        height: 16 / 12,
-                        letterSpacing: 0.05 * 12,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      '85%',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        height: 16 / 12,
-                        letterSpacing: 0.05 * 12,
-                        color: theme.primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, "/profile-details"),
+            style: ButtonStyle(
+              padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
+            ),
+            child: Text(
+              'View Details',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: theme.primaryColor,
+                fontSize: 14.sp,
               ),
-              const SizedBox(height: 8),
-              Container(
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: _profileCompletion,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () =>
-                    Navigator.pushNamed(context, "/profile-details"),
-                style: ButtonStyle(
-                  padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
-                ),
-                child: Text(
-                  'View Details',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: theme.primaryColor,
-                    fontSize: 14.sp,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

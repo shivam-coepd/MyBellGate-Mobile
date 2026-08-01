@@ -12,7 +12,6 @@ class SecurityPrivacyScreen extends StatefulWidget {
 }
 
 class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
-  bool _biometricEnabled = false;
   bool _twoFactorEnabled = false;
   bool _pinLockEnabled = false;
   bool _showOnlineStatus = true;

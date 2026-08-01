@@ -84,6 +84,9 @@ class User extends Equatable {
   @HiveField(25)
   final List<ResidentPet>? pets;
 
+  @HiveField(26)
+  final List<ResidentFlat>? flats;
+
   const User({
     required this.id,
     required this.name,
@@ -111,12 +114,14 @@ class User extends Equatable {
     this.updatedAt,
     this.vehicles,
     this.pets,
+    this.flats,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     List<FamilyMember>? parsedFamilyMembers;
     List<ResidentVehicle>? parsedVehicles;
     List<ResidentPet>? parsedPets;
+    List<ResidentFlat>? parsedFlats;
     String? parsedUnit;
 
     if (json['resident_data'] != null) {
@@ -136,9 +141,11 @@ class User extends Equatable {
         )).toList();
       }
 
-      // Flats → derive unit display string
+      // Flats → derive unit display string and parse list
       if (resData['flats'] != null && (resData['flats'] as List).isNotEmpty) {
-        final flat = (resData['flats'] as List).first;
+        final List<dynamic> fList = resData['flats'];
+        parsedFlats = fList.map((f) => ResidentFlat.fromJson(f)).toList();
+        final flat = fList.first;
         parsedUnit = '${flat['building_name'] ?? ''} - ${flat['flat_number'] ?? ''}';
       }
 
@@ -182,6 +189,7 @@ class User extends Equatable {
       updatedAt: json['updated_at'],
       vehicles: parsedVehicles,
       pets: parsedPets,
+      flats: parsedFlats,
     );
   }
 
@@ -212,6 +220,7 @@ class User extends Equatable {
     String? updatedAt,
     List<ResidentVehicle>? vehicles,
     List<ResidentPet>? pets,
+    List<ResidentFlat>? flats,
   }) {
     return User(
       id: id ?? this.id,
@@ -240,6 +249,7 @@ class User extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
       vehicles: vehicles ?? this.vehicles,
       pets: pets ?? this.pets,
+      flats: flats ?? this.flats,
     );
   }
 
@@ -271,6 +281,7 @@ class User extends Equatable {
         updatedAt,
         vehicles,
         pets,
+        flats,
       ];
 }
 
@@ -466,4 +477,59 @@ class ResidentPet extends Equatable {
 
   @override
   List<Object?> get props => [id, name, petTypeName, breed, age, vaccinationStatus];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ResidentFlat
+// ═══════════════════════════════════════════════════════════════════════════
+@HiveType(typeId: 4)
+class ResidentFlat extends Equatable {
+  @HiveField(0)
+  final String id;
+
+  @HiveField(1)
+  final String? flatNumber;
+
+  @HiveField(2)
+  final String? floorNumber;
+
+  @HiveField(3)
+  final double? areaSqft;
+
+  @HiveField(4)
+  final bool isOccupied;
+
+  @HiveField(5)
+  final String? buildingName;
+
+  const ResidentFlat({
+    required this.id,
+    this.flatNumber,
+    this.floorNumber,
+    this.areaSqft,
+    this.isOccupied = false,
+    this.buildingName,
+  });
+
+  factory ResidentFlat.fromJson(Map<String, dynamic> json) {
+    return ResidentFlat(
+      id: json['id'].toString(),
+      flatNumber: json['flat_number']?.toString(),
+      floorNumber: json['floor_number']?.toString(),
+      areaSqft: json['area_sqft'] != null ? double.tryParse(json['area_sqft'].toString()) : null,
+      isOccupied: json['is_occupied'] == 1 || json['is_occupied'] == true,
+      buildingName: json['building_name']?.toString(),
+    );
+  }
+
+  /// Display-friendly label e.g. "A - 103"
+  String get label {
+    final parts = <String>[];
+    if (buildingName != null && buildingName!.isNotEmpty) parts.add(buildingName!);
+    if (flatNumber != null && flatNumber!.isNotEmpty) parts.add(flatNumber!);
+    return parts.join(' - ');
+  }
+
+  @override
+  List<Object?> get props => [id, flatNumber, floorNumber, areaSqft, isOccupied, buildingName];
 }

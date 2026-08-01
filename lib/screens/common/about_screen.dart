@@ -60,7 +60,7 @@ class AboutScreen extends StatelessWidget {
                       height: 80.w,
                       width: 80.w,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         height: 80.w,
                         width: 80.w,
                         decoration: BoxDecoration(
@@ -364,7 +364,7 @@ class AboutScreen extends StatelessWidget {
                   'assets/images/app_logo.png',
                   height: 48,
                   width: 48,
-                  errorBuilder: (_, __, ___) => Icon(
+                  errorBuilder: (_, _, _) => Icon(
                     Icons.home_work,
                     size: 48,
                     color: theme.colorScheme.primary,

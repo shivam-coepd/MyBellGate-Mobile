@@ -43,13 +43,14 @@ class UserAdapter extends TypeAdapter<User> {
       updatedAt: fields[23] as String?,
       vehicles: (fields[24] as List?)?.cast<ResidentVehicle>(),
       pets: (fields[25] as List?)?.cast<ResidentPet>(),
+      flats: (fields[26] as List?)?.cast<ResidentFlat>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(26)
+      ..writeByte(27)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -101,7 +102,9 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(24)
       ..write(obj.vehicles)
       ..writeByte(25)
-      ..write(obj.pets);
+      ..write(obj.pets)
+      ..writeByte(26)
+      ..write(obj.flats);
   }
 
   @override
@@ -288,6 +291,55 @@ class ResidentPetAdapter extends TypeAdapter<ResidentPet> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ResidentPetAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class ResidentFlatAdapter extends TypeAdapter<ResidentFlat> {
+  @override
+  final int typeId = 4;
+
+  @override
+  ResidentFlat read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return ResidentFlat(
+      id: fields[0] as String,
+      flatNumber: fields[1] as String?,
+      floorNumber: fields[2] as String?,
+      areaSqft: fields[3] as double?,
+      isOccupied: fields[4] as bool,
+      buildingName: fields[5] as String?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ResidentFlat obj) {
+    writer
+      ..writeByte(6)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.flatNumber)
+      ..writeByte(2)
+      ..write(obj.floorNumber)
+      ..writeByte(3)
+      ..write(obj.areaSqft)
+      ..writeByte(4)
+      ..write(obj.isOccupied)
+      ..writeByte(5)
+      ..write(obj.buildingName);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResidentFlatAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

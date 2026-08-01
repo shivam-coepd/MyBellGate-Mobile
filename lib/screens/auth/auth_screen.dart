@@ -20,7 +20,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  bool _isLogin = true;
+  final bool _isLogin = true;
   bool _obscurePassword = true;
   final _formKey = GlobalKey<FormState>();
 

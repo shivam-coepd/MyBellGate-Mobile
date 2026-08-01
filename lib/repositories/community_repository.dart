@@ -32,7 +32,7 @@ class CommunityRepository {
     try {
       final response = await _apiService.dio.post(
         '/community/posts',
-        data: {'content': content, if (image != null) 'image': image},
+        data: {'content': content, 'image': ?image},
       );
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to create post');

@@ -28,7 +28,6 @@ class GuardProfileScreen extends StatefulWidget {
 class _GuardProfileScreenState extends State<GuardProfileScreen> {
   bool _isOffline = false;
   bool _notificationsEnabled = true;
-  bool _biometricEnabled = false;
   String _selectedLanguage = 'English';
 
   final List<String> _languages = [

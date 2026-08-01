@@ -545,7 +545,7 @@ class _AnnouncementListShimmer extends StatelessWidget {
       child: ListView.builder(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         itemCount: 6,
-        itemBuilder: (_, __) => Padding(
+        itemBuilder: (_, _) => Padding(
           padding: EdgeInsets.only(bottom: 14.h),
           child: Container(
             decoration: BoxDecoration(

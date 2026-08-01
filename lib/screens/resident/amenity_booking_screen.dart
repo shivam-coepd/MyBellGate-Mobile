@@ -253,7 +253,7 @@ class _AmenityBookingScreenState extends State<AmenityBookingScreen>
                                 ? CachedNetworkImage(
                                     imageUrl: a.imageUrl!,
                                     fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) =>
+                                    errorWidget: (_, _, _) =>
                                         Container(color: Colors.grey.shade200),
                                   )
                                 : Container(
@@ -759,7 +759,7 @@ class _AmenityBookShimmer extends StatelessWidget {
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 4,
-                itemBuilder: (_, __) => Container(
+                itemBuilder: (_, _) => Container(
                   width: 140.w,
                   margin: EdgeInsets.only(right: 14.w),
                   decoration: BoxDecoration(
@@ -786,7 +786,7 @@ class _AmenityBookShimmer extends StatelessWidget {
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 7,
-                itemBuilder: (_, __) => Container(
+                itemBuilder: (_, _) => Container(
                   width: 60.w,
                   margin: EdgeInsets.only(right: 10.w),
                   decoration: BoxDecoration(
@@ -848,7 +848,7 @@ class _AmenityBookingsShimmer extends StatelessWidget {
       child: ListView.builder(
         padding: EdgeInsets.all(16.w),
         itemCount: 5,
-        itemBuilder: (_, __) => Padding(
+        itemBuilder: (_, _) => Padding(
           padding: EdgeInsets.only(bottom: 14.h),
           child: Container(
             decoration: BoxDecoration(

@@ -43,11 +43,7 @@ class UserRepository {
     try {
       final response = await _apiService.dio.post(
         '/auth/login',
-        data: {
-          'phone': phone, 
-          'password': password,
-          if (role != null) 'role': role,
-        },
+        data: {'phone': phone, 'password': password, 'role': role},
       );
 
       log("User Login Raw Response: ${response.data}");
@@ -155,7 +151,10 @@ class UserRepository {
     }
   }
 
-  Future<void> changePassword(String currentPassword, String newPassword) async {
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
       final response = await _apiService.dio.post(
         '/auth/change-password',
@@ -168,7 +167,9 @@ class UserRepository {
       if (response.data != null && response.data['status'] == true) {
         return;
       } else {
-        throw Exception(response.data?['message'] ?? 'Failed to change password');
+        throw Exception(
+          response.data?['message'] ?? 'Failed to change password',
+        );
       }
     } on DioException catch (e) {
       final message =
@@ -198,17 +199,16 @@ class UserRepository {
       if (profession != null) data['profession'] = profession;
       if (hometown != null) data['hometown'] = hometown;
 
-      final response = await _apiService.dio.put(
-        '/users/profile',
-        data: data,
-      );
+      final response = await _apiService.dio.put('/users/profile', data: data);
 
       log("Update Profile Raw Response: ${response.data}");
 
       if (response.data != null && response.data['status'] == true) {
         return await getProfile();
       } else {
-        throw Exception(response.data?['message'] ?? 'Failed to update profile');
+        throw Exception(
+          response.data?['message'] ?? 'Failed to update profile',
+        );
       }
     } on DioException catch (e) {
       final message =

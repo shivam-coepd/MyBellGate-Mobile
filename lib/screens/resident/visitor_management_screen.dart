@@ -255,8 +255,9 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     final phone = visitor['phone'] ?? 'N/A';
     final purpose = visitor['purpose'] ?? 'N/A';
     final visitTime = _formatVisitTime(visitor);
-    
-    final text = 'Visitor Details:\nName: $name\nPhone: $phone\nPurpose: $purpose\nExpected Time: $visitTime';
+
+    final text =
+        'Visitor Details:\nName: $name\nPhone: $phone\nPurpose: $purpose\nExpected Time: $visitTime';
     Share.share(text, subject: 'Visitor Details: $name');
   }
 
@@ -267,37 +268,42 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Padding(
-         padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-         ),
-         child: AddVisitorBottomSheet(
-            existingVisitor: visitor,
-            onVisitorAdded: (_) {}, 
-         ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: AddVisitorBottomSheet(
+          existingVisitor: visitor,
+          onVisitorAdded: (_) {},
+        ),
       ),
     );
-    
+
     if (updatedVisitor != null) {
-       setState(() {
-          _isLoading = true;
-       });
-       try {
-          final result = await _visitorRepository.updateVisitor(visitorId, updatedVisitor);
-          final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
-          if (index != -1) {
-             setState(() {
-                _allVisitors[index] = _adaptVisitor(result);
-             });
-             _filterVisitors();
-          }
-          _showSuccessMessage('Visitor updated successfully');
-       } catch (e) {
-          _showSuccessMessage('Failed to update visitor: ${e.toString().replaceAll('Exception: ', '')}');
-       } finally {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final result = await _visitorRepository.updateVisitor(
+          visitorId,
+          updatedVisitor,
+        );
+        final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
+        if (index != -1) {
           setState(() {
-             _isLoading = false;
+            _allVisitors[index] = _adaptVisitor(result);
           });
-       }
+          _filterVisitors();
+        }
+        _showSuccessMessage('Visitor updated successfully');
+      } catch (e) {
+        _showSuccessMessage(
+          'Failed to update visitor: ${e.toString().replaceAll('Exception: ', '')}',
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -314,26 +320,30 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     );
 
     if (pickedTime != null) {
-      final formattedTime = '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}:00';
+      final formattedTime =
+          '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}:00';
       setState(() {
-         _isLoading = true;
+        _isLoading = true;
       });
       try {
-         final updatedVisitor = await _visitorRepository.updateVisitor(visitorId, {'expected_exit_time': formattedTime});
-         final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
-         if (index != -1) {
-            setState(() {
-               _allVisitors[index] = _adaptVisitor(updatedVisitor);
-            });
-            _filterVisitors();
-         }
-         _showSuccessMessage('Time extended successfully');
+        final updatedVisitor = await _visitorRepository.updateVisitor(
+          visitorId,
+          {'expected_exit_time': formattedTime},
+        );
+        final index = _allVisitors.indexWhere((v) => v['id'] == visitorId);
+        if (index != -1) {
+          setState(() {
+            _allVisitors[index] = _adaptVisitor(updatedVisitor);
+          });
+          _filterVisitors();
+        }
+        _showSuccessMessage('Time extended successfully');
       } catch (e) {
-         _showSuccessMessage('Failed to extend time: ${e.toString()}');
+        _showSuccessMessage('Failed to extend time: ${e.toString()}');
       } finally {
-         setState(() {
-            _isLoading = false;
-         });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -355,20 +365,20 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     try {
       for (final id in _selectedVisitors) {
         try {
-           await _visitorRepository.updateVisitorStatus(id, 'approved');
-           final index = _allVisitors.indexWhere((v) => v['id'] == id);
-           if (index != -1) {
-             _allVisitors[index]['status'] = 'approved';
-           }
-           successCount++;
+          await _visitorRepository.updateVisitorStatus(id, 'approved');
+          final index = _allVisitors.indexWhere((v) => v['id'] == id);
+          if (index != -1) {
+            _allVisitors[index]['status'] = 'approved';
+          }
+          successCount++;
         } catch (e) {
-           log("Bulk approve failed for $id: $e");
+          log("Bulk approve failed for $id: $e");
         }
       }
       _selectedVisitors.clear();
       _isBulkMode = false;
       _filterVisitors();
-      
+
       _showSuccessMessage('$successCount visitors approved successfully');
     } finally {
       setState(() {
@@ -380,17 +390,19 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
   void _handleVoiceSearch() {
     // Basic mock since speech_to_text is not installed
     showDialog(
-       context: context,
-       builder: (context) => AlertDialog(
-          title: const Text('Voice Search'),
-          content: const Text('Listening... Please speak now.\n(Speech-to-text integration required)'),
-          actions: [
-             TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-             )
-          ],
-       )
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Voice Search'),
+        content: const Text(
+          'Listening... Please speak now.\n(Speech-to-text integration required)',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -736,7 +748,11 @@ class AddVisitorBottomSheet extends StatefulWidget {
   final Function(Map<String, dynamic>) onVisitorAdded;
   final Map<String, dynamic>? existingVisitor;
 
-  const AddVisitorBottomSheet({super.key, required this.onVisitorAdded, this.existingVisitor});
+  const AddVisitorBottomSheet({
+    super.key,
+    required this.onVisitorAdded,
+    this.existingVisitor,
+  });
 
   @override
   State<AddVisitorBottomSheet> createState() => _AddVisitorBottomSheetState();
@@ -790,7 +806,10 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
         try {
           final parts = visitor['visit_time'].toString().split(':');
           if (parts.length >= 2) {
-            _selectedTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+            _selectedTime = TimeOfDay(
+              hour: int.parse(parts[0]),
+              minute: int.parse(parts[1]),
+            );
           }
         } catch (_) {}
       }
@@ -978,7 +997,7 @@ class _AddVisitorBottomSheetState extends State<AddVisitorBottomSheet> {
         visitTime =
             '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00';
       }
-      
+
       Map<String, dynamic> resultData = {
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -1996,7 +2015,7 @@ class VisitorCardWidget extends StatelessWidget {
                             width: 56.w,
                             height: 56.w,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
+                            errorBuilder: (_, _, _) => Container(
                               color: statusColor.withValues(alpha: 0.1),
                               child: Icon(
                                 Icons.person_rounded,
@@ -2263,7 +2282,7 @@ class VisitorCardWidget extends StatelessWidget {
                         width: 40.w,
                         height: 40.w,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+                        errorBuilder: (_, _, _) => Container(
                           width: 40.w,
                           height: 40.w,
                           color: statusColor.withValues(alpha: 0.1),

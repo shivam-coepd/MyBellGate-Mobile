@@ -811,7 +811,7 @@ class _AvatarBubble extends StatelessWidget {
               : 'https://randomuser.me/api/portraits/${index % 2 == 0 ? 'men' : 'women'}/${index + 20}.jpg',
           fit: BoxFit.cover,
           semanticLabel: 'Attendee ${index + 1}',
-          errorBuilder: (_, __, ___) => CircleAvatar(
+          errorBuilder: (_, _, _) => CircleAvatar(
             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             child: Text(
               '${index + 1}',

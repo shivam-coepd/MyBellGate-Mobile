@@ -1129,7 +1129,7 @@ class _TicketListShimmer extends StatelessWidget {
       child: ListView.builder(
         padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 80.h),
         itemCount: 5,
-        itemBuilder: (_, __) => Padding(
+        itemBuilder: (_, _) => Padding(
           padding: EdgeInsets.only(bottom: 14.h),
           child: Container(
             decoration: BoxDecoration(

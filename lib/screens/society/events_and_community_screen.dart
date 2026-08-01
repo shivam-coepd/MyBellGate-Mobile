@@ -274,7 +274,7 @@ class _EventsSectionWidgetState extends State<EventsSectionWidget> {
           return ListView.builder(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             itemCount: 4,
-            itemBuilder: (_, __) => buildEventCardShimmer(theme),
+            itemBuilder: (_, _) => buildEventCardShimmer(theme),
           );
         }
         if (state is EventsError) {
@@ -784,7 +784,7 @@ class _CommunityFeedSectionWidgetState
           return ListView.builder(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             itemCount: 3,
-            itemBuilder: (_, __) => buildCommunityPostShimmer(theme),
+            itemBuilder: (_, _) => buildCommunityPostShimmer(theme),
           );
         } else if (state is CommunityError) {
           return Padding(
@@ -2638,7 +2638,7 @@ class _PollsSectionWidgetState extends State<PollsSectionWidget> {
           return ListView.builder(
             itemCount: 4,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-            itemBuilder: (_, __) => buildPollCardShimmer(theme),
+            itemBuilder: (_, _) => buildPollCardShimmer(theme),
           );
         }
         if (state is CommunicationsError) {

@@ -62,6 +62,7 @@ void main() async {
   Hive.registerAdapter(FamilyMemberAdapter());
   Hive.registerAdapter(ResidentVehicleAdapter());
   Hive.registerAdapter(ResidentPetAdapter());
+  Hive.registerAdapter(ResidentFlatAdapter());
 
   // Initialize app configuration
   await AppConfig.init();

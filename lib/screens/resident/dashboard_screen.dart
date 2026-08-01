@@ -843,7 +843,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: 2,
-                  itemBuilder: (_, __) => _buildEventShimmer(),
+                  itemBuilder: (_, _) => _buildEventShimmer(),
                 );
               }
               if (state is EventsError) {
@@ -869,7 +869,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: events.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 14.h),
+                  separatorBuilder: (_, _) => SizedBox(height: 14.h),
                   itemBuilder: (context, index) {
                     final count = events.length;
 
@@ -888,7 +888,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
 
                     return AnimatedBuilder(
                       animation: animation,
-                      builder: (_, __) {
+                      builder: (_, _) {
                         return Opacity(
                           opacity: animation.value,
                           child: Transform.translate(
@@ -962,13 +962,12 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                     width: 90.w,
                     height: 90.w,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(
+                    placeholder: (_, _) => Container(
                       width: 90.w,
                       height: 90.w,
                       color: Colors.grey.shade300,
                     ),
-                    errorWidget: (_, __, ___) =>
-                        Icon(Icons.image_not_supported),
+                    errorWidget: (_, _, _) => Icon(Icons.image_not_supported),
                   ),
                 ),
 
