@@ -58,4 +58,26 @@ class AppConfig {
       await _prefs.setString(_keyToken, value);
     }
   }
-}
+
+  // PIN Lock
+  static const String _keyPinLockEnabled = 'pin_lock_enabled';
+  static const String _keyAppPin = 'app_pin';
+
+  static bool get pinLockEnabled =>
+      _prefs.getBool(_keyPinLockEnabled) ?? false;
+
+  static Future<void> setPinLockEnabled(bool value) async {
+    await _prefs.setBool(_keyPinLockEnabled, value);
+  }
+
+  static String? get appPin => _prefs.getString(_keyAppPin);
+
+  static Future<void> setAppPin(String? pin) async {
+    if (pin == null) {
+      await _prefs.remove(_keyAppPin);
+    } else {
+      await _prefs.setString(_keyAppPin, pin);
+    }
+  }
+}
+

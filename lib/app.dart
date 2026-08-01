@@ -42,6 +42,7 @@ import 'package:mygate_coepd/screens/resident/visitor_management_screen.dart';
 import 'package:mygate_coepd/services/api_service.dart';
 import 'package:mygate_coepd/services/fcm_service.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
+import 'package:mygate_coepd/widgets/app_lock_wrapper.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -172,6 +173,9 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
                 theme: AppTheme.lightTheme,
                 darkTheme: AppTheme.darkTheme,
                 themeMode: themeMode,
+                builder: (context, child) {
+                  return AppLockWrapper(child: child!);
+                },
                 initialRoute: '/',
                 routes: {..._getMainRoutes()},
                 debugShowCheckedModeBanner: false,

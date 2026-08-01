@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/config/app_config.dart';
 
 class SecurityPrivacyScreen extends StatefulWidget {
   const SecurityPrivacyScreen({super.key});
@@ -13,7 +14,13 @@ class SecurityPrivacyScreen extends StatefulWidget {
 
 class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
   bool _twoFactorEnabled = false;
-  bool _pinLockEnabled = false;
+  late bool _pinLockEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _pinLockEnabled = AppConfig.pinLockEnabled;
+  }
   bool _showOnlineStatus = true;
   bool _profileVisible = true;
   bool _activityVisible = true;
@@ -266,15 +273,21 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (formKey.currentState!.validate()) {
-                      Navigator.pop(ctx);
+                      await AppConfig.setAppPin(pinCtrl.text);
+                      await AppConfig.setPinLockEnabled(true);
+                      if (ctx.mounted) {
+                        Navigator.pop(ctx);
+                      }
                       setState(() => _pinLockEnabled = true);
-                      AppSnackbar.show(
-                        context: context,
-                        message: 'PIN lock set successfully',
-                        type: SnackBarType.success,
-                      );
+                      if (mounted) {
+                        AppSnackbar.show(
+                          context: context,
+                          message: 'PIN lock set successfully',
+                          type: SnackBarType.success,
+                        );
+                      }
                     }
                   },
                   child: const Text('Set PIN'),
@@ -475,16 +488,20 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                   ),
                   value: _pinLockEnabled,
                   activeThumbColor: theme.colorScheme.primary,
-                  onChanged: (v) {
+                  onChanged: (v) async {
                     if (v) {
                       _showSetPinSheet();
                     } else {
+                      await AppConfig.setPinLockEnabled(false);
+                      await AppConfig.setAppPin(null);
                       setState(() => _pinLockEnabled = false);
-                      AppSnackbar.show(
-                        context: context,
-                        message: 'PIN lock removed',
-                        type: SnackBarType.info,
-                      );
+                      if (mounted) {
+                        AppSnackbar.show(
+                          context: context,
+                          message: 'PIN lock removed',
+                          type: SnackBarType.info,
+                        );
+                      }
                     }
                   },
                 ),
