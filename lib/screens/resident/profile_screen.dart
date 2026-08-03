@@ -1299,7 +1299,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           Text(
-            'Version 4.12.0',
+            'Version 1.0.2',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
