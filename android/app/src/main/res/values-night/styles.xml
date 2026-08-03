@@ -7,5 +7,6 @@
     <!-- Theme applied after Flutter engine draws its first frame -->
     <style name="NormalTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">?android:colorBackground</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
     </style>
 </resources>
