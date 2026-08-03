@@ -151,16 +151,36 @@ class ApiService {
               final retryResp = await dio.fetch(e.requestOptions);
               return handler.resolve(retryResp);
             } on DioException catch (retryErr) {
-              return handler.next(retryErr);
+              return handler.next(_formatDioError(retryErr));
             } catch (_) {
-              return handler.next(e);
+              return handler.next(_formatDioError(e));
             }
           }
 
-          return handler.next(e);
+          return handler.next(_formatDioError(e));
         },
       ),
     );
+  }
+
+  DioException _formatDioError(DioException e) {
+    String friendlyMessage;
+    final type = e.type;
+
+    if (type == DioExceptionType.connectionTimeout ||
+        type == DioExceptionType.receiveTimeout ||
+        type == DioExceptionType.sendTimeout) {
+      friendlyMessage = 'Connection timed out. Please check your internet and try again.';
+    } else if (type == DioExceptionType.connectionError || type == DioExceptionType.unknown) {
+      friendlyMessage = 'Network connection failed. Please check your internet connection.';
+    } else if (e.response != null && e.response?.data is Map && e.response?.data['message'] != null) {
+      // Keep server provided error message if possible
+      friendlyMessage = e.response?.data['message'];
+    } else {
+      friendlyMessage = 'An unexpected error occurred. Please try again.';
+    }
+
+    return e.copyWith(message: friendlyMessage);
   }
 
   // ── Private helpers ──────────────────────────────────────────────────────

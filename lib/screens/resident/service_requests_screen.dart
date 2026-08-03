@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/models/ticket.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/app_error_widget.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ServiceRequestsScreen extends StatefulWidget {
@@ -425,9 +426,11 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                     return const _TicketListShimmer();
                   }
                   if (state is HelpdeskError) {
-                    return _errorWidget(
-                      state.message,
-                      () => ctx.read<HelpdeskBloc>().add(const LoadTickets()),
+                    return AppErrorWidget(
+                      message: state.message,
+                      title: 'Request Failed',
+                      icon: Icons.support_agent_outlined,
+                      onRetry: () => ctx.read<HelpdeskBloc>().add(const LoadTickets()),
                     );
                   }
 
@@ -1055,29 +1058,6 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
     );
   }
 
-  Widget _errorWidget(String msg, VoidCallback retry) => Center(
-    child: Padding(
-      padding: EdgeInsets.all(24.w),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 56.sp, color: Colors.red),
-          SizedBox(height: 14.h),
-          Text(
-            msg,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-          ),
-          SizedBox(height: 18.h),
-          ElevatedButton.icon(
-            onPressed: retry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    ),
-  );
 
   Widget _emptyWidget(String t, String s) => Center(
     child: Column(

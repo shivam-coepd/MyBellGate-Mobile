@@ -86,6 +86,13 @@ class AccountingError extends AccountingState {
   List<Object?> get props => [message];
 }
 
+class PaymentFailure extends AccountingState {
+  final String message;
+  const PaymentFailure(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
 // ── BLoC ──────────────────────────────────────────────────────────────────────
 
 class AccountingBloc extends Bloc<AccountingEvent, AccountingState> {
@@ -137,7 +144,7 @@ class AccountingBloc extends Bloc<AccountingEvent, AccountingState> {
         receiptNumber: result['receipt_number'] ?? '',
       ));
     } catch (e) {
-      emit(AccountingError(e.toString().replaceFirst('Exception: ', '')));
+      emit(PaymentFailure(e.toString().replaceFirst('Exception: ', '')));
     }
   }
 }

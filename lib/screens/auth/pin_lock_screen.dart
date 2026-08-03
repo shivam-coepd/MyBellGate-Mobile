@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/config/app_config.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
-import 'package:mygate_coepd/theme/app_theme.dart';
 
 class PinLockScreen extends StatefulWidget {
   final VoidCallback onUnlock;
@@ -87,9 +86,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
                   ),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor:
-                        theme.colorScheme.surfaceContainerHighest ??
-                        theme.colorScheme.surfaceVariant,
+                    fillColor: theme.colorScheme.surfaceContainerHighest,
                     counterText: '',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),

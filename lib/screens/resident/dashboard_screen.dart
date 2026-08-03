@@ -14,6 +14,7 @@ import 'package:mygate_coepd/blocs/accounting/accounting_bloc.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:mygate_coepd/blocs/events/events_bloc.dart';
+import 'package:mygate_coepd/widgets/app_error_widget.dart';
 
 class ResidentDashboardScreen extends StatefulWidget {
   const ResidentDashboardScreen({super.key});
@@ -847,7 +848,12 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 );
               }
               if (state is EventsError) {
-                return Center(child: Text(state.message));
+                return AppErrorWidget(
+                  message: state.message,
+                  title: 'Failed to Load Events',
+                  icon: Icons.event_busy_outlined,
+                  onRetry: () => _onRefresh(),
+                );
               }
               if (state is EventsLoaded) {
                 final events = state.events.take(3).toList();

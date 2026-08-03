@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/communications/communications_bloc.dart';
+import 'package:mygate_coepd/widgets/app_error_widget.dart';
 import 'package:mygate_coepd/models/announcement.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -110,9 +111,12 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
           return const _AnnouncementListShimmer();
         }
         if (state is CommunicationsError) {
-          return _errorWidget(
-            state.message,
-            () => ctx.read<CommunicationsBloc>().add(const LoadAnnouncements()),
+          return AppErrorWidget(
+            message: state.message,
+            title: 'Failed to Load',
+            icon: Icons.campaign_outlined,
+            onRetry: () =>
+                ctx.read<CommunicationsBloc>().add(const LoadAnnouncements()),
           );
         }
         if (state is AnnouncementsLoaded) {
@@ -306,9 +310,11 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
           return const _AnnouncementListShimmer();
         }
         if (state is CommunicationsError) {
-          return _errorWidget(
-            state.message,
-            () => ctx.read<CommunicationsBloc>().add(
+          return AppErrorWidget(
+            message: state.message,
+            title: 'Failed to Load',
+            icon: Icons.poll_outlined,
+            onRetry: () => ctx.read<CommunicationsBloc>().add(
               const LoadPolls(isActive: true),
             ),
           );
@@ -471,30 +477,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
       ),
     );
   }
-
-  Widget _errorWidget(String msg, VoidCallback retry) => Center(
-    child: Padding(
-      padding: EdgeInsets.all(24.w),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 56.sp, color: Colors.red),
-          SizedBox(height: 14.h),
-          Text(
-            msg,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-          ),
-          SizedBox(height: 18.h),
-          ElevatedButton.icon(
-            onPressed: retry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    ),
-  );
 
   Widget _emptyWidget(String t, String s) => Center(
     child: Column(
