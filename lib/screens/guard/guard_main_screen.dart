@@ -1318,7 +1318,7 @@ class _GuardDrawerState extends State<GuardDrawer>
             // ── App Version Footer ──
             Center(
               child: Text(
-                'MyGateBell Guard v1.0.2',
+                'MyGateBell Guard v1.0.3',
                 style: TextStyle(
                   fontSize: 11.sp,
                   color: isDark
