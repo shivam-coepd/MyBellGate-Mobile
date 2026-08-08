@@ -21,6 +21,7 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
     super.initState();
     _pinLockEnabled = AppConfig.pinLockEnabled;
   }
+
   bool _showOnlineStatus = true;
   bool _profileVisible = true;
   bool _activityVisible = true;
@@ -505,110 +506,9 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                     }
                   },
                 ),
-                Divider(
-                  height: 0,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.3,
-                  ),
-                ),
-                SwitchListTile(
-                  secondary: Icon(
-                    Icons.security,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Two-Factor Authentication',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Add extra security with OTP verification',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: _twoFactorEnabled,
-                  activeThumbColor: theme.colorScheme.primary,
-                  onChanged: (v) {
-                    setState(() => _twoFactorEnabled = v);
-                    AppSnackbar.show(
-                      context: context,
-                      message: '2FA ${v ? "enabled" : "disabled"}',
-                      type: SnackBarType.warning,
-                    );
-                  },
-                ),
               ],
             ),
-
-            // ── Privacy ──────────────────────────────────────────────────
-            _sectionHeader(theme, 'PRIVACY'),
-            _card(
-              theme,
-              children: [
-                SwitchListTile(
-                  secondary: Icon(
-                    Icons.wifi_protected_setup,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Show Online Status',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Others can see when you are online',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: _showOnlineStatus,
-                  activeThumbColor: theme.colorScheme.primary,
-                  onChanged: (v) => setState(() => _showOnlineStatus = v),
-                ),
-                Divider(
-                  height: 0,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.3,
-                  ),
-                ),
-                SwitchListTile(
-                  secondary: Icon(
-                    Icons.person_outline,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Profile Visibility',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Allow society members to view your profile',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: _profileVisible,
-                  activeThumbColor: theme.colorScheme.primary,
-                  onChanged: (v) => setState(() => _profileVisible = v),
-                ),
-                Divider(
-                  height: 0,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.3,
-                  ),
-                ),
-                SwitchListTile(
-                  secondary: Icon(
-                    Icons.history,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Activity Visibility',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Show your activity in community feed',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: _activityVisible,
-                  activeThumbColor: theme.colorScheme.primary,
-                  onChanged: (v) => setState(() => _activityVisible = v),
-                ),
-              ],
-            ),
-
+            
             // ── Data ─────────────────────────────────────────────────────
             _sectionHeader(theme, 'DATA & ACCOUNT'),
             _card(

@@ -314,12 +314,6 @@ class ProfileScreenState extends State<ProfileScreen> {
               onTap: () {
                 context.read<ThemeCubit>().updateTheme(ThemeMode.light);
                 Navigator.pop(context);
-                AppSnackbar.show(
-                  context: context,
-                  message: "Light mode enabled",
-                  type: SnackBarType.success,
-                  position: SnackBarPosition.top,
-                );
               },
             ),
             ListTile(
@@ -342,12 +336,6 @@ class ProfileScreenState extends State<ProfileScreen> {
               onTap: () {
                 context.read<ThemeCubit>().updateTheme(ThemeMode.dark);
                 Navigator.pop(context);
-                AppSnackbar.show(
-                  context: context,
-                  message: "Dark mode enabled",
-                  type: SnackBarType.success,
-                  position: SnackBarPosition.top,
-                );
               },
             ),
             ListTile(
@@ -634,25 +622,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                 // All other sections remain visible and interactive during loading
                 SliverToBoxAdapter(child: _buildHouseholdSection(theme)),
                 SliverToBoxAdapter(
-                  child: _buildSectionHeader('Security & Notifications', theme),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildToggleItem(
-                    icon: Icons.bolt_outlined,
-                    title: 'Flash Approvals',
-                    value: _flashApprovalsEnabled,
-                    onChanged: (value) {
-                      setState(() => _flashApprovalsEnabled = value);
-                      AppSnackbar.show(
-                        context: context,
-                        message:
-                            "Flash Approvals ${value ? "enabled" : "disabled"}",
-                        type: SnackBarType.success,
-                        position: SnackBarPosition.top,
-                      );
-                    },
-                    theme: theme,
-                  ),
+                  child: _buildSectionHeader('Security', theme),
                 ),
                 SliverToBoxAdapter(
                   child: _buildNavItem(
@@ -674,14 +644,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _buildNavItem(
-                    icon: Icons.credit_card_outlined,
-                    title: 'Saved Payments',
-                    onTap: () => _navigateTo('Saved Payments'),
-                    theme: theme,
-                  ),
-                ),
-                SliverToBoxAdapter(
                   child: _buildSectionHeader('Manage Flat', theme),
                 ),
                 SliverToBoxAdapter(
@@ -695,15 +657,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: _buildSectionHeader('General Settings', theme),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildNavItem(
-                    icon: Icons.language_outlined,
-                    title: 'App Language',
-                    trailing: _selectedLanguage,
-                    onTap: _showLanguagePicker,
-                    theme: theme,
-                  ),
                 ),
                 SliverToBoxAdapter(
                   child: _buildNavItem(

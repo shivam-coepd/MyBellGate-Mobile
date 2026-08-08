@@ -48,6 +48,34 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
     if (await canLaunchUrl(uri)) launchUrl(uri);
   }
 
+  Future<bool> _tryLaunchUrl(Uri uri) async {
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _openPlayStore() async {
+    const packageName = 'com.mygatebell.app';
+    final marketUri = Uri.parse('market://details?id=$packageName');
+    final webUri = Uri.parse('https://play.google.com/store/apps/details?id=$packageName');
+
+    if (await _tryLaunchUrl(marketUri)) {
+      return;
+    }
+
+    if (await _tryLaunchUrl(webUri)) {
+      return;
+    }
+
+    AppSnackbar.show(
+      context: context,
+      message: 'Unable to open Play Store. Please try again later.',
+      type: SnackBarType.error,
+    );
+  }
+
   void _showRaiseTicketSheet() {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
@@ -352,11 +380,6 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             'Go to Bills & Payments from the home screen. You will see all your invoices. Tap on any unpaid invoice and select a payment method (UPI, Card, or Net Banking) to pay.',
       },
       {
-        'q': 'What is Flash Approval?',
-        'a':
-            'Flash Approvals allow visitors to be auto-approved if you have pre-registered them. This speeds up entry at the gate without requiring manual confirmation each time.',
-      },
-      {
         'q': 'How do I book an amenity?',
         'a':
             'Go to Amenities from the home screen. Browse available amenities, select a date and time slot, and confirm your booking. Some amenities may require approval from the society admin.',
@@ -371,11 +394,6 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
         'a':
             'Go to Support & Feedback > Raise Ticket. Select "Maintenance" category and describe your issue. Our team will respond within 24 hours.',
       },
-      {
-        'q': 'Can I add multiple properties?',
-        'a':
-            'Yes! Go to Profile > Manage Flats > Add New Property to register another flat or property in the same or different society.',
-      },
     ];
 
     return ListView.builder(
@@ -386,7 +404,6 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Colors.grey[200]!),
         ),
         child: ExpansionTileTheme(
           data: const ExpansionTileThemeData(
@@ -714,11 +731,7 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             SizedBox(height: 24.h),
             Center(
               child: TextButton.icon(
-                onPressed: () => AppSnackbar.show(
-                  context: context,
-                  message: 'Thank you for rating us!',
-                  type: SnackBarType.success,
-                ),
+                onPressed: _openPlayStore,
                 icon: Icon(Icons.star_border, color: theme.colorScheme.primary),
                 label: Text(
                   'Rate us on Play Store',

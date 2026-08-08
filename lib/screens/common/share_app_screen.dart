@@ -10,45 +10,95 @@ class ShareAppScreen extends StatelessWidget {
   const ShareAppScreen({super.key});
 
   static const String _playStoreUrl =
-      'https://play.google.com/store/apps/details?id=com.coepd.mygatebell';
-  static const String _appStoreUrl =
-      'https://apps.apple.com/app/mygatebell/id123456789';
-  static const String _referralCode = 'MGB2026X';
+      'https://play.google.com/store/apps/details?id=com.mygatebell.app';
+  // static const String _appStoreUrl =
+  //     'https://apps.apple.com/app/mygatebell/id123456789';
 
   String get _shareText =>
       'Hey! I\'ve been using MyGateBell for my society management and it\'s amazing! 🏠\n\n'
       'It handles visitor entries, billing, amenities, security alerts and more — all in one app.\n\n'
-      'Download it now: $_playStoreUrl\n\n'
-      'Use my referral code: $_referralCode to get started!';
+      'Download it now: $_playStoreUrl\n\n';
 
-  void _shareApp() async {
-    await Share.share(_shareText);
-  }
-
-  void _shareViaWhatsApp() async {
-    final uri = Uri.parse(
-      'https://wa.me/?text=${Uri.encodeComponent(_shareText)}',
-    );
-    if (await canLaunchUrl(uri)) {
-      launchUrl(uri, mode: LaunchMode.externalApplication);
+  Future<void> _shareApp(BuildContext context) async {
+    try {
+      await Share.share(_shareText);
+    } catch (_) {
+      AppSnackbar.show(
+        context: context,
+        message: 'Unable to open sharing options. Please try again later.',
+        type: SnackBarType.error,
+      );
     }
   }
 
-  void _shareViaEmail() async {
-    final uri = Uri(
-      scheme: 'mailto',
-      query:
-          'subject=Check out MyGateBell App&body=${Uri.encodeComponent(_shareText)}',
-    );
-    if (await canLaunchUrl(uri)) launchUrl(uri);
+  Future<bool> _tryLaunchUrl(Uri uri, {LaunchMode mode = LaunchMode.platformDefault}) async {
+    try {
+      return await launchUrl(uri, mode: mode);
+    } catch (_) {
+      return false;
+    }
   }
 
-  void _shareViaSms() async {
+  Future<void> _shareViaWhatsApp(BuildContext context) async {
+    final nativeUri = Uri.parse(
+      'whatsapp://send?text=${Uri.encodeComponent(_shareText)}',
+    );
+    if (await _tryLaunchUrl(nativeUri, mode: LaunchMode.externalApplication)) {
+      return;
+    }
+
+    final fallbackUri = Uri.parse(
+      'https://wa.me/?text=${Uri.encodeComponent(_shareText)}',
+    );
+    if (await _tryLaunchUrl(fallbackUri, mode: LaunchMode.externalApplication)) {
+      return;
+    }
+
+    AppSnackbar.show(
+      context: context,
+      message: 'WhatsApp is unavailable. Opening general share options instead.',
+      type: SnackBarType.warning,
+    );
+    await Share.share(_shareText, subject: 'Check out MyGateBell App');
+  }
+
+  Future<void> _shareViaEmail(BuildContext context) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      queryParameters: {
+        'subject': 'Check out MyGateBell App',
+        'body': _shareText,
+      },
+    );
+    if (await _tryLaunchUrl(uri, mode: LaunchMode.externalApplication)) {
+      return;
+    }
+
+    AppSnackbar.show(
+      context: context,
+      message: 'No email client was found. Opening general share options instead.',
+      type: SnackBarType.warning,
+    );
+    await Share.share(_shareText, subject: 'Check out MyGateBell App');
+  }
+
+  Future<void> _shareViaSms(BuildContext context) async {
     final uri = Uri(
       scheme: 'sms',
-      query: 'body=${Uri.encodeComponent(_shareText)}',
+      queryParameters: {
+        'body': _shareText,
+      },
     );
-    if (await canLaunchUrl(uri)) launchUrl(uri);
+    if (await _tryLaunchUrl(uri, mode: LaunchMode.externalApplication)) {
+      return;
+    }
+
+    AppSnackbar.show(
+      context: context,
+      message: 'Unable to open SMS. Opening general share options instead.',
+      type: SnackBarType.warning,
+    );
+    await Share.share(_shareText, subject: 'Check out MyGateBell App');
   }
 
   void _copyLink(BuildContext context) {
@@ -56,16 +106,7 @@ class ShareAppScreen extends StatelessWidget {
     AppSnackbar.show(
       context: context,
       message: 'Link copied to clipboard!',
-      type: SnackBarType.info,
-    );
-  }
-
-  void _copyReferral(BuildContext context) {
-    Clipboard.setData(const ClipboardData(text: _referralCode));
-    AppSnackbar.show(
-      context: context,
-      message: 'Referral code copied!',
-      type: SnackBarType.info,
+      type: SnackBarType.success,
     );
   }
 
@@ -137,90 +178,7 @@ class ShareAppScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // ── Referral Code ────────────────────────────────────────────
-            SizedBox(height: 12.h),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.card_giftcard,
-                          color: theme.colorScheme.primary,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'Your Referral Code',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    GestureDetector(
-                      onTap: () => _copyReferral(context),
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.08,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.3,
-                            ),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _referralCode,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 4,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Icon(
-                              Icons.copy,
-                              size: 18,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Center(
-                      child: Text(
-                        'Tap to copy · Share with friends & earn rewards',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
+ 
             // ── Share Options ────────────────────────────────────────────
             SizedBox(height: 12.h),
             Card(
@@ -241,28 +199,28 @@ class ShareAppScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 16.h),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _shareBtn(
                           theme,
                           Icons.message,
                           'WhatsApp',
                           const Color(0xFF25D366),
-                          _shareViaWhatsApp,
+                          () => _shareViaWhatsApp(context),
                         ),
                         _shareBtn(
                           theme,
                           Icons.email_outlined,
                           'Email',
                           theme.colorScheme.primary,
-                          _shareViaEmail,
+                          () => _shareViaEmail(context),
                         ),
                         _shareBtn(
                           theme,
                           Icons.sms_outlined,
                           'SMS',
                           Colors.orange,
-                          _shareViaSms,
+                          () => _shareViaSms(context),
                         ),
                         _shareBtn(
                           theme,
@@ -283,7 +241,7 @@ class ShareAppScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _shareApp,
+                onPressed: () => _shareApp(context),
                 icon: const Icon(Icons.share, size: 20),
                 label: const Text(
                   'Share MyGateBell',
@@ -315,20 +273,20 @@ class ShareAppScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => launchUrl(
-                      Uri.parse(_appStoreUrl),
-                      mode: LaunchMode.externalApplication,
-                    ),
-                    icon: const Icon(Icons.apple, size: 18),
-                    label: const Text('App Store'),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                    ),
-                  ),
-                ),
+                // SizedBox(width: 12.w),
+                // Expanded(
+                //   child: OutlinedButton.icon(
+                //     onPressed: () => launchUrl(
+                //       Uri.parse(_appStoreUrl),
+                //       mode: LaunchMode.externalApplication,
+                //     ),
+                //     icon: const Icon(Icons.apple, size: 18),
+                //     label: const Text('App Store'),
+                //     style: OutlinedButton.styleFrom(
+                //       padding: EdgeInsets.symmetric(vertical: 12.h),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
 
