@@ -63,13 +63,10 @@ class ShareAppScreen extends StatelessWidget {
   }
 
   Future<void> _shareViaEmail(BuildContext context) async {
-    final uri = Uri(
-      scheme: 'mailto',
-      queryParameters: {
-        'subject': 'Check out MyGateBell App',
-        'body': _shareText,
-      },
-    );
+    final encodedSubject = Uri.encodeComponent('Check out MyGateBell App');
+    final encodedBody = Uri.encodeComponent(_shareText);
+    final uri = Uri.parse('mailto:?subject=$encodedSubject&body=$encodedBody');
+
     if (await _tryLaunchUrl(uri, mode: LaunchMode.externalApplication)) {
       return;
     }

@@ -7,6 +7,7 @@ import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/models/ticket.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:in_app_review/in_app_review.dart';
 
 class SupportFeedbackScreen extends StatefulWidget {
   const SupportFeedbackScreen({super.key});
@@ -48,6 +49,8 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
     if (await canLaunchUrl(uri)) launchUrl(uri);
   }
 
+  final InAppReview _inAppReview = InAppReview.instance;
+
   Future<bool> _tryLaunchUrl(Uri uri) async {
     try {
       return await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -56,22 +59,27 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
     }
   }
 
-  void _openPlayStore() async {
+  Future<void> _requestInAppReview() async {
     const packageName = 'com.mygatebell.app';
     final marketUri = Uri.parse('market://details?id=$packageName');
     final webUri = Uri.parse('https://play.google.com/store/apps/details?id=$packageName');
 
-    if (await _tryLaunchUrl(marketUri)) {
-      return;
+    if (await _inAppReview.isAvailable()) {
+      try {
+        await _inAppReview.requestReview();
+        return;
+      } catch (_) {
+        // Fall back to store listing if review prompt fails.
+      }
     }
 
-    if (await _tryLaunchUrl(webUri)) {
+    if (await _tryLaunchUrl(marketUri) || await _tryLaunchUrl(webUri)) {
       return;
     }
 
     AppSnackbar.show(
       context: context,
-      message: 'Unable to open Play Store. Please try again later.',
+      message: 'Unable to open Play Store review. Please try again later.',
       type: SnackBarType.error,
     );
   }
@@ -731,7 +739,7 @@ class _SupportFeedbackScreenState extends State<SupportFeedbackScreen>
             SizedBox(height: 24.h),
             Center(
               child: TextButton.icon(
-                onPressed: _openPlayStore,
+                onPressed: _requestInAppReview,
                 icon: Icon(Icons.star_border, color: theme.colorScheme.primary),
                 label: Text(
                   'Rate us on Play Store',
