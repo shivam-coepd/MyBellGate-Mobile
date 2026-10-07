@@ -1,9 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mygate_coepd/repositories/user_repository.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:mygate_coepd/config/app_config.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SecurityPrivacyScreen extends StatefulWidget {
   const SecurityPrivacyScreen({super.key});
@@ -13,7 +18,6 @@ class SecurityPrivacyScreen extends StatefulWidget {
 }
 
 class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
-  bool _twoFactorEnabled = false;
   late bool _pinLockEnabled;
 
   @override
@@ -21,10 +25,6 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
     super.initState();
     _pinLockEnabled = AppConfig.pinLockEnabled;
   }
-
-  bool _showOnlineStatus = true;
-  bool _profileVisible = true;
-  bool _activityVisible = true;
 
   void _showChangePasswordSheet() {
     final currentCtrl = TextEditingController();
@@ -301,6 +301,38 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
     );
   }
 
+  Future<void> _downloadMyData() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final String jsonData = await context
+          .read<UserRepository>()
+          .downloadMyData();
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/mygatebell_data_backup.json');
+      await file.writeAsString(jsonData);
+
+      if (mounted) {
+        Navigator.pop(context); // dismiss loading
+        Share.shareXFiles([XFile(file.path)], text: 'My Data Backup');
+      }
+    } catch (e) {
+      if (mounted) {
+        log("Error while downloading data:- $e");
+        Navigator.pop(context); // dismiss loading
+        AppSnackbar.show(
+          context: context,
+          message: e.toString().replaceAll('Exception: ', ''),
+          type: SnackBarType.error,
+        );
+      }
+    }
+  }
+
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
@@ -508,7 +540,7 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                 ),
               ],
             ),
-            
+
             // ── Data ─────────────────────────────────────────────────────
             _sectionHeader(theme, 'DATA & ACCOUNT'),
             _card(
@@ -531,12 +563,7 @@ class _SecurityPrivacyScreenState extends State<SecurityPrivacyScreen> {
                     Icons.chevron_right,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  onTap: () => AppSnackbar.show(
-                    context: context,
-                    message:
-                        'Data export request submitted. You will receive an email shortly.',
-                    type: SnackBarType.info,
-                  ),
+                  onTap: _downloadMyData,
                 ),
                 Divider(
                   height: 0,
