@@ -18,7 +18,7 @@ class CommunicationsRepository {
       if (isDraft != null) params['is_draft'] = isDraft ? 1 : 0;
 
       final response = await _apiService.dio.get(
-        '/communications/announcements',
+        '/api/communications/announcements',
         queryParameters: params,
       );
       log('Get Announcements: ${response.data}');
@@ -48,7 +48,7 @@ class CommunicationsRepository {
       if (isActive != null) params['is_active'] = isActive ? 1 : 0;
 
       final response = await _apiService.dio.get(
-        '/communications/polls',
+        '/api/communications/polls',
         queryParameters: params,
       );
       log('Get Polls: ${response.data}');
@@ -74,7 +74,7 @@ class CommunicationsRepository {
   }) async {
     try {
       final response = await _apiService.dio.post(
-        '/communications/polls',
+        '/api/communications/polls',
         data: {
           'question': question,
           'options': options,
@@ -94,7 +94,7 @@ class CommunicationsRepository {
   Future<void> voteOnPoll(String pollId, String optionId) async {
     try {
       final response = await _apiService.dio.post(
-        '/communications/polls/$pollId/vote',
+        '/api/communications/polls/$pollId/vote',
         data: {'option_id': optionId},
       );
       log('Vote Poll: ${response.data}');
@@ -109,7 +109,7 @@ class CommunicationsRepository {
   Future<void> updatePoll(String pollId, Map<String, dynamic> updates) async {
     try {
       final response = await _apiService.dio.put(
-        '/communications/polls/$pollId',
+        '/api/communications/polls/$pollId',
         data: updates,
       );
       log('Update Poll: ${response.data}');
@@ -124,7 +124,7 @@ class CommunicationsRepository {
   Future<void> deletePoll(String pollId) async {
     try {
       final response = await _apiService.dio.delete(
-        '/communications/polls/$pollId',
+        '/api/communications/polls/$pollId',
       );
       log('Delete Poll: ${response.data}');
       if (response.data == null || response.data['status'] != true) {
@@ -140,7 +140,7 @@ class CommunicationsRepository {
   Future<void> joinGroup(String groupId) async {
     try {
       final response = await _apiService.dio.post(
-        '/communications/groups/$groupId/join',
+        '/api/communications/groups/$groupId/join',
       );
       log('Join Group: ${response.data}');
       if (response.data == null || response.data['status'] != true) {
@@ -154,7 +154,7 @@ class CommunicationsRepository {
   Future<void> leaveGroup(String groupId) async {
     try {
       final response = await _apiService.dio.post(
-        '/communications/groups/$groupId/leave',
+        '/api/communications/groups/$groupId/leave',
       );
       log('Leave Group: ${response.data}');
       if (response.data == null || response.data['status'] != true) {

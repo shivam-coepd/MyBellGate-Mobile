@@ -182,6 +182,7 @@ class UserRepository {
   Future<User?> updateProfile({
     String? name,
     String? email,
+    String? phone,
     String? profileImage,
     String? coverImageUrl,
     String? residentType,
@@ -193,6 +194,7 @@ class UserRepository {
       final data = <String, dynamic>{};
       if (name != null) data['name'] = name;
       if (email != null) data['email'] = email;
+      if (phone != null) data['phone'] = phone;
       if (profileImage != null) data['profile_image'] = profileImage;
       if (coverImageUrl != null) data['cover_image_url'] = coverImageUrl;
       if (residentType != null) data['resident_type'] = residentType;

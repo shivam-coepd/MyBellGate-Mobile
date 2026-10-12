@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/resident_search_field.dart';
 
 class GroupVisitorEntryScreen extends StatefulWidget {
   const GroupVisitorEntryScreen({super.key});
@@ -15,7 +16,7 @@ class GroupVisitorEntryScreen extends StatefulWidget {
 
 class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
   final _purposeCtrl = TextEditingController();
-  final _residentIdCtrl = TextEditingController();
+  int? _selectedResidentId;
   final _purposeFormKey = GlobalKey<FormState>();
   String _visitorType = 'other';
 
@@ -26,7 +27,6 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
   @override
   void dispose() {
     _purposeCtrl.dispose();
-    _residentIdCtrl.dispose();
     super.dispose();
   }
 
@@ -123,11 +123,10 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
       return;
     }
 
-    final residentId = int.tryParse(_residentIdCtrl.text.trim());
-    if (residentId == null) {
+    if (_selectedResidentId == null) {
       AppSnackbar.show(
         context: context,
-        message: 'Enter a valid Resident ID',
+        message: 'Please select a resident from the list',
         type: SnackBarType.error,
       );
       return;
@@ -147,7 +146,7 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
             phone: member['phone'],
             purpose: _purposeCtrl.text.trim(),
             visitorType: _visitorType,
-            residentId: residentId,
+            residentId: _selectedResidentId,
           ),
         );
 
@@ -237,15 +236,11 @@ class _GroupVisitorEntryScreenState extends State<GroupVisitorEntryScreen> {
                             (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                       SizedBox(height: 12.h),
-                      TextFormField(
-                        controller: _residentIdCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Resident ID *',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      ResidentSearchField(
+                        onSelected: (id) => _selectedResidentId = id,
+                        validator: (v) => _selectedResidentId == null
+                            ? 'Please select a resident'
+                            : null,
                       ),
                       SizedBox(height: 12.h),
                       DropdownButtonFormField<String>(

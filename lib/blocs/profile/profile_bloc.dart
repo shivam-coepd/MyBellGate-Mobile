@@ -60,6 +60,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final user = await userRepository.updateProfile(
         name: event.name,
         email: event.email,
+        phone: event.phone,
         profileImage: event.profileImage,
         coverImageUrl: event.coverImageUrl,
         residentType: event.residentType,

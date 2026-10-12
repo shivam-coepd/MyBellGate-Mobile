@@ -294,11 +294,13 @@ class _VisitorManagementScreenState
                   _loadVisitors();
                 } else if (state is GuardError) {
                   if (await AppInternetCheck().hasInternetConnection()) {
-                    AppSnackbar.show(
-                      context: context,
-                      message: "Can't load data now. Please try again later.",
-                      type: SnackBarType.error,
-                    );
+                    if (context.mounted) {
+                      AppSnackbar.show(
+                        context: context,
+                        message: state.message,
+                        type: SnackBarType.error,
+                      );
+                    }
                   } else {
                     AppInternetCheck.checkInternet(context: context);
                   }

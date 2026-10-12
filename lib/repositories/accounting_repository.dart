@@ -69,7 +69,7 @@ class AccountingRepository {
       if (notes != null) data['notes'] = notes;
 
       final response = await _apiService.dio.post(
-        '/accounting/payments',
+        '/api/accounting/payments',
         data: data,
       );
       log('Process Payment: ${response.data}');

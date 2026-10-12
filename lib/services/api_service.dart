@@ -64,6 +64,8 @@ class ApiService {
               options.data.fields.add(MapEntry('updated_at', deviceTime));
               options.data.fields.add(MapEntry('updatedAt', deviceTime));
             }
+          } else if (options.method.toUpperCase() == 'GET') {
+            options.queryParameters['_t'] = DateTime.now().millisecondsSinceEpoch;
           }
 
           if (token != null && !isRefreshCall) {

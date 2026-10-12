@@ -80,7 +80,10 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
     _tabController.animateTo(index);
   }
 
-  void _showCreatePostSheet() {
+  void _showCreatePostSheet(
+    BuildContext context, {
+    String initialMode = 'post',
+  }) {
     HapticFeedback.mediumImpact();
     final communityBloc = context.read<CommunityBloc>();
     final commsBloc = context.read<CommunicationsBloc>();
@@ -94,7 +97,7 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
           BlocProvider.value(value: communityBloc),
           BlocProvider.value(value: commsBloc),
         ],
-        child: const CreatePostBottomSheet(),
+        child: CreatePostBottomSheet(initialMode: initialMode),
       ),
     );
   }
@@ -131,7 +134,8 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
           ),
         ],
       ),
-      floatingActionButton: _selectedSegment == 1 && _showFab
+      floatingActionButton:
+          (_selectedSegment == 1 || _selectedSegment == 2) && _showFab
           ? _buildFloatingActionButton(theme)
           : null,
     );
@@ -208,12 +212,15 @@ class _EventsAndCommunityScreenState extends State<EventsAndCommunityScreen>
         return Transform.scale(
           scale: 1.0 + (0.1 * (0.5 - (value - 0.5).abs())),
           child: FloatingActionButton.extended(
-            onPressed: _showCreatePostSheet,
+            onPressed: () => _showCreatePostSheet(
+              context,
+              initialMode: _selectedSegment == 2 ? 'poll' : 'post',
+            ),
             backgroundColor: theme.colorScheme.primary,
             elevation: 4,
             icon: Icon(Icons.add, color: theme.colorScheme.onPrimary, size: 24),
             label: Text(
-              'Create Post',
+              _selectedSegment == 2 ? 'Create Poll' : 'Create Post',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.onPrimary,
                 fontWeight: FontWeight.w600,
@@ -1649,7 +1656,9 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
 
 /// Bottom sheet for creating new posts with text, photos, and polls
 class CreatePostBottomSheet extends StatefulWidget {
-  const CreatePostBottomSheet({super.key});
+  final String initialMode;
+
+  const CreatePostBottomSheet({super.key, this.initialMode = 'post'});
 
   @override
   State<CreatePostBottomSheet> createState() => _CreatePostBottomSheetState();
@@ -1664,7 +1673,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final List<String> _uploadedImageUrls = [];
   bool _isUploadingImages = false;
   String _privacySetting = 'public'; // public, residents_only
-  _PostMode _mode = _PostMode.text;
+  late _PostMode _mode;
   final List<TextEditingController> _pollOptions = [
     TextEditingController(),
     TextEditingController(),
@@ -1672,6 +1681,12 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final _s3 = S3UploadService();
 
   bool get _isCreatingPoll => _mode == _PostMode.poll;
+
+  @override
+  void initState() {
+    super.initState();
+    _mode = widget.initialMode == 'poll' ? _PostMode.poll : _PostMode.text;
+  }
 
   @override
   void dispose() {
@@ -1916,7 +1931,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
         children: [
           Expanded(
             child: Text(
-              'New post',
+              _isCreatingPoll ? 'New Poll' : 'New Post',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 fontSize: 20.sp,
@@ -2070,7 +2085,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
         hintText: _isCreatingPoll ? 'Ask a question…' : "What's on your mind?",
         border: InputBorder.none,
         isCollapsed: true,
-        contentPadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.all(8.w),
         hintStyle: theme.textTheme.bodyLarge?.copyWith(
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           fontSize: 16.sp,

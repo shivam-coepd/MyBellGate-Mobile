@@ -28,6 +28,7 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
+  late TextEditingController _phoneController;
   late TextEditingController _bioController;
   late TextEditingController _professionController;
   late TextEditingController _hometownController;
@@ -49,6 +50,7 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
     _bioController = TextEditingController(text: widget.user.bio);
     _professionController = TextEditingController(text: widget.user.profession);
     _hometownController = TextEditingController(text: widget.user.hometown);
+    _phoneController = TextEditingController(text: widget.user.phone);
     _profileImageController = TextEditingController(
       text: widget.user.profileImage,
     );
@@ -62,6 +64,7 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
     _professionController.dispose();
     _hometownController.dispose();
     _profileImageController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -106,6 +109,7 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
         UpdateProfileInfo(
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
           bio: _bioController.text.trim(),
           profession: _professionController.text.trim(),
           hometown: _hometownController.text.trim(),
@@ -198,9 +202,7 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
                   child: Column(
                     children: [
                       // Avatar profile photo
-                      Positioned(
-                        bottom: 0,
-                        child: Stack(
+                      Stack(
                           children: [
                             Container(
                               decoration: BoxDecoration(
@@ -276,7 +278,6 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
                             ),
                           ],
                         ),
-                      ),
                       SizedBox(height: 16.h),
                       // Fields list inside card
                       Card(
@@ -337,6 +338,27 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
                                   );
                                   if (!emailRegex.hasMatch(value.trim())) {
                                     return 'Please enter a valid email address';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              SizedBox(height: 16.h),
+                              // Phone field
+                              TextFormField(
+                                controller: _phoneController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Phone Number',
+                                  prefixIcon: Icon(Icons.phone),
+                                  border: OutlineInputBorder(),
+                                ),
+                                style: TextStyle(color: textColor),
+                                keyboardType: TextInputType.phone,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Phone number cannot be empty';
+                                  }
+                                  if (value.trim().length < 10) {
+                                    return 'Please enter a valid phone number';
                                   }
                                   return null;
                                 },
@@ -427,11 +449,6 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
                   ),
                 ),
               ),
-              if (state is ProfileUpdating)
-                Container(
-                  color: Colors.black26,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
             ],
           ),
           bottomSheet: Container(
@@ -458,13 +475,22 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                 ),
-                child: Text(
-                  'Save Profile Changes',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: state is ProfileUpdating
+                    ? SizedBox(
+                        height: 24.h,
+                        width: 24.h,
+                        child: const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Save Profile Changes',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ),

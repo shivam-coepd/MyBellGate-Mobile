@@ -5,6 +5,7 @@ import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/resident_search_field.dart';
 
 /// Vendor access is a "service" visitor type — integrates with the real visitors API.
 class VendorAccessScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
     final nameCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
     final serviceCtrl = TextEditingController();
-    final residentIdCtrl = TextEditingController();
+    int? selectedResidentId;
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -111,15 +112,10 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                         (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
                   SizedBox(height: 12.h),
-                  TextFormField(
-                    controller: residentIdCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Resident ID *',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Resident ID is required'
+                  ResidentSearchField(
+                    onSelected: (id) => selectedResidentId = id,
+                    validator: (v) => selectedResidentId == null
+                        ? 'Please select a resident from the list'
                         : null,
                   ),
                   SizedBox(height: 20.h),
@@ -135,9 +131,7 @@ class _VendorAccessScreenState extends State<VendorAccessScreen> {
                                     phone: phoneCtrl.text.trim(),
                                     purpose: serviceCtrl.text.trim(),
                                     visitorType: 'service',
-                                    residentId: int.tryParse(
-                                      residentIdCtrl.text.trim(),
-                                    ),
+                                    residentId: selectedResidentId,
                                   ),
                                 );
                               }

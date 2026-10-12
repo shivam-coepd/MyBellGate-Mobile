@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "4f2bbee6-c698-4ecd-927d-86ff3e68556c",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "S:\\MyGateBell\\mygate_coepd_mobile\\.archify\\architecture-mygatebell-20261008-102115\\candidate.json",
+  "output": "S:\\MyGateBell\\mygate_coepd_mobile\\.archify\\architecture-mygatebell-20261008-102115\\mygatebell-architecture.html",
+  "specification": {
+    "sha256": "2de289b16ac4d9477d11eacfa8b3b433d35e3999ed1b7c9de9caf2d6e9e571ba",
+    "bytes": 3252
+  },
+  "artifact": {
+    "sha256": "b16d1a1746991f2a5f6fc0e0a20394f2c3a70f8c09d44a07bc3901be4924f222",
+    "bytes": 761871
+  }
+}

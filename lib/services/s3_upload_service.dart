@@ -17,23 +17,23 @@ class S3UploadService {
   final ApiService _api = ApiService();
 
   // ── Folder constants ──────────────────────────────────────────────────────
-  static const String folderProfiles  = 'profiles';
-  static const String folderVehicles  = 'vehicles';
-  static const String folderPets      = 'pets';
-  static const String folderVisitors  = 'visitors';
-  static const String folderFamily    = 'family';
+  static const String folderProfiles = 'profiles';
+  static const String folderVehicles = 'vehicles';
+  static const String folderPets = 'pets';
+  static const String folderVisitors = 'visitors';
+  static const String folderFamily = 'family';
   static const String folderCommunity = 'community';
 
   /// Upload [file] to S3 via the backend and return the permanent public URL.
   /// Throws a descriptive [Exception] on any failure.
-  Future<String> uploadImage(File file, {String folder = folderProfiles}) async {
+  Future<String> uploadImage(
+    File file, {
+    String folder = folderProfiles,
+  }) async {
     final fileName = file.path.split('/').last;
 
     final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(
-        file.path,
-        filename: fileName,
-      ),
+      'file': await MultipartFile.fromFile(file.path, filename: fileName),
       'folder': folder,
     });
 
@@ -53,7 +53,8 @@ class S3UploadService {
     }
 
     if (resp.statusCode != 201 && resp.statusCode != 200) {
-      final msg = resp.data?['message'] ?? 'Upload failed (HTTP ${resp.statusCode})';
+      final msg =
+          resp.data?['message'] ?? 'Upload failed (HTTP ${resp.statusCode})';
       throw Exception(msg);
     }
 

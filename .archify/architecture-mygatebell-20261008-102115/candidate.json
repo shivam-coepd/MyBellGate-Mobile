@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "MyGateBell Mobile App Runtime Architecture",
+    "output": "mygatebell-architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "Resident / Guard", "sublabel": "Mobile App User", "pos": [50, 300], "size": [120, 60] },
+    { "id": "ui", "type": "frontend", "label": "Flutter UI", "sublabel": "Widgets & Screens", "pos": [250, 300], "size": [130, 60] },
+    { "id": "bloc", "type": "frontend", "label": "BLoC Layer", "sublabel": "State Management", "pos": [460, 300], "size": [130, 60] },
+    { "id": "repository", "type": "backend", "label": "Repositories", "sublabel": "Data Abstraction", "pos": [670, 300], "size": [130, 60] },
+    { "id": "hive", "type": "database", "label": "Hive DB", "sublabel": "Local NoSQL Cache", "pos": [670, 450], "size": [130, 60] },
+    { "id": "dio", "type": "backend", "label": "Dio HTTP Client", "sublabel": "Network Layer", "pos": [880, 300], "size": [130, 60] },
+    { "id": "backend", "type": "cloud", "label": "MyGateBell Backend", "sublabel": "REST API Server", "pos": [1100, 300], "size": [140, 60] },
+    { "id": "fcm", "type": "cloud", "label": "Firebase Cloud Messaging", "sublabel": "Push Notifications", "pos": [880, 150], "size": [160, 60] },
+    { "id": "fcm_service", "type": "backend", "label": "FCM Service", "sublabel": "Local Notifications", "pos": [460, 150], "size": [160, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Mobile Device (iOS / Android)", "wraps": ["ui", "bloc", "repository", "hive", "dio", "fcm_service"] },
+    { "kind": "security-group", "label": "External / Cloud", "wraps": ["backend", "fcm"] }
+  ],
+  "connections": [
+    { "id": "user-ui", "from": "user", "to": "ui", "label": "Interacts", "variant": "emphasis" },
+    { "id": "ui-bloc", "from": "ui", "to": "bloc", "label": "Events / States" },
+    { "id": "bloc-repo", "from": "bloc", "to": "repository", "label": "Fetch Data" },
+    { "id": "repo-hive", "from": "repository", "to": "hive", "label": "Cache / Read", "variant": "dashed" },
+    { "id": "repo-dio", "from": "repository", "to": "dio", "label": "API Calls" },
+    { "id": "dio-backend", "from": "dio", "to": "backend", "label": "HTTPS REST", "variant": "security" },
+    { "id": "fcm-to-service", "from": "fcm", "to": "fcm_service", "label": "Push Payload", "fromSide": "left", "toSide": "right", "variant": "dashed" },
+    { "id": "fcm_service-ui", "from": "fcm_service", "to": "ui", "label": "Alerts / Badges", "fromSide": "left", "toSide": "top", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Presentation & State Management", "items": ["Uses flutter_bloc for predictable state flow", "UI dispatches events to BLoC", "BLoC yields updated states back to UI"] },
+    { "dot": "cyan", "title": "Data Strategy", "items": ["Repositories abstract data sources from business logic", "Hive provides fast local caching and offline capabilities", "Dio handles remote API communication"] },
+    { "dot": "rose", "title": "External Integrations", "items": ["Firebase Cloud Messaging for real-time notifications", "flutter_local_notifications for local device alerts"] }
+  ]
+}

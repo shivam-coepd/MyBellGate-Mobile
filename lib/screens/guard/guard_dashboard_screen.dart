@@ -191,11 +191,13 @@ class _GuardDashboardScreenState extends State<GuardDashboardScreen> {
               listener: (context, state) async {
                 if (state is GuardError) {
                   if (await AppInternetCheck().hasInternetConnection()) {
-                    AppSnackbar.show(
-                      context: context,
-                      message: "Can't load data now. Please try again later.",
-                      type: SnackBarType.error,
-                    );
+                    if (context.mounted) {
+                      AppSnackbar.show(
+                        context: context,
+                        message: state.message,
+                        type: SnackBarType.error,
+                      );
+                    }
                   } else {
                     AppInternetCheck.checkInternet(context: context);
                   }
@@ -415,8 +417,10 @@ class _GuardDashboardScreenState extends State<GuardDashboardScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 10.h),
-                                Card(
-                                  shape: RoundedRectangleBorder(
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).cardColor,
                                     borderRadius: BorderRadius.circular(16.r),
                                   ),
                                   child: Column(

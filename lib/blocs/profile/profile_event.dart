@@ -13,6 +13,7 @@ class FetchProfile extends ProfileEvent {}
 class UpdateProfileInfo extends ProfileEvent {
   final String? name;
   final String? email;
+  final String? phone;
   final String? profileImage;
   final String? coverImageUrl;
   final String? residentType;
@@ -23,6 +24,7 @@ class UpdateProfileInfo extends ProfileEvent {
   const UpdateProfileInfo({
     this.name,
     this.email,
+    this.phone,
     this.profileImage,
     this.coverImageUrl,
     this.residentType,
@@ -35,6 +37,7 @@ class UpdateProfileInfo extends ProfileEvent {
   List<Object?> get props => [
         name,
         email,
+        phone,
         profileImage,
         coverImageUrl,
         residentType,

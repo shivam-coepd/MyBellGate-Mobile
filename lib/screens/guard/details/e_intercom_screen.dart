@@ -86,7 +86,7 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
             children: [
               // Search bar
               Padding(
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 child: TextField(
                   controller: _searchCtrl,
                   decoration: InputDecoration(
@@ -105,37 +105,6 @@ class _EIntercomScreenState extends State<EIntercomScreen> {
                   onChanged: _search,
                 ),
               ),
-
-              // Info card
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Card(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
-                  child: Padding(
-                    padding: EdgeInsets.all(12.w),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: AppTheme.primary,
-                          size: 18.sp,
-                        ),
-                        SizedBox(width: 8.w),
-                        Flexible(
-                          child: Text(
-                            'Tap the call icon to ring a resident for visitor approval.',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 8.h),
 
               Expanded(
                 child: isLoading

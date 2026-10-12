@@ -2122,15 +2122,18 @@ class VisitorCardWidget extends StatelessWidget {
                               ),
                             ),
                             SizedBox(width: 4.w),
-                            Text(
-                              visitor['expectedTime'] as String,
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w500,
-                                color: colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.8,
+                            Expanded(
+                              child: Text(
+                                visitor['expectedTime'] as String,
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.8),
+                                  letterSpacing: 0.1,
                                 ),
-                                letterSpacing: 0.1,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],

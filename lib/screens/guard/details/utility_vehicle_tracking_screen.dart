@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -56,9 +58,12 @@ class _UtilityVehicleTrackingScreenState
             );
             _load();
           } else if (state is GuardError) {
+            log(state.message);
             AppSnackbar.show(
               context: context,
-              message: 'Failed to log vehicle entry',
+              message: state.message.isNotEmpty
+                  ? state.message
+                  : 'Failed to log vehicle entry',
               type: SnackBarType.error,
             );
           }
@@ -432,7 +437,6 @@ class _UtilityVehicleTrackingScreenState
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _callDriver(phone),
-                        icon: const Icon(Icons.call, size: 16),
                         label: const Text('Call Driver'),
                       ),
                     ),
