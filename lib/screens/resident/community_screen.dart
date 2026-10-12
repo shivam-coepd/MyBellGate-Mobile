@@ -7,6 +7,7 @@ import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/blocs/community/community_bloc.dart';
 import 'package:mygate_coepd/models/community_post.dart';
 import 'package:mygate_coepd/models/marketplace_item.dart';
+import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -222,20 +223,30 @@ class _CommunityScreenState extends State<CommunityScreen>
                           ),
                           child: Row(
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(25.r),
-                                  border: Border.all(
-                                    color: Theme.of(context).primaryColor,
-                                    width: 2.w,
+                              GestureDetector(
+                                onTap: () {
+                                  ProfileImageViewer.show(
+                                    context,
+                                    imageUrl: post.userAvatar,
+                                    title: post.userName,
+                                    subtitle: 'Community Member',
+                                  );
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25.r),
+                                    border: Border.all(
+                                      color: Theme.of(context).primaryColor,
+                                      width: 2.w,
+                                    ),
                                   ),
-                                ),
-                                child: CircleAvatar(
-                                  radius: 20.r,
-                                  backgroundImage: post.userAvatar != null
-                                      ? CachedNetworkImageProvider(post.userAvatar!)
-                                      : null,
-                                  child: post.userAvatar == null ? const Icon(Icons.person) : null,
+                                  child: CircleAvatar(
+                                    radius: 20.r,
+                                    backgroundImage: post.userAvatar != null
+                                        ? CachedNetworkImageProvider(post.userAvatar!)
+                                        : null,
+                                    child: post.userAvatar == null ? const Icon(Icons.person) : null,
+                                  ),
                                 ),
                               ),
                               SizedBox(width: 12.w),

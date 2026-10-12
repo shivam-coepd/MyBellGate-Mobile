@@ -21,6 +21,7 @@ import 'package:mygate_coepd/screens/resident/saved_payments_screen.dart';
 import 'package:mygate_coepd/blocs/theme/theme_cubit.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class ProfileScreenState extends State<ProfileScreen> {
-  bool _flashApprovalsEnabled = true;
+  final bool _flashApprovalsEnabled = true;
   String _selectedLanguage = 'English';
   final double _profileCompletion = 0.85;
 
@@ -773,45 +774,80 @@ class ProfileScreenState extends State<ProfileScreen> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => AppSnackbar.show(
-                  context: context,
-                  message: "Edit profile photo",
-                  type: SnackBarType.success,
-                  position: SnackBarPosition.top,
-                ),
-                child: Container(
-                  width: 80.w,
-                  height: 80.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.r),
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.r),
-                    child: Image.network(
-                      user.profileImage ?? "",
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Shimmer.fromColors(
-                          baseColor: Colors.grey[300]!,
-                          highlightColor: Colors.grey[100]!,
-                          child: Container(
-                            width: 80.w,
-                            height: 80.w,
-                            color: theme.scaffoldBackgroundColor,
+                onTap: () {
+                  ProfileImageViewer.show(
+                    context,
+                    imageUrl: user.profileImage,
+                    title: user.name,
+                    subtitle: user.unit != null && user.unit!.isNotEmpty
+                        ? 'Flat / Unit: ${user.unit}'
+                        : 'Resident',
+                    heroTag: 'resident_profile_avatar_${user.id}',
+                  );
+                },
+                child: Hero(
+                  tag: 'resident_profile_avatar_${user.id}',
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 80.w,
+                        height: 80.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.r),
+                          color: theme.colorScheme.onSurface,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: Image.network(
+                            user.profileImage ?? "",
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  width: 80.w,
+                                  height: 80.w,
+                                  color: theme.scaffoldBackgroundColor,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: theme.scaffoldBackgroundColor,
+                              child: Icon(
+                                Icons.person,
+                                color: theme.primaryColor,
+                                size: 40,
+                              ),
+                            ),
                           ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: theme.scaffoldBackgroundColor,
-                        child: Icon(
-                          Icons.person,
-                          color: theme.primaryColor,
-                          size: 40,
                         ),
                       ),
-                    ),
+                      Positioned(
+                        right: 4.w,
+                        bottom: 4.w,
+                        child: Container(
+                          padding: EdgeInsets.all(4.w),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.55),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.fullscreen_rounded,
+                            size: 14.sp,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

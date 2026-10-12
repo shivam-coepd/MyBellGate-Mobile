@@ -16,6 +16,7 @@ import 'package:mygate_coepd/screens/common/about_screen.dart';
 import 'package:mygate_coepd/screens/guard/edit_profile_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
+import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
 import 'package:mygate_coepd/blocs/theme/theme_cubit.dart';
 
 class GuardProfileScreen extends StatefulWidget {
@@ -354,34 +355,50 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
                                     ),
                                     Stack(
                                       children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: AppTheme.primary
-                                                    .withValues(alpha: 0.1),
-                                                blurRadius: 10.r,
-                                                offset: const Offset(0, 4),
+                                        GestureDetector(
+                                          onTap: () {
+                                            ProfileImageViewer.show(
+                                              context,
+                                              imageUrl: user.profileImage,
+                                              title: user.name,
+                                              subtitle: user.role.isNotEmpty
+                                                  ? user.role
+                                                  : 'Security Guard',
+                                              heroTag: 'guard_profile_avatar_${user.id}',
+                                            );
+                                          },
+                                          child: Hero(
+                                            tag: 'guard_profile_avatar_${user.id}',
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: AppTheme.primary
+                                                        .withValues(alpha: 0.1),
+                                                    blurRadius: 10.r,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                          child: CircleAvatar(
-                                            radius: 45.r,
-                                            backgroundColor: Colors.white,
-                                            backgroundImage:
-                                                user.profileImage != null
-                                                ? CachedNetworkImageProvider(
-                                                    user.profileImage!,
-                                                  )
-                                                : null,
-                                            child: user.profileImage == null
-                                                ? Icon(
-                                                    Icons.person,
-                                                    size: 50.sp,
-                                                    color: AppTheme.primary,
-                                                  )
-                                                : null,
+                                              child: CircleAvatar(
+                                                radius: 45.r,
+                                                backgroundColor: Colors.white,
+                                                backgroundImage:
+                                                    user.profileImage != null
+                                                    ? CachedNetworkImageProvider(
+                                                        user.profileImage!,
+                                                      )
+                                                    : null,
+                                                child: user.profileImage == null
+                                                    ? Icon(
+                                                        Icons.person,
+                                                        size: 50.sp,
+                                                        color: AppTheme.primary,
+                                                      )
+                                                    : null,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                         Positioned(

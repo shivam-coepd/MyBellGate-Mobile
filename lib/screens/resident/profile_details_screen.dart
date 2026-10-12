@@ -14,6 +14,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ProfileDetailsScreen extends StatefulWidget {
@@ -1576,37 +1577,72 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
           bottom: -125.h,
           child: Column(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4.w),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: user.profileImage ?? "",
-                  imageBuilder: (context, imageProvider) => CircleAvatar(
-                    radius: 55.r,
-                    backgroundColor: surfaceColor,
-                    backgroundImage: imageProvider,
-                  ),
-                  placeholder: (context, url) => Shimmer.fromColors(
-                    baseColor: Colors.grey.shade300,
-                    highlightColor: Colors.grey.shade100,
-                    child: CircleAvatar(
-                      radius: 55.r,
-                      backgroundColor: Colors.white,
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => CircleAvatar(
-                    radius: 55.r,
-                    backgroundColor: surfaceColor,
-                    child: Icon(Icons.person, size: 45.sp, color: Colors.grey),
+              GestureDetector(
+                onTap: () {
+                  ProfileImageViewer.show(
+                    context,
+                    imageUrl: user.profileImage,
+                    title: user.name,
+                    subtitle: user.unit != null ? 'Unit ${user.unit}' : 'Resident',
+                    heroTag: 'resident_details_avatar_${user.id}',
+                  );
+                },
+                child: Hero(
+                  tag: 'resident_details_avatar_${user.id}',
+                  child: Stack(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4.w),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: CachedNetworkImage(
+                          imageUrl: user.profileImage ?? "",
+                          imageBuilder: (context, imageProvider) => CircleAvatar(
+                            radius: 55.r,
+                            backgroundColor: surfaceColor,
+                            backgroundImage: imageProvider,
+                          ),
+                          placeholder: (context, url) => Shimmer.fromColors(
+                            baseColor: Colors.grey.shade300,
+                            highlightColor: Colors.grey.shade100,
+                            child: CircleAvatar(
+                              radius: 55.r,
+                              backgroundColor: Colors.white,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => CircleAvatar(
+                            radius: 55.r,
+                            backgroundColor: surfaceColor,
+                            child: Icon(Icons.person, size: 45.sp, color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 4.w,
+                        bottom: 4.w,
+                        child: Container(
+                          padding: EdgeInsets.all(5.w),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.55),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5.w),
+                          ),
+                          child: Icon(
+                            Icons.fullscreen_rounded,
+                            size: 16.sp,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1863,15 +1899,29 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 24.r,
-              backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
-              backgroundImage: member.profileImage != null
-                  ? NetworkImage(member.profileImage!)
-                  : null,
-              child: member.profileImage == null
-                  ? Icon(Icons.person, size: 24.sp, color: theme.primaryColor)
-                  : null,
+            GestureDetector(
+              onTap: () {
+                ProfileImageViewer.show(
+                  context,
+                  imageUrl: member.profileImage,
+                  title: member.name,
+                  subtitle: member.relationship,
+                  heroTag: 'family_avatar_${member.id}',
+                );
+              },
+              child: Hero(
+                tag: 'family_avatar_${member.id}',
+                child: CircleAvatar(
+                  radius: 24.r,
+                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
+                  backgroundImage: member.profileImage != null
+                      ? NetworkImage(member.profileImage!)
+                      : null,
+                  child: member.profileImage == null
+                      ? Icon(Icons.person, size: 24.sp, color: theme.primaryColor)
+                      : null,
+                ),
+              ),
             ),
             SizedBox(width: 16.w),
             Expanded(
@@ -2192,15 +2242,29 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 24.r,
-              backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
-              backgroundImage: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
-                  ? NetworkImage(pet.imageUrl!)
-                  : null,
-              child: pet.imageUrl == null || pet.imageUrl!.isEmpty
-                  ? Icon(Icons.pets, color: theme.primaryColor, size: 24.sp)
-                  : null,
+            GestureDetector(
+              onTap: () {
+                ProfileImageViewer.show(
+                  context,
+                  imageUrl: pet.imageUrl,
+                  title: pet.name,
+                  subtitle: '${pet.petTypeName ?? "Pet"}${pet.breed != null && pet.breed!.isNotEmpty ? " · ${pet.breed}" : ""}',
+                  heroTag: 'pet_avatar_${pet.id}',
+                );
+              },
+              child: Hero(
+                tag: 'pet_avatar_${pet.id}',
+                child: CircleAvatar(
+                  radius: 24.r,
+                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
+                  backgroundImage: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
+                      ? NetworkImage(pet.imageUrl!)
+                      : null,
+                  child: pet.imageUrl == null || pet.imageUrl!.isEmpty
+                      ? Icon(Icons.pets, color: theme.primaryColor, size: 24.sp)
+                      : null,
+                ),
+              ),
             ),
             SizedBox(width: 16.w),
             Expanded(

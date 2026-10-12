@@ -10,6 +10,7 @@ import 'package:mygate_coepd/models/user.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
 
 class EditProfileDetailsScreen extends StatefulWidget {
   final User user;
@@ -230,40 +231,64 @@ class _EditProfileDetailsScreenState extends State<EditProfileDetailsScreen> {
                               bottom: 0,
                               child: Stack(
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 4.w,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.15,
+                                  GestureDetector(
+                                    onTap: () {
+                                      ProfileImageViewer.show(
+                                        context,
+                                        imageFile: _pickedProfileImage,
+                                        imageUrl: _pickedProfileImage == null && _profileImageController.text.isNotEmpty
+                                            ? _profileImageController.text
+                                            : null,
+                                        title: _nameController.text.isNotEmpty
+                                            ? _nameController.text
+                                            : widget.user.name,
+                                        subtitle: 'Resident Profile',
+                                        heroTag: 'edit_resident_avatar',
+                                      );
+                                    },
+                                    child: Hero(
+                                      tag: 'edit_resident_avatar',
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 4.w,
                                           ),
-                                          // blurRadius: 12,
-                                          offset: const Offset(0, 4),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 50.r,
-                                      backgroundColor: surfaceColor,
-                                      backgroundImage:
-                                          _pickedProfileImage != null
-                                          ? FileImage(_pickedProfileImage!)
-                                                as ImageProvider
-                                          : (_profileImageController
-                                                    .text
-                                                    .isNotEmpty
-                                                ? NetworkImage(
-                                                    _profileImageController
-                                                        .text,
-                                                  )
-                                                : const NetworkImage(
-                                                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100',
-                                                  )),
+                                        child: CircleAvatar(
+                                          radius: 50.r,
+                                          backgroundColor: surfaceColor,
+                                          backgroundImage:
+                                              _pickedProfileImage != null
+                                              ? FileImage(_pickedProfileImage!)
+                                                    as ImageProvider
+                                              : (_profileImageController
+                                                        .text
+                                                        .isNotEmpty
+                                                    ? NetworkImage(
+                                                        _profileImageController
+                                                            .text,
+                                                      )
+                                                    : null),
+                                          child: _pickedProfileImage == null &&
+                                                  _profileImageController.text.isEmpty
+                                              ? Icon(
+                                                  Icons.person,
+                                                  size: 50.sp,
+                                                  color: primaryColor,
+                                                )
+                                              : null,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   Positioned(

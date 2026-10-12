@@ -13,6 +13,7 @@ import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
 
 class GuardEditProfileScreen extends StatefulWidget {
   final User user;
@@ -204,41 +205,62 @@ class _GuardEditProfileScreenState extends State<GuardEditProfileScreen> {
                       // Avatar profile photo
                       Stack(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 4.w,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 12.r,
-                                    offset: const Offset(0, 4),
+                            GestureDetector(
+                              onTap: () {
+                                ProfileImageViewer.show(
+                                  context,
+                                  imageFile: _pickedProfileImage,
+                                  imageUrl: _pickedProfileImage == null && _profileImageController.text.isNotEmpty
+                                      ? _profileImageController.text
+                                      : null,
+                                  title: _nameController.text.isNotEmpty
+                                      ? _nameController.text
+                                      : widget.user.name,
+                                  subtitle: widget.user.role.isNotEmpty
+                                      ? widget.user.role
+                                      : 'Security Guard',
+                                  heroTag: 'edit_guard_avatar',
+                                );
+                              },
+                              child: Hero(
+                                tag: 'edit_guard_avatar',
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 4.w,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.15),
+                                        blurRadius: 12.r,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: 50.r,
-                                backgroundColor: surfaceColor,
-                                backgroundImage: _pickedProfileImage != null
-                                    ? FileImage(_pickedProfileImage!)
-                                          as ImageProvider
-                                    : (_profileImageController.text.isNotEmpty
-                                          ? NetworkImage(
-                                              _profileImageController.text,
-                                            )
-                                          : null),
-                                child:
-                                    _pickedProfileImage == null &&
-                                        _profileImageController.text.isEmpty
-                                    ? Icon(
-                                        Icons.person,
-                                        size: 50.sp,
-                                        color: primaryColor,
-                                      )
-                                    : null,
+                                  child: CircleAvatar(
+                                    radius: 50.r,
+                                    backgroundColor: surfaceColor,
+                                    backgroundImage: _pickedProfileImage != null
+                                        ? FileImage(_pickedProfileImage!)
+                                              as ImageProvider
+                                        : (_profileImageController.text.isNotEmpty
+                                              ? NetworkImage(
+                                                  _profileImageController.text,
+                                                )
+                                              : null),
+                                    child:
+                                        _pickedProfileImage == null &&
+                                            _profileImageController.text.isEmpty
+                                        ? Icon(
+                                            Icons.person,
+                                            size: 50.sp,
+                                            color: primaryColor,
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
                             ),
                             Positioned(

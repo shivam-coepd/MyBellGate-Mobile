@@ -14,6 +14,7 @@ import 'package:mygate_coepd/screens/guard/visitor_management_screen.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
+import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
 
 class GuardMainScreen extends StatefulWidget {
   const GuardMainScreen({super.key});
@@ -155,14 +156,26 @@ class _GuardMainScreenState extends State<GuardMainScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                CircleAvatar(
-                  radius: 30.r,
-                  backgroundImage: user.profileImage != null
-                      ? NetworkImage(user.profileImage!)
-                      : null,
-                  child: user.profileImage == null
-                      ? const Icon(Icons.person, color: Colors.white)
-                      : null,
+                GestureDetector(
+                  onTap: () {
+                    ProfileImageViewer.show(
+                      context,
+                      imageUrl: user.profileImage,
+                      title: user.name,
+                      subtitle: user.role.isNotEmpty
+                          ? user.role
+                          : 'Security Guard',
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 30.r,
+                    backgroundImage: user.profileImage != null
+                        ? NetworkImage(user.profileImage!)
+                        : null,
+                    child: user.profileImage == null
+                        ? const Icon(Icons.person, color: Colors.white)
+                        : null,
+                  ),
                 ),
                 SizedBox(height: 10.h),
                 Text(
@@ -1035,25 +1048,37 @@ class _GuardDrawerState extends State<GuardDrawer>
               children: [
                 Stack(
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(3.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: CircleAvatar(
-                        radius: 32.r,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        backgroundImage: user.profileImage != null
-                            ? NetworkImage(user.profileImage!)
-                            : null,
-                        child: user.profileImage == null
-                            ? Icon(
-                                Icons.person_rounded,
-                                color: Colors.white,
-                                size: 36.sp,
-                              )
-                            : null,
+                    GestureDetector(
+                      onTap: () {
+                        ProfileImageViewer.show(
+                          context,
+                          imageUrl: user.profileImage,
+                          title: user.name,
+                          subtitle: user.role.isNotEmpty
+                              ? user.role
+                              : 'Security Guard',
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(3.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: CircleAvatar(
+                          radius: 32.r,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          backgroundImage: user.profileImage != null
+                              ? NetworkImage(user.profileImage!)
+                              : null,
+                          child: user.profileImage == null
+                              ? Icon(
+                                  Icons.person_rounded,
+                                  color: Colors.white,
+                                  size: 36.sp,
+                                )
+                              : null,
+                        ),
                       ),
                     ),
                     Positioned(
