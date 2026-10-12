@@ -209,8 +209,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                 style: TextStyle(
                   fontSize: 32.sp,
                   fontWeight: FontWeight.bold,
-                  // color: isDarkMode ? Colors.white : Color(0xFF1A1A2E),
-                  color: Theme.of(context).primaryColor,
                   height: 1.2,
                 ),
               ),
