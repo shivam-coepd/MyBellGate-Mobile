@@ -15,6 +15,7 @@ import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:mygate_coepd/blocs/events/events_bloc.dart';
 import 'package:mygate_coepd/widgets/app_error_widget.dart';
+import 'package:mygate_coepd/screens/society/event_details_screen.dart';
 
 class ResidentDashboardScreen extends StatefulWidget {
   const ResidentDashboardScreen({super.key});
@@ -703,8 +704,8 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 15.w,
-                  mainAxisSpacing: 15.h,
+                  crossAxisSpacing: 10.w,
+                  mainAxisSpacing: 8.h,
                   childAspectRatio: 0.8,
                 ),
                 itemCount: _quickActions.length,
@@ -763,7 +764,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                 case 'community':
                                   Navigator.pushReplacementNamed(
                                     context,
-                                    '/community',
+                                    '/resident-main/community',
                                   );
                                   break;
                                 case 'announcements':
@@ -938,107 +939,121 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   Widget _buildEventCard(Map<String, dynamic> event) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EventDetailScreen(event: event),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18.r),
-        child: Material(
-          color: Theme.of(context).cardColor,
-          child: Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// IMAGE
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14.r),
-                  child: CachedNetworkImage(
-                    imageUrl: event['cover_image']?.isNotEmpty == true
-                        ? event['cover_image']
-                        : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678',
-                    width: 90.w,
-                    height: 90.w,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18.r),
+          child: Material(
+            color: Theme.of(context).cardColor,
+            child: Padding(
+              padding: EdgeInsets.all(12.w),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// IMAGE
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14.r),
+                    child: CachedNetworkImage(
+                      imageUrl: event['cover_image']?.isNotEmpty == true
+                          ? event['cover_image']
+                          : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678',
                       width: 90.w,
                       height: 90.w,
-                      color: Colors.grey.shade300,
-                    ),
-                    errorWidget: (_, _, _) => Icon(Icons.image_not_supported),
-                  ),
-                ),
-
-                SizedBox(width: 12.w),
-
-                /// CONTENT
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      /// TITLE
-                      Text(
-                        event['title'] ?? 'Untitled Event',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fit: BoxFit.cover,
+                      placeholder: (_, _) => Container(
+                        width: 90.w,
+                        height: 90.w,
+                        color: Colors.grey.shade300,
                       ),
+                      errorWidget: (_, _, _) =>
+                          const Icon(Icons.image_not_supported),
+                    ),
+                  ),
 
-                      SizedBox(height: 6.h),
+                  SizedBox(width: 12.w),
 
-                      /// DATE BADGE
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 4.h,
+                  /// CONTENT
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        /// TITLE
+                        Text(
+                          event['title'] ?? 'Untitled Event',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8.r),
+
+                        SizedBox(height: 6.h),
+
+                        /// DATE BADGE
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.calendar_today, size: 12.sp),
+                              SizedBox(width: 4.w),
+                              Flexible(
+                                child: Text(
+                                  '${event["event_date"] ?? ""} • ${event["event_time"] ?? ""}',
+                                  style: TextStyle(fontSize: 11.sp),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+
+                        SizedBox(height: 10.h),
+
+                        /// FOOTER ROW
+                        Row(
                           children: [
-                            Icon(Icons.calendar_today, size: 12.sp),
-                            SizedBox(width: 4.w),
-                            Text(
-                              '${event["event_date"] ?? ""} • ${event["event_time"] ?? ""}',
-                              style: TextStyle(fontSize: 11.sp),
-                            ),
+                            _buildAttendees(event),
+
+                            const Spacer(),
+
+                            _buildRSVPButton(event),
                           ],
                         ),
-                      ),
-
-                      SizedBox(height: 10.h),
-
-                      /// FOOTER ROW
-                      Row(
-                        children: [
-                          _buildAttendees(event),
-
-                          const Spacer(),
-
-                          _buildRSVPButton(),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1047,70 +1062,153 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
   }
 
   Widget _buildAttendees(Map<String, dynamic> event) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Recent attendee avatar URLs (up to 3 shown)
+    final List<dynamic> recentAvatars =
+        (event['recent_attendees'] as List<dynamic>? ?? []);
+    final int totalAttendees =
+        (event['attendees'] is int)
+            ? event['attendees'] as int
+            : int.tryParse(event['attendees']?.toString() ?? '0') ?? 0;
 
-    final int avatarCount = 3;
-    final double overlap = 12.w;
+    final int displayCount = recentAvatars.length.clamp(0, 3);
+    final double overlap = 14.w;
+    final double avatarRadius = 10.r;
+    final double badgeWidth = 36.w;
+    final double totalWidth =
+        displayCount * overlap + avatarRadius * 2 + badgeWidth;
 
     return SizedBox(
       height: 24.h,
-      width: (avatarCount + 1) * overlap + 30.w, // space for +count
+      width: totalWidth,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          /// AVATARS
-          ...List.generate(
-            avatarCount,
-            (index) => Positioned(
+          /// REAL ATTENDEE AVATARS
+          ...List.generate(displayCount, (index) {
+            final avatarUrl = recentAvatars[index]?.toString() ?? '';
+            return Positioned(
               left: index * overlap,
               child: CircleAvatar(
-                radius: 10.r,
-                backgroundColor: Colors.white, // border effect
-                child: CircleAvatar(
-                  radius: 9.r,
-                  backgroundColor: isDark
-                      ? Colors.grey.shade700
-                      : Colors.grey.shade300,
+                radius: avatarRadius + 1.r, // white border ring
+                backgroundColor: Colors.white,
+                child: CachedNetworkImage(
+                  imageUrl: avatarUrl,
+                  imageBuilder: (ctx, img) => CircleAvatar(
+                    radius: avatarRadius,
+                    backgroundImage: img,
+                  ),
+                  placeholder: (_, _) => CircleAvatar(
+                    radius: avatarRadius,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.25),
+                    child: Icon(
+                      Icons.person,
+                      size: 10.sp,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  errorWidget: (_, _, _) => CircleAvatar(
+                    radius: avatarRadius,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.25),
+                    child: Icon(
+                      Icons.person,
+                      size: 10.sp,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
 
-          /// +COUNT BADGE (also overlapped)
-          Positioned(
-            left: avatarCount * overlap,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '+${event['attendees'] ?? 0}',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w500,
+          /// +COUNT BADGE
+          if (totalAttendees > 0)
+            Positioned(
+              left: displayCount * overlap,
+              child: Container(
+                height: (avatarRadius + 1.r) * 2,
+                padding: EdgeInsets.symmetric(horizontal: 5.w),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '+$totalAttendees',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 9.5.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildRSVPButton() {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-        shape: RoundedRectangleBorder(
+  Widget _buildRSVPButton(Map<String, dynamic> event) {
+    final String? myStatus = event['my_status'] as String?;
+    final int eventId =
+        (event['id'] is int)
+            ? event['id'] as int
+            : int.tryParse(event['id']?.toString() ?? '0') ?? 0;
+
+    final bool isGoing = myStatus == 'going';
+    final bool isMaybe = myStatus == 'maybe';
+
+    final Color bgColor = isGoing
+        ? Colors.green.shade600
+        : isMaybe
+        ? Colors.orange.shade600
+        : Theme.of(context).primaryColor;
+
+    final String label = isGoing
+        ? '✓ Going'
+        : isMaybe
+        ? '~ Maybe'
+        : 'RSVP';
+
+    return GestureDetector(
+      onTap: () {
+        if (eventId == 0) return;
+        // Toggle: if already 'going' switch to 'not_going', else mark 'going'
+        final String newStatus = isGoing ? 'not_going' : 'going';
+        context.read<EventsBloc>().add(RsvpToEvent(eventId, newStatus));
+      },
+      onLongPress: () {
+        if (eventId == 0) return;
+        // Long-press → 'maybe'
+        context.read<EventsBloc>().add(RsvpToEvent(eventId, 'maybe'));
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: bgColor,
           borderRadius: BorderRadius.circular(10.r),
+          boxShadow: [
+            BoxShadow(
+              color: bgColor.withValues(alpha: 0.35),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        elevation: 0,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
-      child: Text('RSVP', style: TextStyle(fontSize: 12.sp)),
     );
   }
 

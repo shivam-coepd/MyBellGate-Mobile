@@ -413,7 +413,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      // backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Visitor Management'),
         actions: [
