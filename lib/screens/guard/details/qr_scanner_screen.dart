@@ -99,21 +99,41 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   void _processQRCode(String qrData) {
     controller.stop();
-    
+
     try {
-      final parts = qrData.split(':');
+      final trimmed = qrData.trim();
+
+      // CASE 1: Static Daily Helper Gate Pass (e.g. DHP-S1-F12-ABC123)
+      if (trimmed.startsWith('DHP-') || trimmed.startsWith('DAILY_HELP:')) {
+        final helperCode = trimmed.replaceFirst('DAILY_HELP:', '');
+        Navigator.pop(context, {
+          'type': 'daily_helper',
+          'qr_code': helperCode,
+          'scannedAt': DateTime.now().toIso8601String(),
+        });
+        return;
+      }
+
+      // CASE 2: Legacy Visitor Format (id:name:phone:purpose)
+      final parts = trimmed.split(':');
       if (parts.length >= 4) {
         final visitorData = {
+          'type': 'visitor',
           'id': parts[0],
           'name': parts[1],
           'phone': parts[2],
           'purpose': parts[3],
           'scannedAt': DateTime.now().toIso8601String(),
         };
-        
+
         Navigator.pop(context, visitorData);
       } else {
-        _showErrorDialog('Invalid QR code format');
+        // Fallback: check if raw token might be daily helper
+        Navigator.pop(context, {
+          'type': 'raw_qr',
+          'qr_code': trimmed,
+          'scannedAt': DateTime.now().toIso8601String(),
+        });
       }
     } catch (e) {
       _showErrorDialog('Error processing QR code: $e');

@@ -37,6 +37,12 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
       'screen': 'visitors',
     },
     {
+      'icon': Icons.cleaning_services,
+      'label': 'Daily Help',
+      'color': Colors.deepPurple,
+      'screen': 'daily_help',
+    },
+    {
       'icon': Icons.checklist,
       'label': 'Services',
       'color': Colors.green,
@@ -774,6 +780,12 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                   Navigator.pushReplacementNamed(
                                     context,
                                     '/resident-main/visitors',
+                                  );
+                                  break;
+                                case 'daily_help':
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/profile-details',
                                   );
                                   break;
                                 case 'services':

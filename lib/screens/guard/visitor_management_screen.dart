@@ -16,6 +16,8 @@ import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:mygate_coepd/screens/guard/guard_add_visitor_bottom_sheet.dart';
+import 'package:mygate_coepd/screens/guard/guard_daily_help_screen.dart';
+import 'package:mygate_coepd/repositories/household_repository.dart';
 
 class GuardVisitorManagementScreen extends StatefulWidget {
   final bool isBackButton;
@@ -45,6 +47,12 @@ class _VisitorManagementScreenState
       'label': 'QR Scanner',
       'color': Colors.purple,
       'screen': 'qr_scanner',
+    },
+    {
+      'icon': Icons.cleaning_services,
+      'label': 'Daily Help',
+      'color': Colors.teal,
+      'screen': 'daily_help',
     },
     {
       'icon': Icons.group,
@@ -138,6 +146,12 @@ class _VisitorManagementScreenState
       case 'qr_scanner':
         await _openQRScanner();
         break;
+      case 'daily_help':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const GuardDailyHelpScreen()),
+        );
+        break;
       case 'group_entry':
         Navigator.push(
           context,
@@ -178,7 +192,84 @@ class _VisitorManagementScreenState
     }
   }
 
-  void _processScannedVisitor(Map<String, dynamic> data) {
+  void _processScannedVisitor(Map<String, dynamic> data) async {
+    final scanType = data['type']?.toString() ?? '';
+    final qrCode = data['qr_code']?.toString() ?? '';
+
+    // If scanned a Static Daily Helper QR
+    if (scanType == 'daily_helper' || qrCode.startsWith('DHP-')) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        final res = await HouseholdRepository().scanDailyHelperQr(qrCode);
+        if (mounted) Navigator.pop(context); // close loading
+
+        final action = res['action']?.toString() ?? 'recorded';
+        final helper = res['helper'] as Map<String, dynamic>? ?? {};
+        final name = helper['name'] ?? 'Worker';
+        final service = helper['service_type'] ?? 'Helper';
+        final flat = helper['flat_number'] ?? '';
+
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+            title: Row(
+              children: [
+                Icon(
+                  action == 'entered' ? Icons.login : Icons.logout,
+                  color: action == 'entered' ? Colors.green : Colors.orange,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  action == 'entered' ? 'Entry Registered' : 'Exit Registered',
+                  style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold)),
+                SizedBox(height: 4.h),
+                Text('$service • Flat $flat', style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade600)),
+                SizedBox(height: 10.h),
+                Text(
+                  action == 'entered'
+                      ? 'Daily helper marked checked IN. Resident notified.'
+                      : 'Daily helper marked checked OUT.',
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade700),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        _loadVisitors();
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // close loading
+          AppSnackbar.show(
+            context: context,
+            message: 'QR scan error: ${e.toString().replaceFirst("Exception: ", "")}',
+            type: SnackBarType.error,
+          );
+        }
+      }
+      return;
+    }
+
     _showAddVisitorForm(prefill: data);
   }
 

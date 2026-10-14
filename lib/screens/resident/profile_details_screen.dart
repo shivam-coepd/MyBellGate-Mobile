@@ -15,6 +15,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mygate_coepd/services/s3_upload_service.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:mygate_coepd/widgets/profile_image_viewer.dart';
+import 'package:mygate_coepd/screens/resident/daily_helper_qr_pass_screen.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ProfileDetailsScreen extends StatefulWidget {
@@ -2477,16 +2478,35 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
             Column(
               children: [
                 IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DailyHelperQrPassScreen(helper: helper),
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    Icons.qr_code_2_outlined,
+                    size: 22.sp,
+                    color: Colors.purple.shade700,
+                  ),
+                  tooltip: 'View QR Gate Pass',
+                  padding: EdgeInsets.all(6.w),
+                  constraints: BoxConstraints(),
+                ),
+                SizedBox(height: 2.h),
+                IconButton(
                   onPressed: () => _showDailyHelperBottomSheet(helper: helper),
                   icon: Icon(
                     Icons.edit_outlined,
-                    size: 20.sp,
+                    size: 18.sp,
                     color: theme.primaryColor,
                   ),
-                  padding: EdgeInsets.all(8.w),
+                  padding: EdgeInsets.all(6.w),
                   constraints: BoxConstraints(),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 2.h),
                 IconButton(
                   onPressed: () {
                     final helperId = int.tryParse(helper['id'].toString()) ?? 0;
@@ -2504,10 +2524,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
                   },
                   icon: Icon(
                     Icons.delete_outline,
-                    size: 20.sp,
+                    size: 18.sp,
                     color: Colors.red.shade400,
                   ),
-                  padding: EdgeInsets.all(8.w),
+                  padding: EdgeInsets.all(6.w),
                   constraints: BoxConstraints(),
                 ),
               ],

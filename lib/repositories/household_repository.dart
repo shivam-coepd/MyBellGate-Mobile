@@ -382,55 +382,59 @@ class HouseholdRepository {
   }
 
   // ─────────────────────────────────────────────────────
-  //  DAILY HELP (via Visitors table)
+  //  DAILY HELP PROVIDERS & STATIC QR GATE PASS
   // ─────────────────────────────────────────────────────
 
-  /// POST /api/visitors — register a daily helper as a recurring visitor
-  /// Uses visitorType = 'service' to distinguish from guests.
-  Future<void> addDailyHelper({
+  /// POST /api/daily-helpers — add a new daily helper with static QR pass
+  Future<Map<String, dynamic>> addDailyHelper({
     required String name,
     required String phone,
     required String serviceType,
-    String? daysOfWeek,
     String? visitTime,
     String? imageUrl,
+    int? flatId,
+    String? workingDays,
   }) async {
     try {
       final data = <String, dynamic>{
         'name': name,
         'phone': phone,
-        'purpose': serviceType,
-        'visitor_type': 'service',
+        'service_type': serviceType,
       };
+      if (flatId != null) data['flat_id'] = flatId;
       if (visitTime != null && visitTime.isNotEmpty) {
-        data['visit_time'] = visitTime;
+        data['expected_time_in'] = visitTime;
       }
       if (imageUrl != null) data['image_url'] = imageUrl;
+      if (workingDays != null) data['working_days'] = workingDays;
 
-      final response = await _apiService.dio.post('/visitors', data: data);
+      final response = await _apiService.dio.post('/daily-helpers', data: data);
       log('addDailyHelper: ${response.data}');
-      if (response.data == null || response.data['status'] != true) {
-        throw Exception(response.data?['message'] ?? 'Failed to add daily helper');
+      if (response.data != null && response.data['status'] == true) {
+        return Map<String, dynamic>.from(response.data['data'] ?? {});
       }
+      throw Exception(response.data?['message'] ?? 'Failed to add daily helper');
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
       throw Exception(msg);
     }
   }
 
-  /// GET /api/visitors?visitor_type=service — fetch all recurring daily helpers
-  Future<List<Map<String, dynamic>>> getDailyHelpers() async {
+  /// GET /api/daily-helpers — fetch all recurring daily helpers
+  Future<List<Map<String, dynamic>>> getDailyHelpers({int? flatId}) async {
     try {
+      final Map<String, dynamic> params = {};
+      if (flatId != null) params['flat_id'] = flatId;
+
       final response = await _apiService.dio.get(
-        '/visitors',
-        queryParameters: {'visitor_type': 'service', 'limit': 50},
+        '/daily-helpers',
+        queryParameters: params.isNotEmpty ? params : null,
       );
       log('getDailyHelpers: ${response.data}');
       if (response.data != null && response.data['status'] == true) {
         final data = response.data['data'];
-        // Visitor list is nested under data.data (paginated)
-        if (data != null && data['data'] != null) {
-          return List<Map<String, dynamic>>.from(data['data']);
+        if (data != null && data is List) {
+          return List<Map<String, dynamic>>.from(data);
         }
         return [];
       }
@@ -441,10 +445,10 @@ class HouseholdRepository {
     }
   }
 
-  /// DELETE /api/visitors/{id}
+  /// DELETE /api/daily-helpers/{id}
   Future<void> deleteDailyHelper(int id) async {
     try {
-      final response = await _apiService.dio.delete('/visitors/$id');
+      final response = await _apiService.dio.delete('/daily-helpers/$id');
       log('deleteDailyHelper($id): ${response.data}');
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to delete daily helper');
@@ -455,7 +459,7 @@ class HouseholdRepository {
     }
   }
 
-  /// PUT /api/visitors/{id} — update a daily helper's info
+  /// PUT /api/daily-helpers/{id} — update a daily helper's info
   Future<void> updateDailyHelper({
     required int id,
     String? name,
@@ -468,19 +472,97 @@ class HouseholdRepository {
       final data = <String, dynamic>{};
       if (name != null && name.isNotEmpty) data['name'] = name;
       if (phone != null && phone.isNotEmpty) data['phone'] = phone;
-      if (purpose != null) data['purpose'] = purpose;
-      if (visitTime != null) data['visit_time'] = visitTime;
+      if (purpose != null) data['service_type'] = purpose;
+      if (visitTime != null) data['expected_time_in'] = visitTime;
       if (imageUrl != null) data['image_url'] = imageUrl;
 
       if (data.isEmpty) {
         throw Exception('No fields to update');
       }
 
-      // Use PATCH or PUT to update visitor fields
-      final response = await _apiService.dio.put('/visitors/$id', data: data);
+      final response = await _apiService.dio.put('/daily-helpers/$id', data: data);
       log('updateDailyHelper($id): ${response.data}');
       if (response.data == null || response.data['status'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to update daily helper');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
+  /// GET /api/daily-helpers/logs — fetch attendance history logs
+  Future<List<Map<String, dynamic>>> getDailyHelperLogs({
+    int? dailyHelperId,
+    String? date,
+  }) async {
+    try {
+      final Map<String, dynamic> params = {};
+      if (dailyHelperId != null) params['daily_helper_id'] = dailyHelperId;
+      if (date != null) params['date'] = date;
+
+      final response = await _apiService.dio.get(
+        '/daily-helpers/logs',
+        queryParameters: params.isNotEmpty ? params : null,
+      );
+      if (response.data != null && response.data['status'] == true) {
+        final data = response.data['data'];
+        if (data != null && data is List) {
+          return List<Map<String, dynamic>>.from(data);
+        }
+        return [];
+      }
+      throw Exception(response.data?['message'] ?? 'Failed to fetch logs');
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
+  /// POST /api/daily-helpers/scan — scan static QR for check-in or check-out
+  Future<Map<String, dynamic>> scanDailyHelperQr(String qrCode, {String? notes}) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/daily-helpers/scan',
+        data: {
+          'qr_code': qrCode,
+          ...?notes != null ? {'notes': notes} : null,
+        },
+      );
+      if (response.data != null && response.data['status'] == true) {
+        return Map<String, dynamic>.from(response.data['data'] ?? {});
+      }
+      throw Exception(response.data?['message'] ?? 'Failed to process QR scan');
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
+  /// GET /api/daily-helpers/active-inside — helpers currently inside
+  Future<List<Map<String, dynamic>>> getActiveInsideHelpers() async {
+    try {
+      final response = await _apiService.dio.get('/daily-helpers/active-inside');
+      if (response.data != null && response.data['status'] == true) {
+        final data = response.data['data'];
+        if (data != null && data is List) {
+          return List<Map<String, dynamic>>.from(data);
+        }
+        return [];
+      }
+      throw Exception(response.data?['message'] ?? 'Failed to fetch active helpers');
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
+      throw Exception(msg);
+    }
+  }
+
+  /// POST /api/daily-helpers/manual-exit/{logId}
+  Future<void> manualExitHelper(int logId) async {
+    try {
+      final response = await _apiService.dio.post('/daily-helpers/manual-exit/$logId');
+      if (response.data == null || response.data['status'] != true) {
+        throw Exception(response.data?['message'] ?? 'Failed to mark exit');
       }
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? e.message ?? 'Network error';
