@@ -60,6 +60,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   IconData _getIconForType(String type) {
     switch (type.toLowerCase()) {
+      case 'alert':
+      case 'security_alert':
+        return Icons.warning_amber_rounded;
+      case 'building':
+      case 'wing':
+        return Icons.apartment_rounded;
       case 'visitor_request':
         return Icons.person_add_alt_1;
       case 'visitor_status':
@@ -69,7 +75,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'health':
         return Icons.health_and_safety;
       case 'announcement':
+      case 'notice':
         return Icons.campaign;
+      case 'maintenance':
+        return Icons.build_rounded;
       case 'payment':
         return Icons.payment;
       default:
@@ -187,7 +196,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   final notification = state.notifications[index];
                   final isCritical =
                       notification.type.toLowerCase() == 'health' ||
-                      notification.title.toLowerCase().contains('critical');
+                      notification.type.toLowerCase() == 'alert' ||
+                      notification.type.toLowerCase() == 'security_alert' ||
+                      notification.title.toLowerCase().contains('critical') ||
+                      notification.title.contains('🚨');
 
                   return FadeInUp(
                     delay: Duration(milliseconds: (index % 10) * 30),
