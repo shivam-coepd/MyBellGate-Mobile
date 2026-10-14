@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mygate_coepd/blocs/helpdesk/helpdesk_bloc.dart';
 import 'package:mygate_coepd/models/ticket.dart';
+import 'package:mygate_coepd/repositories/helpdesk_repository.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:mygate_coepd/widgets/app_error_widget.dart';
 import 'package:shimmer/shimmer.dart';
@@ -430,7 +431,8 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                       message: state.message,
                       title: 'Request Failed',
                       icon: Icons.support_agent_outlined,
-                      onRetry: () => ctx.read<HelpdeskBloc>().add(const LoadTickets()),
+                      onRetry: () =>
+                          ctx.read<HelpdeskBloc>().add(const LoadTickets()),
                     );
                   }
 
@@ -515,7 +517,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
       elevation: 3,
       child: InkWell(
         borderRadius: BorderRadius.circular(14.r),
-        onTap: () => _showTicketActions(t),
+        onTap: () => _showCommentsBottomSheet(t),
         child: Padding(
           padding: EdgeInsets.all(14.w),
           child: Column(
@@ -600,36 +602,56 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                   Icon(Icons.tag, size: 13.sp, color: Colors.grey),
                   SizedBox(width: 4.w),
                   Text(
-                    '#${t.ticketNumber}',
+                    t.ticketNumber,
                     style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                   ),
-                  SizedBox(width: 12.w),
+                  Spacer(),
                   Icon(Icons.flag, size: 13.sp, color: Colors.grey),
                   SizedBox(width: 4.w),
                   Text(
                     t.priorityLabel,
                     style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                   ),
-                  SizedBox(width: 12.w),
+                ],
+              ),
+              Row(
+                children: [
                   Icon(Icons.access_time, size: 13.sp, color: Colors.grey),
                   SizedBox(width: 4.w),
                   Text(
                     t.createdAt?.substring(0, 10) ?? '',
                     style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                   ),
-                  if (t.commentCount > 0) ...[
-                    SizedBox(width: 12.w),
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 13.sp,
-                      color: Colors.grey,
+                  Spacer(),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(6.r),
+                    onTap: () => _showCommentsBottomSheet(t),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 13.sp,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${t.commentCount}',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '${t.commentCount}',
-                      style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                    ),
-                  ],
+                  ),
                 ],
               ),
               if (t.assignedToName != null) ...[
@@ -791,6 +813,40 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
                   );
                 },
               ),
+            // View Comments
+            ListTile(
+              leading: Icon(
+                Icons.forum_outlined,
+                color: Theme.of(context).primaryColor,
+              ),
+              title: const Text('View Comments / Activity'),
+              trailing: t.commentCount > 0
+                  ? Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 2.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Text(
+                        '${t.commentCount}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    )
+                  : null,
+              onTap: () {
+                Navigator.pop(context);
+                _showCommentsBottomSheet(t);
+              },
+            ),
             // Add comment
             ListTile(
               leading: const Icon(
@@ -819,6 +875,25 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
             SizedBox(height: 8.h),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCommentsBottomSheet(Ticket ticket) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _TicketCommentsSheet(
+        ticket: ticket,
+        onCommentAdded: () {
+          // Refresh tickets list so comment count updates
+          context.read<HelpdeskBloc>().add(
+            _selectedTab == 'history'
+                ? const LoadTickets(status: 'resolved')
+                : const LoadTickets(),
+          );
+        },
       ),
     );
   }
@@ -1058,7 +1133,6 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen>
     );
   }
 
-
   Widget _emptyWidget(String t, String s) => Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1215,6 +1289,668 @@ class _TicketListShimmer extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TicketCommentsSheet extends StatefulWidget {
+  final Ticket ticket;
+  final VoidCallback onCommentAdded;
+
+  const _TicketCommentsSheet({
+    required this.ticket,
+    required this.onCommentAdded,
+  });
+
+  @override
+  State<_TicketCommentsSheet> createState() => _TicketCommentsSheetState();
+}
+
+class _TicketCommentsSheetState extends State<_TicketCommentsSheet> {
+  final _commentCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  final _repository = HelpdeskRepository();
+
+  bool _isLoading = true;
+  bool _isSending = false;
+  String? _errorMessage;
+  List<TicketComment> _comments = [];
+  Ticket? _detailedTicket;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTicketDetails();
+  }
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTicketDetails() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final ticket = await _repository.getTicketById(widget.ticket.id);
+      if (mounted) {
+        setState(() {
+          _detailedTicket = ticket;
+          _comments = List.from(ticket.comments);
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _postComment() async {
+    final text = _commentCtrl.text.trim();
+    if (text.isEmpty || _isSending) return;
+
+    setState(() => _isSending = true);
+
+    try {
+      await _repository.addComment(widget.ticket.id, text);
+      _commentCtrl.clear();
+      FocusScope.of(context).unfocus();
+      widget.onCommentAdded();
+
+      // Refresh ticket details to fetch newly added comment with accurate server timestamp
+      await _loadTicketDetails();
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(
+          context: context,
+          message: e.toString().replaceFirst('Exception: ', ''),
+          type: SnackBarType.error,
+          position: SnackBarPosition.top,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSending = false);
+      }
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'in_progress':
+        return Colors.orange;
+      case 'resolved':
+        return Colors.green;
+      case 'closed':
+        return Colors.grey;
+      default:
+        return Colors.blue;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ticket = _detailedTicket ?? widget.ticket;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.88,
+      ),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomInset),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              SizedBox(height: 10.h),
+              Center(
+                child: Container(
+                  width: 44.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+              ),
+
+              // Header
+              Padding(
+                padding: EdgeInsets.fromLTRB(18.w, 12.h, 12.w, 8.h),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Badges row: #TK-..., Priority, Category
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 4.h,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 3.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Text(
+                                  '#${ticket.ticketNumber}',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 3.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Text(
+                                  '${ticket.priorityLabel} Priority',
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red.shade700,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 3.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Text(
+                                  ticket.category.isNotEmpty
+                                      ? ticket.category[0].toUpperCase() +
+                                            ticket.category.substring(1)
+                                      : 'General',
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          // Title
+                          Text(
+                            ticket.title,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: theme.textTheme.titleLarge?.color,
+                            ),
+                          ),
+                          SizedBox(height: 6.h),
+                          // Meta row: resident name, flat, date
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  if (ticket.residentName != null &&
+                                      ticket.residentName!.isNotEmpty) ...[
+                                    Icon(
+                                      Icons.person_outline,
+                                      size: 14.sp,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      ticket.residentName!,
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10.w),
+                                  ],
+                                  if (ticket.flatNumber != null &&
+                                      ticket.flatNumber!.isNotEmpty) ...[
+                                    Icon(
+                                      Icons.apartment_outlined,
+                                      size: 14.sp,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      'Flat ${ticket.flatNumber}',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10.w),
+                                  ],
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 14.sp,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Text(
+                                    ticket.createdAt != null &&
+                                            ticket.createdAt!.length >= 16
+                                        ? ticket.createdAt!.substring(0, 16)
+                                        : (ticket.createdAt ?? ''),
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+
+              // Scrollable Details & Comments Body
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollCtrl,
+                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ISSUE DESCRIPTION section
+                      Text(
+                        'ISSUE DESCRIPTION',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      SizedBox(height: 6.h),
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.grey.shade900
+                              : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: Colors.grey.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Text(
+                          ticket.description.trim().isNotEmpty
+                              ? ticket.description
+                              : 'No description provided.',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            height: 1.4,
+                            color: theme.textTheme.bodyMedium?.color,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 14.h),
+
+                      // Current Status Banner
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 10.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F7FF),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: Colors.blue.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Current Status: ',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue.shade900,
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _statusColor(ticket.status),
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              child: Text(
+                                ticket.statusLabel,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ACTIVITY & COMMENTS header
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.forum_outlined,
+                            size: 16.sp,
+                            color: Colors.grey.shade700,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            'ACTIVITY & COMMENTS (${_comments.length})',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+
+                      // Comments items or loader
+                      if (_isLoading)
+                        Padding(
+                          padding: EdgeInsets.all(24.h),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (_errorMessage != null)
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(16.w),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(10.r),
+                            border: Border.all(
+                              color: Colors.red.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                _errorMessage!,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.red,
+                                ),
+                              ),
+                              SizedBox(height: 6.h),
+                              TextButton.icon(
+                                onPressed: _loadTicketDetails,
+                                icon: Icon(Icons.refresh, size: 16.sp),
+                                label: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_comments.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(
+                            vertical: 24.h,
+                            horizontal: 16.w,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.grey.shade900
+                                : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(10.r),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.15),
+                            ),
+                          ),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 32.sp,
+                                  color: Colors.grey.shade400,
+                                ),
+                                SizedBox(height: 6.h),
+                                Text(
+                                  'No comments or updates yet',
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _comments.length,
+                          separatorBuilder: (_, _) => SizedBox(height: 10.h),
+                          itemBuilder: (ctx, index) {
+                            final comment = _comments[index];
+                            final name =
+                                comment.commenterName?.trim().isNotEmpty == true
+                                ? comment.commenterName!
+                                : 'User';
+                            final time =
+                                comment.createdAt != null &&
+                                    comment.createdAt!.length >= 16
+                                ? comment.createdAt!.substring(11, 16)
+                                : (comment.createdAt ?? '');
+
+                            return Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(12.w),
+                              decoration: BoxDecoration(
+                                color:
+                                    theme.cardTheme.color ??
+                                    (theme.brightness == Brightness.dark
+                                        ? Colors.grey.shade900
+                                        : Colors.white),
+                                borderRadius: BorderRadius.circular(10.r),
+                                border: Border.all(
+                                  color: Colors.grey.withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        name,
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: theme
+                                              .textTheme
+                                              .titleMedium
+                                              ?.color,
+                                        ),
+                                      ),
+                                      if (time.isNotEmpty)
+                                        Text(
+                                          time,
+                                          style: TextStyle(
+                                            fontSize: 11.sp,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6.h),
+                                  Text(
+                                    comment.comment,
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      height: 1.35,
+                                      color: theme.textTheme.bodyMedium?.color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const Divider(height: 1),
+
+              // Comment Input Field
+              Padding(
+                padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 12.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color:
+                              theme.cardTheme.color ??
+                              (theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade900
+                                  : Colors.grey.shade100),
+                          borderRadius: BorderRadius.circular(24.r),
+                          border: Border.all(
+                            color: Colors.grey.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _commentCtrl,
+                          textCapitalization: TextCapitalization.sentences,
+                          minLines: 1,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            hintText: 'Add a comment or reply...',
+                            hintStyle: TextStyle(
+                              fontSize: 13.sp,
+                              color: Colors.grey,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 10.h,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    _isSending
+                        ? SizedBox(
+                            width: 36.w,
+                            height: 36.w,
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                          )
+                        : IconButton.filled(
+                            onPressed: _postComment,
+                            icon: const Icon(Icons.send_rounded),
+                            style: IconButton.styleFrom(
+                              backgroundColor: theme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.all(10.w),
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

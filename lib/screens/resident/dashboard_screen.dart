@@ -157,7 +157,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                     children: <Widget>[
                       buildInfoHeader(),
                       statsCarouselWidget(),
-                      getAnnouncementsSection(),
+                      // getAnnouncementsSection(),
                       getQuickActionsSection(),
                       getUpcomingEventsSection(),
                       SizedBox(height: 80.h),
@@ -494,25 +494,55 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                     Positioned(
                                       top: 15.h,
                                       left: 15.w,
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10.w,
-                                          vertical: 5.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: tagColor,
-                                          borderRadius: BorderRadius.circular(
-                                            20.r,
+                                      right: 15.w,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10.w,
+                                              vertical: 5.h,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.6),
+                                              borderRadius: BorderRadius.circular(
+                                                20.r,
+                                              ),
+                                              border: Border.all(
+                                                color: Colors.white.withOpacity(0.3),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              announcement.category,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                        child: Text(
-                                          announcement.sendVia.toUpperCase(),
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12.sp,
-                                            fontWeight: FontWeight.bold,
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 8.w,
+                                              vertical: 4.h,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: tagColor,
+                                              borderRadius: BorderRadius.circular(
+                                                20.r,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              announcement.sendVia.toUpperCase(),
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10.sp,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
                                     ),
                                     Positioned(
@@ -1065,10 +1095,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
     // Recent attendee avatar URLs (up to 3 shown)
     final List<dynamic> recentAvatars =
         (event['recent_attendees'] as List<dynamic>? ?? []);
-    final int totalAttendees =
-        (event['attendees'] is int)
-            ? event['attendees'] as int
-            : int.tryParse(event['attendees']?.toString() ?? '0') ?? 0;
+    final int totalAttendees = (event['attendees'] is int)
+        ? event['attendees'] as int
+        : int.tryParse(event['attendees']?.toString() ?? '0') ?? 0;
 
     final int displayCount = recentAvatars.length.clamp(0, 3);
     final double overlap = 14.w;
@@ -1093,10 +1122,8 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                 backgroundColor: Colors.white,
                 child: CachedNetworkImage(
                   imageUrl: avatarUrl,
-                  imageBuilder: (ctx, img) => CircleAvatar(
-                    radius: avatarRadius,
-                    backgroundImage: img,
-                  ),
+                  imageBuilder: (ctx, img) =>
+                      CircleAvatar(radius: avatarRadius, backgroundImage: img),
                   placeholder: (_, _) => CircleAvatar(
                     radius: avatarRadius,
                     backgroundColor: Theme.of(
@@ -1154,10 +1181,9 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
 
   Widget _buildRSVPButton(Map<String, dynamic> event) {
     final String? myStatus = event['my_status'] as String?;
-    final int eventId =
-        (event['id'] is int)
-            ? event['id'] as int
-            : int.tryParse(event['id']?.toString() ?? '0') ?? 0;
+    final int eventId = (event['id'] is int)
+        ? event['id'] as int
+        : int.tryParse(event['id']?.toString() ?? '0') ?? 0;
 
     final bool isGoing = myStatus == 'going';
     final bool isMaybe = myStatus == 'maybe';

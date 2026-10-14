@@ -7,6 +7,7 @@ class Announcement extends Equatable {
   final String id;
   final String title;
   final String content;
+  final String category; // General | Important | Event | Amenity | Maintenance
   final String? societyId;
   final String? createdBy;
   final String? createdByName;
@@ -21,6 +22,7 @@ class Announcement extends Equatable {
     required this.id,
     required this.title,
     required this.content,
+    this.category = 'General',
     this.societyId,
     this.createdBy,
     this.createdByName,
@@ -37,6 +39,9 @@ class Announcement extends Equatable {
       id: json['id'].toString(),
       title: json['title'] ?? '',
       content: json['content'] ?? '',
+      category: json['category'] != null && json['category'].toString().trim().isNotEmpty
+          ? json['category'].toString().trim()
+          : 'General',
       societyId: json['society_id']?.toString(),
       createdBy: json['created_by']?.toString(),
       createdByName: json['created_by_name'],
@@ -51,7 +56,7 @@ class Announcement extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, title, content, createdBy, targetGroupId, isDraft, createdAt
+        id, title, content, category, createdBy, targetGroupId, isDraft, createdAt
       ];
 }
 

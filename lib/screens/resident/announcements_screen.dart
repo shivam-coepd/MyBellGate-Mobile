@@ -22,6 +22,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
 
   final List<String> _categories = [
     'All',
+    'General',
     'Important',
     'Event',
     'Amenity',
@@ -60,6 +61,38 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     super.dispose();
   }
 
+  Color _categoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'important':
+        return const Color(0xFFDC2626);
+      case 'event':
+        return const Color(0xFF7C3AED);
+      case 'amenity':
+        return const Color(0xFF059669);
+      case 'maintenance':
+        return const Color(0xFFD97706);
+      case 'general':
+      default:
+        return const Color(0xFF2563EB);
+    }
+  }
+
+  Color _categoryBgColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'important':
+        return const Color(0xFFFEE2E2);
+      case 'event':
+        return const Color(0xFFF3E8FF);
+      case 'amenity':
+        return const Color(0xFFD1FAE5);
+      case 'maintenance':
+        return const Color(0xFFFEF3C7);
+      case 'general':
+      default:
+        return const Color(0xFFDBEAFE);
+    }
+  }
+
   Color _tagColor(String? sendVia) {
     switch (sendVia) {
       case 'sms':
@@ -86,11 +119,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
           labelColor: theme.primaryColor,
           indicatorColor: theme.primaryColor,
           unselectedLabelColor: theme.primaryColor,
-          labelStyle: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-          unselectedLabelStyle: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
+          labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
           tabs: const [
             Tab(text: 'Announcements'),
             Tab(text: 'Polls'),
@@ -123,7 +152,11 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
           final items = _selectedCategory == 'All'
               ? state.announcements
               : state.announcements
-                    .where((a) => a.sendVia == _selectedCategory.toLowerCase())
+                    .where(
+                      (a) =>
+                          a.category.trim().toLowerCase() ==
+                          _selectedCategory.trim().toLowerCase(),
+                    )
                     .toList();
           return Column(
             children: [
@@ -173,7 +206,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
                 child: items.isEmpty
                     ? _emptyWidget(
                         'No Announcements',
-                        'No announcements in this category.',
+                        _selectedCategory == 'All'
+                            ? 'No announcements posted yet.'
+                            : 'No announcements in "$_selectedCategory" category.',
                       )
                     : RefreshIndicator(
                         onRefresh: () async => ctx
@@ -196,6 +231,8 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
 
   Widget _announcementCard(Announcement a) {
     final expanded = _expandedId == int.tryParse(a.id);
+    final catColor = _categoryColor(a.category);
+    final catBg = _categoryBgColor(a.category);
     final tColor = _tagColor(a.sendVia);
     return Card(
       margin: EdgeInsets.only(bottom: 14.h),
@@ -212,6 +249,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
@@ -222,23 +260,30 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
                       ),
                     ),
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 9.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: tColor,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Text(
-                      a.sendVia.toUpperCase(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.bold,
+                  SizedBox(width: 8.w),
+                  Wrap(
+                    spacing: 6.w,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: catBg,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: catColor.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          a.category,
+                          style: TextStyle(
+                            color: catColor,
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),

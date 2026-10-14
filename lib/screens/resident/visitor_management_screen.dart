@@ -31,7 +31,6 @@ class VisitorManagementScreen extends StatefulWidget {
 class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'Today';
-  bool _isBulkMode = false;
   final Set<int> _selectedVisitors = {};
   Map<String, dynamic>? _activeNotification;
 
@@ -348,45 +347,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     }
   }
 
-  void _toggleBulkMode() {
-    setState(() {
-      _isBulkMode = !_isBulkMode;
-      if (!_isBulkMode) {
-        _selectedVisitors.clear();
-      }
-    });
-  }
-
-  Future<void> _bulkApprove() async {
-    setState(() {
-      _isLoading = true;
-    });
-    int successCount = 0;
-    try {
-      for (final id in _selectedVisitors) {
-        try {
-          await _visitorRepository.updateVisitorStatus(id, 'approved');
-          final index = _allVisitors.indexWhere((v) => v['id'] == id);
-          if (index != -1) {
-            _allVisitors[index]['status'] = 'approved';
-          }
-          successCount++;
-        } catch (e) {
-          log("Bulk approve failed for $id: $e");
-        }
-      }
-      _selectedVisitors.clear();
-      _isBulkMode = false;
-      _filterVisitors();
-
-      _showSuccessMessage('$successCount visitors approved successfully');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   void _handleVoiceSearch() {
     // Basic mock since speech_to_text is not installed
     showDialog(
@@ -413,28 +373,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Visitor Management'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isBulkMode ? Icons.close : Icons.checklist,
-              color: theme.primaryColor,
-              size: 24.sp,
-            ),
-            onPressed: _toggleBulkMode,
-          ),
-          if (_isBulkMode && _selectedVisitors.isNotEmpty)
-            IconButton(
-              icon: Icon(
-                Icons.check_circle,
-                color: theme.primaryColor,
-                size: 24.sp,
-              ),
-              onPressed: _bulkApprove,
-            ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Visitor Management')),
       body: Stack(
         children: [
           Column(
@@ -559,7 +498,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
                               onCall: () =>
                                   _callVisitor(visitor['phone'] as String),
                               onShare: () => _shareVisitorDetails(visitor),
-                              onDelete: () => _deleteVisitor(visitorId),
                               onEdit: () => _editVisitor(visitorId),
                               onExtendTime: () => _extendTime(visitorId),
                               isSelected: _selectedVisitors.contains(visitorId),
@@ -572,7 +510,6 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
                                   }
                                 });
                               },
-                              isBulkMode: _isBulkMode,
                             );
                           },
                         ),
@@ -1771,7 +1708,6 @@ class VisitorCardWidget extends StatelessWidget {
   final VoidCallback onReject;
   final VoidCallback onCall;
   final VoidCallback onShare;
-  final VoidCallback onDelete;
   final VoidCallback onEdit;
   final VoidCallback onExtendTime;
   final bool isSelected;
@@ -1785,7 +1721,6 @@ class VisitorCardWidget extends StatelessWidget {
     required this.onReject,
     required this.onCall,
     required this.onShare,
-    required this.onDelete,
     required this.onEdit,
     required this.onExtendTime,
     this.isSelected = false,
@@ -1908,22 +1843,11 @@ class VisitorCardWidget extends StatelessWidget {
             ),
           ],
         ),
-        endActionPane: ActionPane(
-          motion: const BehindMotion(),
-          extentRatio: 0.22,
-          children: [
-            _buildSlideAction(
-              icon: Icons.delete_outline_rounded,
-              label: 'Delete',
-              color: const Color(0xFFEF4444),
-              onTap: (_) => onDelete(),
-              isFirst: true,
-              isLast: true,
-            ),
-          ],
-        ),
         child: GestureDetector(
           onTap: () {
+            if (status.toLowerCase() == 'exited') {
+              return;
+            }
             showModalBottomSheet(
               context: context,
               backgroundColor: Colors.transparent,
@@ -2232,6 +2156,9 @@ class VisitorCardWidget extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final status = visitor['status'] as String;
     final statusColor = _getStatusColor(status, colorScheme);
+    final bool canExtendTime =
+        status.toLowerCase() != 'exited' &&
+        status.toLowerCase() != 'rejected';
 
     return Container(
       decoration: BoxDecoration(
@@ -2351,20 +2278,22 @@ class VisitorCardWidget extends StatelessWidget {
                   Navigator.pop(context);
                   onEdit();
                 },
+                isLast: !canExtendTime,
               ),
-              _buildMenuTile(
-                context: context,
-                theme: theme,
-                icon: Icons.access_time_rounded,
-                title: 'Extend Time',
-                subtitle: 'Increase visit duration',
-                color: const Color(0xFFF59E0B),
-                onTap: () {
-                  Navigator.pop(context);
-                  onExtendTime();
-                },
-                isLast: true,
-              ),
+              if (canExtendTime)
+                _buildMenuTile(
+                  context: context,
+                  theme: theme,
+                  icon: Icons.access_time_rounded,
+                  title: 'Extend Time',
+                  subtitle: 'Increase visit duration',
+                  color: const Color(0xFFF59E0B),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onExtendTime();
+                  },
+                  isLast: true,
+                ),
 
               SizedBox(height: 8.h),
             ],
