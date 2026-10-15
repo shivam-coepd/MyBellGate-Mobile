@@ -184,6 +184,22 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
     ).show(context);
   }
 
+  void _showErrorMessage(String message) {
+    HapticFeedback.heavyImpact();
+    Flushbar(
+      message: message,
+      duration: const Duration(seconds: 3),
+      backgroundColor: Colors.red.shade700,
+      borderRadius: BorderRadius.circular(12),
+      margin: EdgeInsets.all(4.w),
+      icon: const Icon(
+        Icons.error_outline,
+        color: Colors.white,
+        size: 24,
+      ),
+    ).show(context);
+  }
+
   Future<void> _approveVisitor(int visitorId) async {
     try {
       setState(() {
@@ -200,7 +216,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
       }
       _showSuccessMessage('Visitor approved successfully');
     } catch (e) {
-      _showSuccessMessage(
+      _showErrorMessage(
         'Failed to approve visitor: ${e.toString().replaceAll('Exception: ', '')}',
       );
     } finally {
@@ -226,7 +242,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
       }
       _showSuccessMessage('Visitor rejected');
     } catch (e) {
-      _showSuccessMessage(
+      _showErrorMessage(
         'Failed to reject visitor: ${e.toString().replaceAll('Exception: ', '')}',
       );
     } finally {
@@ -2065,44 +2081,132 @@ class VisitorCardWidget extends StatelessWidget {
                     ),
                   ),
 
-                  // Status Badge — vertical pill
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10.w,
-                          vertical: 6.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusBgColor,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(
-                            color: statusColor.withValues(alpha: 0.25),
+                  // Status Badge or Direct Action Buttons for Pending
+                  if (status.toLowerCase() == 'pending')
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 6.h,
+                      children: [
+                        // Approve Button
+                        InkWell(
+                          onTap: onApprove,
+                          borderRadius: BorderRadius.circular(10.r),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 5.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF22C55E),
+                              borderRadius: BorderRadius.circular(10.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_rounded,
+                                  size: 13.sp,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 3.w),
+                                Text(
+                                  'Approve',
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              _getStatusIcon(status),
-                              size: 15.sp,
-                              color: statusColor,
+
+                        // Reject Button
+                        InkWell(
+                          onTap: onReject,
+                          borderRadius: BorderRadius.circular(10.r),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 4.h,
                             ),
-                            SizedBox(height: 3.h),
-                            Text(
-                              _getStatusLabel(status),
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w700,
-                                color: statusColor,
-                                letterSpacing: 0.2,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(
+                                color: const Color(0xFFEF4444).withValues(alpha: 0.3),
                               ),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.close_rounded,
+                                  size: 12.sp,
+                                  color: const Color(0xFFEF4444),
+                                ),
+                                SizedBox(width: 3.w),
+                                Text(
+                                  'Reject',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFEF4444),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    // Standard Status Badge — vertical pill
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 6.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusBgColor,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                _getStatusIcon(status),
+                                size: 15.sp,
+                                color: statusColor,
+                              ),
+                              SizedBox(height: 3.h),
+                              Text(
+                                _getStatusLabel(status),
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: statusColor,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -2265,6 +2369,34 @@ class VisitorCardWidget extends StatelessWidget {
                   ],
                 ),
               ),
+
+              // Quick Actions for Pending Visitors
+              if (status.toLowerCase() == 'pending') ...[
+                _buildMenuTile(
+                  context: context,
+                  theme: theme,
+                  icon: Icons.check_circle_rounded,
+                  title: 'Approve Visitor',
+                  subtitle: 'Grant entry access',
+                  color: const Color(0xFF22C55E),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onApprove();
+                  },
+                ),
+                _buildMenuTile(
+                  context: context,
+                  theme: theme,
+                  icon: Icons.cancel_rounded,
+                  title: 'Reject Visitor',
+                  subtitle: 'Deny entry access',
+                  color: const Color(0xFFEF4444),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onReject();
+                  },
+                ),
+              ],
 
               // Actions
               _buildMenuTile(
