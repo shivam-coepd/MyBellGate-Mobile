@@ -785,7 +785,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen>
                                 case 'daily_help':
                                   Navigator.pushNamed(
                                     context,
-                                    '/profile-details',
+                                    '/daily-help',
                                   );
                                   break;
                                 case 'services':

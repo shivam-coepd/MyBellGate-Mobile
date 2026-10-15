@@ -33,6 +33,7 @@ import 'package:mygate_coepd/screens/resident/amenity_booking_screen.dart';
 import 'package:mygate_coepd/screens/resident/announcements_screen.dart';
 import 'package:mygate_coepd/screens/resident/bills_payments_screen.dart';
 import 'package:mygate_coepd/screens/society/events_and_community_screen.dart';
+import 'package:mygate_coepd/screens/resident/daily_help_screen.dart';
 import 'package:mygate_coepd/screens/resident/notifications_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_details_screen.dart';
 import 'package:mygate_coepd/screens/resident/profile_screen.dart';
@@ -211,6 +212,7 @@ class _MyGateBellState extends State<App> with WidgetsBindingObserver {
       '/community': (context) => const EventsAndCommunityScreen(),
       '/profile': (context) => const ProfileScreen(),
       '/profile-details': (context) => const ProfileDetailsScreen(),
+      '/daily-help': (context) => const DailyHelpScreen(),
       '/resident-notifications': (context) => const NotificationsScreen(),
       '/security': (context) => const NotificationsScreen(),
       '/otp-verification': (context) => throw UnimplementedError(
