@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -15,7 +16,8 @@ class DailyHelperQrPassScreen extends StatefulWidget {
   const DailyHelperQrPassScreen({super.key, required this.helper});
 
   @override
-  State<DailyHelperQrPassScreen> createState() => _DailyHelperQrPassScreenState();
+  State<DailyHelperQrPassScreen> createState() =>
+      _DailyHelperQrPassScreenState();
 }
 
 class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
@@ -62,13 +64,13 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
 
     try {
       // Capture the visual Pass Card (including the QR code) as an image
-      final boundary = _passCardKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _passCardKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
 
       if (boundary != null) {
         final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-        final byteData =
-            await image.toByteData(format: ui.ImageByteFormat.png);
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
         if (byteData != null) {
           final pngBytes = byteData.buffer.asUint8List();
@@ -87,15 +89,9 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
       }
 
       // Fallback if boundary capture is not ready
-      await Share.share(
-        shareText,
-        subject: 'MyGateBell Gate Pass - $name',
-      );
+      await Share.share(shareText, subject: 'MyGateBell Gate Pass - $name');
     } catch (e) {
-      await Share.share(
-        shareText,
-        subject: 'MyGateBell Gate Pass - $name',
-      );
+      await Share.share(shareText, subject: 'MyGateBell Gate Pass - $name');
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }
@@ -103,9 +99,13 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    log("Widget Helper data : ${widget.helper}");
     final theme = Theme.of(context);
     final name = widget.helper['name'] ?? 'Helper';
     final phone = widget.helper['phone'] ?? '';
+    final imageUrl = widget.helper['image_url'] ?? '';
     final serviceType = widget.helper['service_type'] ?? 'Service';
     final qrCode = widget.helper['qr_code'] ?? 'DHP-${widget.helper['id']}';
     final flatNumber = widget.helper['flat_number'] ?? '';
@@ -115,9 +115,6 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Permanent Gate Pass'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
         actions: [
           IconButton(
             onPressed: _shareQrPass,
@@ -136,7 +133,6 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
               key: _passCardKey,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white, // Ensure crisp white card background when shared
                   borderRadius: BorderRadius.circular(24.r),
                   boxShadow: [
                     BoxShadow(
@@ -150,178 +146,209 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
                     width: 1.5,
                   ),
                 ),
-              child: Column(
-                children: [
-                  // Pass Header
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.08),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(22.r),
-                        topRight: Radius.circular(22.r),
+                child: Column(
+                  children: [
+                    // Pass Header
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 16.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(22.r),
+                          topRight: Radius.circular(22.r),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.verified_user,
+                                color: theme.primaryColor,
+                                size: 20.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'MYGATEBELL PASS',
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                  color: theme.primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Text(
+                              'PERMANENT',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.verified_user, color: theme.primaryColor, size: 20.sp),
-                            SizedBox(width: 8.w),
-                            Text(
-                              'MYGATEBELL PASS',
+
+                    SizedBox(height: 20.h),
+
+                    // Helper Details
+                    CircleAvatar(
+                      radius: 36.r,
+                      backgroundColor: theme.primaryColor.withOpacity(0.15),
+                      child: imageUrl.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(200.r),
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                            )
+                          : Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : 'H',
                               style: TextStyle(
-                                fontSize: 13.sp,
+                                fontSize: 28.sp,
                                 fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
                                 color: theme.primaryColor,
                               ),
                             ),
-                          ],
-                        ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Text(
-                            'PERMANENT',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green.shade700,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
 
-                  SizedBox(height: 20.h),
+                    SizedBox(height: 12.h),
 
-                  // Helper Details
-                  CircleAvatar(
-                    radius: 36.r,
-                    backgroundColor: theme.primaryColor.withOpacity(0.15),
-                    child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : 'H',
-                      style: TextStyle(
-                        fontSize: 28.sp,
-                        fontWeight: FontWeight.bold,
-                        color: theme.primaryColor,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  SizedBox(height: 4.h),
-
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      serviceType,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: theme.primaryColor,
-                      ),
-                    ),
-                  ),
-
-                  if (phone.isNotEmpty) ...[
-                    SizedBox(height: 6.h),
                     Text(
-                      phone,
+                      name,
                       style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.grey.shade600,
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
 
-                  if (flatNumber.isNotEmpty) ...[
                     SizedBox(height: 4.h),
-                    Text(
-                      'Flat: ${buildingName.isNotEmpty ? "$buildingName - " : ""}$flatNumber',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade800,
+
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 4.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        serviceType,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: theme.primaryColor,
+                        ),
                       ),
                     ),
+
+                    if (phone.isNotEmpty) ...[
+                      SizedBox(height: 6.h),
+                      Text(
+                        phone,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+
+                    if (flatNumber.isNotEmpty) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Flat: ${buildingName.isNotEmpty ? "$buildingName - " : ""}$flatNumber',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ],
+
+                    SizedBox(height: 20.h),
+
+                    // QR Code Box
+                    Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: QrImageView(
+                        data: qrCode,
+                        version: QrVersions.auto,
+                        size: 190.r,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.grey.shade900
+                            : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Text(
+                        qrCode,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Text(
+                        'Guard will scan this QR at gate to mark both Entry and Exit.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 24.h),
                   ],
-
-                  SizedBox(height: 20.h),
-
-                  // QR Code Box
-                  Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18.r),
-                      border: Border.all(color: Colors.grey.shade200, width: 1.5),
-                    ),
-                    child: QrImageView(
-                      data: qrCode,
-                      version: QrVersions.auto,
-                      size: 190.r,
-                      backgroundColor: Colors.white,
-                    ),
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Text(
-                      qrCode,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontFamily: 'monospace',
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    child: Text(
-                      'Guard will scan this QR at gate to mark both Entry and Exit.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 24.h),
-                ],
+                ),
               ),
             ),
-          ),
 
             SizedBox(height: 24.h),
 
@@ -339,7 +366,9 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
                     )
                   : const Icon(Icons.share),
               label: Text(
-                _isSharing ? 'Generating Pass Image...' : 'Share Gate Pass with Helper',
+                _isSharing
+                    ? 'Generating Pass Image...'
+                    : 'Share Gate Pass with Helper',
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primaryColor,
@@ -375,26 +404,37 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
             SizedBox(height: 10.h),
 
             if (_loadingLogs)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: CircularProgressIndicator(),
-              ))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else if (_logs.isEmpty)
               Container(
                 padding: EdgeInsets.all(20.w),
                 decoration: BoxDecoration(
                   color: theme.cardColor,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(
+                    color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                  ),
                 ),
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.history_toggle_off, size: 36.sp, color: Colors.grey.shade400),
+                      Icon(
+                        Icons.history_toggle_off,
+                        size: 36.sp,
+                        color: Colors.grey.shade400,
+                      ),
                       SizedBox(height: 8.h),
                       Text(
                         'No entry/exit logs recorded yet',
-                        style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade600),
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ),
@@ -434,7 +474,9 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
                       border: Border.all(
                         color: isInside
                             ? Colors.green.withOpacity(0.4)
-                            : Colors.grey.shade200,
+                            : isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade100,
                       ),
                     ),
                     child: Row(
@@ -444,12 +486,14 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
                           decoration: BoxDecoration(
                             color: isInside
                                 ? Colors.green.withOpacity(0.12)
+                                : isDark
+                                ? Colors.grey.shade800
                                 : Colors.grey.shade100,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             isInside ? Icons.login : Icons.logout,
-                            color: isInside ? Colors.green.shade700 : Colors.grey.shade600,
+                            color: isInside ? Colors.green.shade700 : null,
                             size: 20.sp,
                           ),
                         ),
@@ -459,21 +503,31 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    isInside ? 'Currently Inside' : 'Visit Completed',
+                                    isInside
+                                        ? 'Currently Inside'
+                                        : 'Visit Completed',
                                     style: TextStyle(
                                       fontSize: 13.sp,
                                       fontWeight: FontWeight.bold,
-                                      color: isInside ? Colors.green.shade700 : Colors.grey.shade800,
+                                      color: isInside
+                                          ? Colors.green.shade700
+                                          : null,
                                     ),
                                   ),
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8.w,
+                                      vertical: 2.h,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: isInside
                                           ? Colors.green.withOpacity(0.15)
+                                          : isDark
+                                          ? Colors.grey.shade800
                                           : Colors.grey.shade100,
                                       borderRadius: BorderRadius.circular(10.r),
                                     ),
@@ -482,7 +536,9 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
                                       style: TextStyle(
                                         fontSize: 10.sp,
                                         fontWeight: FontWeight.bold,
-                                        color: isInside ? Colors.green.shade700 : Colors.grey.shade600,
+                                        color: isInside
+                                            ? Colors.green.shade700
+                                            : null,
                                       ),
                                     ),
                                   ),
@@ -491,12 +547,18 @@ class _DailyHelperQrPassScreenState extends State<DailyHelperQrPassScreen> {
                               SizedBox(height: 4.h),
                               Text(
                                 'In: $formattedEntry',
-                                style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
                               if (!isInside)
                                 Text(
                                   'Out: $formattedExit',
-                                  style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: Colors.grey.shade600,
+                                  ),
                                 ),
                             ],
                           ),
