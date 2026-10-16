@@ -346,9 +346,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildNotificationCardShimmer(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade200,
+      baseColor: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+      highlightColor: isDark ? Colors.grey.shade600 : Colors.grey.shade200,
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
         height: 100.h,

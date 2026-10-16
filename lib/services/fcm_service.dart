@@ -100,8 +100,8 @@ class FcmService {
     // 4. Create Android notification channel
     const channel = AndroidNotificationChannel(
       'mygate_high_importance',
-      'MyGate Notifications',
-      description: 'Push notifications for MyGate community events',
+      'MyGateBell Notifications',
+      description: 'Push notifications for MyGateBell community events',
       importance: Importance.max,
       playSound: true,
     );
@@ -177,8 +177,9 @@ class FcmService {
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'mygate_high_importance',
-          'MyGate Notifications',
-          channelDescription: 'Push notifications for MyGate community events',
+          'MyGateBell Notifications',
+          channelDescription:
+              'Push notifications for MyGateBell community events',
           importance: Importance.max,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
