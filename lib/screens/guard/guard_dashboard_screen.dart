@@ -11,7 +11,6 @@ import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/screens/guard/coming_soon.dart';
 import 'package:mygate_coepd/screens/guard/visitor_management_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
-import 'package:mygate_coepd/screens/guard/details/group_visitor_entry_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/vendor_access_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/utility_vehicle_tracking_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/offline_mode_screen.dart';
@@ -37,12 +36,6 @@ class _GuardDashboardScreenState extends State<GuardDashboardScreen> {
       'label': 'Visitor Entry',
       'color': AppTheme.primary,
       'screen': 'visitor_entry',
-    },
-    {
-      'icon': Icons.group,
-      'label': 'Group Entry',
-      'color': AppTheme.secondary,
-      'screen': 'group_entry',
     },
     {
       'icon': Icons.build,
@@ -98,12 +91,6 @@ class _GuardDashboardScreenState extends State<GuardDashboardScreen> {
             builder: (_) =>
                 const GuardVisitorManagementScreen(isBackButton: true),
           ),
-        );
-        break;
-      case 'group_entry':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const GroupVisitorEntryScreen()),
         );
         break;
       case 'vendor_access':

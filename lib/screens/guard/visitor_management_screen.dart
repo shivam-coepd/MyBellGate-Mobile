@@ -5,7 +5,6 @@ import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
-import 'package:mygate_coepd/screens/guard/details/group_visitor_entry_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/vendor_access_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/utility_vehicle_tracking_screen.dart';
 import 'package:mygate_coepd/screens/guard/details/qr_scanner_screen.dart';
@@ -53,12 +52,6 @@ class _VisitorManagementScreenState
       'label': 'Daily Help',
       'color': Colors.teal,
       'screen': 'daily_help',
-    },
-    {
-      'icon': Icons.group,
-      'label': 'Group Entry',
-      'color': Colors.blue,
-      'screen': 'group_entry',
     },
     {
       'icon': Icons.build,
@@ -152,12 +145,6 @@ class _VisitorManagementScreenState
           MaterialPageRoute(builder: (_) => const GuardDailyHelpScreen()),
         );
         break;
-      case 'group_entry':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const GroupVisitorEntryScreen()),
-        );
-        break;
       case 'vendor_access':
         Navigator.push(
           context,
@@ -218,7 +205,9 @@ class _VisitorManagementScreenState
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.r),
+            ),
             title: Row(
               children: [
                 Icon(
@@ -228,7 +217,10 @@ class _VisitorManagementScreenState
                 SizedBox(width: 8.w),
                 Text(
                   action == 'entered' ? 'Entry Registered' : 'Exit Registered',
-                  style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -236,15 +228,30 @@ class _VisitorManagementScreenState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold)),
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 SizedBox(height: 4.h),
-                Text('$service • Flat $flat', style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade600)),
+                Text(
+                  '$service • Flat $flat',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
                 SizedBox(height: 10.h),
                 Text(
                   action == 'entered'
                       ? 'Daily helper marked checked IN. Resident notified.'
                       : 'Daily helper marked checked OUT.',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade700),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey.shade700,
+                  ),
                 ),
               ],
             ),
@@ -262,7 +269,8 @@ class _VisitorManagementScreenState
           Navigator.pop(context); // close loading
           AppSnackbar.show(
             context: context,
-            message: 'QR scan error: ${e.toString().replaceFirst("Exception: ", "")}',
+            message:
+                'QR scan error: ${e.toString().replaceFirst("Exception: ", "")}',
             type: SnackBarType.error,
           );
         }
