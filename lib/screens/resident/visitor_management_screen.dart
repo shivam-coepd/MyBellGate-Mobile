@@ -19,7 +19,6 @@ import 'package:mygate_coepd/services/s3_upload_service.dart';
 
 enum FieldType { name, phone, purpose }
 
-/// Visitor Management Screen for handling visitor pre-approvals and real-time entry management
 class VisitorManagementScreen extends StatefulWidget {
   const VisitorManagementScreen({super.key});
 
@@ -192,11 +191,7 @@ class _VisitorManagementScreenState extends State<VisitorManagementScreen> {
       backgroundColor: Colors.red.shade700,
       borderRadius: BorderRadius.circular(12),
       margin: EdgeInsets.all(4.w),
-      icon: const Icon(
-        Icons.error_outline,
-        color: Colors.white,
-        size: 24,
-      ),
+      icon: const Icon(Icons.error_outline, color: Colors.white, size: 24),
     ).show(context);
   }
 
@@ -1823,43 +1818,10 @@ class VisitorCardWidget extends StatelessWidget {
         ? statusColor.withValues(alpha: 0.15)
         : _getStatusBgColor(status);
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
-      child: Slidable(
-        key: ValueKey(visitor['id']),
-        startActionPane: ActionPane(
-          motion: const BehindMotion(),
-          extentRatio: 0.78,
-          children: [
-            _buildSlideAction(
-              icon: Icons.check_rounded,
-              label: 'Approve',
-              color: const Color(0xFF22C55E),
-              onTap: (_) => onApprove(),
-              isFirst: true,
-            ),
-            _buildSlideAction(
-              icon: Icons.close_rounded,
-              label: 'Reject',
-              color: const Color(0xFFEF4444),
-              onTap: (_) => onReject(),
-            ),
-            _buildSlideAction(
-              icon: Icons.phone_rounded,
-              label: 'Call',
-              color: colorScheme.secondary,
-              onTap: (_) => onCall(),
-            ),
-            _buildSlideAction(
-              icon: Icons.ios_share_rounded,
-              label: 'Share',
-              color: const Color(0xFF8B5CF6),
-              onTap: (_) => onShare(),
-              isLast: true,
-            ),
-          ],
-        ),
-        child: GestureDetector(
+    final slideActions = _buildSlidableActions(colorScheme);
+    final extentRatio = (slideActions.length * 0.20).clamp(0.20, 0.78);
+
+    final cardContent = GestureDetector(
           onTap: () {
             if (status.toLowerCase() == 'exited') {
               return;
@@ -2101,7 +2063,9 @@ class VisitorCardWidget extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+                                  color: const Color(
+                                    0xFF22C55E,
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -2139,10 +2103,14 @@ class VisitorCardWidget extends StatelessWidget {
                               vertical: 4.h,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                              color: const Color(
+                                0xFFEF4444,
+                              ).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10.r),
                               border: Border.all(
-                                color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                color: const Color(
+                                  0xFFEF4444,
+                                ).withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -2211,9 +2179,145 @@ class VisitorCardWidget extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
+        );
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+      child: slideActions.isEmpty || isBulkMode
+          ? cardContent
+          : Slidable(
+              key: ValueKey(visitor['id']),
+              startActionPane: ActionPane(
+                motion: const BehindMotion(),
+                extentRatio: extentRatio,
+                children: slideActions,
+              ),
+              child: cardContent,
+            ),
     );
+  }
+
+  List<Widget> _buildSlidableActions(ColorScheme colorScheme) {
+    final status = (visitor['status'] as String? ?? '').toLowerCase();
+    final List<Widget> actions = [];
+
+    switch (status) {
+      case 'pending':
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.check_rounded,
+            label: 'Approve',
+            color: const Color(0xFF22C55E),
+            onTap: (_) => onApprove(),
+          ),
+        );
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.close_rounded,
+            label: 'Reject',
+            color: const Color(0xFFEF4444),
+            onTap: (_) => onReject(),
+          ),
+        );
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.phone_rounded,
+            label: 'Call',
+            color: colorScheme.secondary,
+            onTap: (_) => onCall(),
+          ),
+        );
+        break;
+
+      case 'approved':
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.ios_share_rounded,
+            label: 'Share',
+            color: const Color(0xFF8B5CF6),
+            onTap: (_) => onShare(),
+          ),
+        );
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.phone_rounded,
+            label: 'Call',
+            color: colorScheme.secondary,
+            onTap: (_) => onCall(),
+          ),
+        );
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.close_rounded,
+            label: 'Cancel',
+            color: const Color(0xFFEF4444),
+            onTap: (_) => onReject(),
+          ),
+        );
+        break;
+
+      case 'entered':
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.phone_rounded,
+            label: 'Call',
+            color: colorScheme.secondary,
+            onTap: (_) => onCall(),
+          ),
+        );
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.access_time_rounded,
+            label: 'Extend',
+            color: const Color(0xFFF59E0B),
+            onTap: (_) => onExtendTime(),
+          ),
+        );
+        break;
+
+      case 'exited':
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.phone_rounded,
+            label: 'Call',
+            color: colorScheme.secondary,
+            onTap: (_) => onCall(),
+          ),
+        );
+        break;
+
+      case 'rejected':
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.check_rounded,
+            label: 'Approve',
+            color: const Color(0xFF22C55E),
+            onTap: (_) => onApprove(),
+          ),
+        );
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.phone_rounded,
+            label: 'Call',
+            color: colorScheme.secondary,
+            onTap: (_) => onCall(),
+          ),
+        );
+        break;
+
+      default:
+        actions.add(
+          _buildSlideAction(
+            icon: Icons.phone_rounded,
+            label: 'Call',
+            color: colorScheme.secondary,
+            onTap: (_) => onCall(),
+          ),
+        );
+        break;
+    }
+
+    return actions;
   }
 
   CustomSlidableAction _buildSlideAction({
@@ -2221,8 +2325,6 @@ class VisitorCardWidget extends StatelessWidget {
     required String label,
     required Color color,
     required void Function(BuildContext) onTap,
-    bool isFirst = false,
-    bool isLast = false,
   }) {
     return CustomSlidableAction(
       onPressed: onTap,
@@ -2261,8 +2363,7 @@ class VisitorCardWidget extends StatelessWidget {
     final status = visitor['status'] as String;
     final statusColor = _getStatusColor(status, colorScheme);
     final bool canExtendTime =
-        status.toLowerCase() != 'exited' &&
-        status.toLowerCase() != 'rejected';
+        status.toLowerCase() != 'exited' && status.toLowerCase() != 'rejected';
 
     return Container(
       decoration: BoxDecoration(
