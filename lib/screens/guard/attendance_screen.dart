@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:mygate_coepd/blocs/guard/guard_bloc.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
 import 'package:mygate_coepd/widgets/app_internet_check.dart';
@@ -120,44 +121,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Quick Actions
-                  Text(
-                    'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      // _quickAction(
-                      //   icon: Icons.directions_walk,
-                      //   label: 'Patrolling',
-                      //   color: AppTheme.primary,
-                      //   onTap: () => Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //       builder: (_) => const GuardPatrollingScreen(),
-                      //     ),
-                      //   ),
-                      // ),
-                      // SizedBox(width: 16.w),
-                      _quickAction(
-                        icon: Icons.qr_code_scanner,
-                        label: 'Scan QR',
-                        color: AppTheme.success,
-                        onTap: () => AppSnackbar.show(
-                          context: context,
-                          message: 'Use Visitor Management > QR Scanner',
-                          type: SnackBarType.info,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 20.h),
-
                   // Today's Attendance
                   Text(
                     "Today's Attendance",
@@ -171,7 +134,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     child: Padding(
                       padding: EdgeInsets.all(16.w),
                       child: isLoading
-                          ? const Center(child: CircularProgressIndicator())
+                          ? _buildTodayAttendanceShimmer()
                           : Column(
                               children: [
                                 Row(
@@ -324,7 +287,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   SizedBox(height: 12.h),
 
                   if (isLoading)
-                    const Center(child: CircularProgressIndicator())
+                    _buildAttendanceHistoryShimmer()
                   else if (history.isEmpty)
                     Card(
                       child: Padding(
@@ -432,6 +395,122 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
         ),
       ],
+    );
+  }
+
+  Widget _buildTodayAttendanceShimmer() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor =
+        isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(
+              3,
+              (index) => Column(
+                children: [
+                  Container(
+                    width: 50.w,
+                    height: 12.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    width: 60.w,
+                    height: 16.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Container(
+            width: double.infinity,
+            height: 48.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttendanceHistoryShimmer() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor =
+        isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            children: List.generate(
+              4,
+              (index) => Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 70.w,
+                      height: 14.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                    Container(
+                      width: 50.w,
+                      height: 14.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                    Container(
+                      width: 50.w,
+                      height: 14.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                    Container(
+                      width: 45.w,
+                      height: 18.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

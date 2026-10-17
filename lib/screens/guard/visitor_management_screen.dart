@@ -456,8 +456,7 @@ class _VisitorManagementScreenState
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 4,
-                                crossAxisSpacing: 15.w,
-                                mainAxisSpacing: 15.h,
+                                crossAxisSpacing: 10.w,
                                 childAspectRatio: 0.6,
                               ),
                           itemCount: _quickActions.length,
@@ -469,7 +468,7 @@ class _VisitorManagementScreenState
                                   onTap: () =>
                                       _navigateToScreen(action['screen']),
                                   child: Container(
-                                    padding: const EdgeInsets.all(20),
+                                    padding: EdgeInsets.all(16.r),
                                     decoration: BoxDecoration(
                                       color: action['color'],
                                       borderRadius: BorderRadius.circular(16),
@@ -583,7 +582,10 @@ class _VisitorManagementScreenState
             ),
           );
         }
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return Scaffold(
+          appBar: AppBar(title: const Text('Visitor Management')),
+          body: _buildVisitorListShimmer(),
+        );
       },
     );
   }

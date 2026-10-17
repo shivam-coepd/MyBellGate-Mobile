@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:mygate_coepd/repositories/household_repository.dart';
 import 'package:mygate_coepd/screens/guard/details/qr_scanner_screen.dart';
 import 'package:mygate_coepd/theme/app_theme.dart';
@@ -275,7 +276,7 @@ class _GuardDailyHelpScreenState extends State<GuardDailyHelpScreen>
         label: const Text('Scan QR Pass'),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? _buildDailyHelpListShimmer()
           : TabBarView(
               controller: _tabController,
               children: [
@@ -511,6 +512,89 @@ class _GuardDailyHelpScreenState extends State<GuardDailyHelpScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDailyHelpListShimmer() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor =
+        isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListView.builder(
+        padding: EdgeInsets.all(16.w),
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Card(
+            margin: EdgeInsets.only(bottom: 12.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(14.w),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48.r,
+                    height: 48.r,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 120.w,
+                          height: 15.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        Container(
+                          width: 160.w,
+                          height: 12.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        Container(
+                          width: 100.w,
+                          height: 11.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Container(
+                    width: 60.w,
+                    height: 32.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

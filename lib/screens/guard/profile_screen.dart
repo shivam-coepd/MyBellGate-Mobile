@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:mygate_coepd/blocs/auth/auth_bloc.dart';
 import 'package:mygate_coepd/blocs/auth/auth_event.dart';
 import 'package:mygate_coepd/blocs/auth/auth_state.dart';
@@ -813,7 +814,7 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
             ),
           );
         }
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return _buildProfileShimmer();
       },
     );
   }
@@ -833,6 +834,81 @@ class _GuardProfileScreenState extends State<GuardProfileScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildProfileShimmer() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor =
+        isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Guard Profile')),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.w),
+        child: Shimmer.fromColors(
+          baseColor: baseColor,
+          highlightColor: highlightColor,
+          child: Column(
+            children: [
+              Center(
+                child: Container(
+                  width: 90.r,
+                  height: 90.r,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                width: 140.w,
+                height: 20.h,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Container(
+                width: 100.w,
+                height: 14.h,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+              SizedBox(height: 24.h),
+              Container(
+                width: double.infinity,
+                height: 100.h,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              ...List.generate(
+                4,
+                (i) => Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Container(
+                    width: double.infinity,
+                    height: 54.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

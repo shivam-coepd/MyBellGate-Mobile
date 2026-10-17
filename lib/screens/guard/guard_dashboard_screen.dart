@@ -475,7 +475,7 @@ class _GuardDashboardScreenState extends State<GuardDashboardScreen> {
             ),
           );
         }
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return _buildDashboardScreenShimmer();
       },
     );
   }
@@ -775,5 +775,101 @@ class _GuardDashboardScreenState extends State<GuardDashboardScreen> {
     } catch (_) {
       return createdAt.toString();
     }
+  }
+
+  Widget _buildDashboardScreenShimmer() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade300;
+    final highlightColor =
+        isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header shimmer
+              Shimmer.fromColors(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48.r,
+                      height: 48.r,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 120.w,
+                          height: 16.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        Container(
+                          width: 80.w,
+                          height: 12.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20.h),
+              // Stats cards shimmer
+              Shimmer.fromColors(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 90.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Container(
+                        height: 90.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20.h),
+              // Pending approvals shimmer
+              _buildPendingApprovalsShimmer(),
+              SizedBox(height: 20.h),
+              // Recent activity shimmer
+              _buildRecentActivityShimmer(),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

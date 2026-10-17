@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:mygate_coepd/widgets/app_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
@@ -692,9 +693,24 @@ class _GuardAddVisitorBottomSheetState
 
               // RESIDENT SELECTION
               if (_isLoadingResidents)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Center(child: CircularProgressIndicator()),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
+                  child: Shimmer.fromColors(
+                    baseColor: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF1E293B)
+                        : Colors.grey.shade300,
+                    highlightColor:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF334155)
+                            : Colors.grey.shade100,
+                    child: Container(
+                      height: 52.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                  ),
                 )
               else
                 Autocomplete<Map<String, dynamic>>(
